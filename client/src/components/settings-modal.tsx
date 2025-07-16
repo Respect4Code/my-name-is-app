@@ -55,7 +55,7 @@ export default function SettingsModal({ isOpen, onClose, settings, onSettingsCha
             </Button>
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           {/* Speech Mode Toggle */}
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
@@ -69,7 +69,7 @@ export default function SettingsModal({ isOpen, onClose, settings, onSettingsCha
               aria-label="Toggle speech mode"
             />
           </div>
-          
+
           {/* Visual Only Mode Toggle */}
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
             <Label className="flex items-center gap-3 cursor-pointer">
@@ -82,7 +82,7 @@ export default function SettingsModal({ isOpen, onClose, settings, onSettingsCha
               aria-label="Toggle visual only mode"
             />
           </div>
-          
+
           {/* Animations Toggle */}
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
             <Label className="flex items-center gap-3 cursor-pointer">
@@ -95,7 +95,7 @@ export default function SettingsModal({ isOpen, onClose, settings, onSettingsCha
               aria-label="Toggle animations"
             />
           </div>
-          
+
           {/* Speech Rate Slider */}
           <div className="p-4 bg-gray-50 rounded-lg">
             <Label className="block text-sm font-medium mb-3 text-gray-700">Speech Rate</Label>
@@ -114,7 +114,7 @@ export default function SettingsModal({ isOpen, onClose, settings, onSettingsCha
               <span>Fast</span>
             </div>
           </div>
-          
+
           {/* High Contrast Mode */}
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
             <Label className="flex items-center gap-3 cursor-pointer">
@@ -128,7 +128,7 @@ export default function SettingsModal({ isOpen, onClose, settings, onSettingsCha
             />
           </div>
         </div>
-        
+
         {/* Modal Footer */}
         <div className="flex gap-3 mt-8">
           <Button

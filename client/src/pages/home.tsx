@@ -10,6 +10,7 @@ export interface Settings {
   animations: boolean;
   speechRate: number;
   highContrast: boolean;
+  deafMode: boolean;
 }
 
 const defaultSettings: Settings = {
@@ -18,6 +19,7 @@ const defaultSettings: Settings = {
   animations: true,
   speechRate: 0.8,
   highContrast: false,
+  deafMode: false,
 };
 
 export default function Home() {
@@ -48,7 +50,7 @@ export default function Home() {
     if (cleanName && cleanName.length >= 2 && cleanName.length <= 12) {
       setCurrentName(cleanName);
       setCurrentScreen('flashcards');
-      
+
       // Add to recent names
       const updatedRecent = [cleanName, ...recentNames.filter(n => n !== cleanName)].slice(0, 5);
       setRecentNames(updatedRecent);
@@ -81,7 +83,7 @@ export default function Home() {
           recentNames={recentNames}
         />
       )}
-      
+
       {currentScreen === 'flashcards' && (
         <FlashcardsScreen
           name={currentName}
@@ -90,7 +92,7 @@ export default function Home() {
           settings={settings}
         />
       )}
-      
+
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={handleCloseSettings}

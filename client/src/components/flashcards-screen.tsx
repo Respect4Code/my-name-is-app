@@ -18,49 +18,49 @@ interface FlashcardsScreenProps {
 export default function FlashcardsScreen({ name, onGoBack, onOpenSettings, settings }: FlashcardsScreenProps) {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
-  
+
   const nameLetters = name.split('');
   const totalCards = nameLetters.length;
   const phonicsData = generatePhonicsData(name);
   const currentPhonics = phonicsData[currentCardIndex];
-  
+
   const { speak, isPlaying } = useSpeech(settings.speechRate);
-  
+
   const goToNextCard = () => {
     if (currentCardIndex < totalCards - 1) {
       setCurrentCardIndex(currentCardIndex + 1);
       setIsFlipped(false);
     }
   };
-  
+
   const goToPrevCard = () => {
     if (currentCardIndex > 0) {
       setCurrentCardIndex(currentCardIndex - 1);
       setIsFlipped(false);
     }
   };
-  
+
   const resetToStart = () => {
     setCurrentCardIndex(0);
     setIsFlipped(false);
   };
-  
+
   const flipCard = () => {
     setIsFlipped(!isFlipped);
-    
+
     if (!isFlipped && settings.speechMode) {
       const soundText = `${currentPhonics.letter} makes the sound ${currentPhonics.sound}`;
       speak(soundText);
     }
   };
-  
+
   const playSound = () => {
     if (settings.speechMode) {
       const soundText = `${currentPhonics.letter} makes the sound ${currentPhonics.sound}`;
       speak(soundText);
     }
   };
-  
+
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -89,26 +89,26 @@ export default function FlashcardsScreen({ name, onGoBack, onOpenSettings, setti
           break;
       }
     };
-    
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentCardIndex, isFlipped]);
-  
+
   // Swipe gestures
   const swipeHandlers = useSwipe({
     onSwipeLeft: goToNextCard,
     onSwipeRight: goToPrevCard,
   });
-  
+
   const progressPercentage = ((currentCardIndex + 1) / totalCards) * 100;
-  
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-indigo-600 p-4" {...swipeHandlers}>
       {/* Live region for screen readers */}
       <div id="live-region" className="sr-only" aria-live="polite" aria-atomic="true">
         Card {currentCardIndex + 1} of {totalCards}. Letter {currentPhonics.letter} in position {currentPhonics.position} of {name}.
       </div>
-      
+
       {/* Header with Navigation */}
       <header className="flex items-center justify-between mb-8 max-w-4xl mx-auto">
         <Button
@@ -120,14 +120,14 @@ export default function FlashcardsScreen({ name, onGoBack, onOpenSettings, setti
           <ArrowLeft className="w-5 h-5" />
           Back
         </Button>
-        
+
         <div className="text-center text-white">
           <h1 className="text-2xl font-bold">{name}</h1>
           <p className="text-white/80">
             {currentCardIndex + 1} of {totalCards}
           </p>
         </div>
-        
+
         <Button
           variant="ghost"
           onClick={onOpenSettings}
@@ -137,7 +137,7 @@ export default function FlashcardsScreen({ name, onGoBack, onOpenSettings, setti
           <SettingsIcon className="w-5 h-5" />
         </Button>
       </header>
-      
+
       {/* Main Flashcard Area */}
       <main id="main-content" className="max-w-2xl mx-auto">
         {/* Name Display with Letter Highlighting */}
@@ -158,18 +158,19 @@ export default function FlashcardsScreen({ name, onGoBack, onOpenSettings, setti
             ))}
           </div>
         </div>
-        
+
         {/* Flashcard Container */}
         <div className="perspective-1000 mb-8">
-          <Flashcard
-            phonics={currentPhonics}
-            name={name}
-            isFlipped={isFlipped}
-            onFlip={flipCard}
-            isPlaying={isPlaying && settings.speechMode}
-          />
+          <Flashcard 
+          phonics={currentPhonics}
+          name={name}
+          isFlipped={isFlipped}
+          onFlip={flipCard}
+          isPlaying={isPlaying}
+          settings={settings}
+        />
         </div>
-        
+
         {/* Navigation Controls */}
         <div className="flex items-center justify-between mb-8">
           <Button
@@ -181,7 +182,7 @@ export default function FlashcardsScreen({ name, onGoBack, onOpenSettings, setti
           >
             <ArrowLeft className="w-6 h-6" />
           </Button>
-          
+
           <div className="flex gap-2">
             <Button
               variant="ghost"
@@ -192,7 +193,7 @@ export default function FlashcardsScreen({ name, onGoBack, onOpenSettings, setti
               <RotateCcw className="w-5 h-5 mr-2" />
               Reset
             </Button>
-            
+
             <Button
               variant="ghost"
               onClick={playSound}
@@ -205,7 +206,7 @@ export default function FlashcardsScreen({ name, onGoBack, onOpenSettings, setti
               Play Sound
             </Button>
           </div>
-          
+
           <Button
             variant="ghost"
             onClick={goToNextCard}
@@ -216,12 +217,12 @@ export default function FlashcardsScreen({ name, onGoBack, onOpenSettings, setti
             <ArrowRight className="w-6 h-6" />
           </Button>
         </div>
-        
+
         {/* Progress Bar */}
         <div className="mb-8">
           <Progress value={progressPercentage} className="h-3 bg-white/20" />
         </div>
-        
+
         {/* Keyboard Shortcuts Help */}
         <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-white/80 text-sm">
           <div className="font-medium mb-2">Keyboard Shortcuts:</div>
