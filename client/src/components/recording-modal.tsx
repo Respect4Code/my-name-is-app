@@ -93,7 +93,7 @@ export default function RecordingModal({
               The <span className="font-semibold">{phonicsData.position}</span> letter
             </div>
             <div className="text-sm text-gray-500 mt-1">
-              Default sound: {phonicsData.sound}
+              How does this letter sound when YOU say your child's name?
             </div>
           </div>
 
