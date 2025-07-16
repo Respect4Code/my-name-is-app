@@ -48,11 +48,19 @@ export default function Flashcard({ phonics, isFlipped, onFlip, onPlaySound, isP
           <div className="text-lg text-gray-500 mt-2">
             in <span className="font-semibold">{name}</span>
           </div>
-          <div className="mt-6 text-sm text-gray-400 flex items-center gap-2">
-            <span>{settings.deafMode ? "Visual phonetic sound" : "Click to hear the sound"}</span>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728"></path>
-            </svg>
+          <div className="mt-6 space-y-3">
+            <div className="text-sm text-gray-400 flex items-center gap-2">
+              <span>{settings.deafMode ? "Visual phonetic sound" : "Click to hear the sound"}</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728"></path>
+              </svg>
+            </div>
+            
+            <ParentRecordingButton 
+              name={name}
+              phonicsData={phonics}
+              className="w-full"
+            />
           </div>
         </div>
 
