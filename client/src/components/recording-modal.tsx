@@ -106,11 +106,11 @@ export default function RecordingModal({
 
           {/* Recording Instructions */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
-            <div className="font-semibold text-blue-800 mb-2">Recording Tips:</div>
+            <div className="font-semibold text-blue-800 mb-2">What to Record:</div>
             <ul className="text-blue-700 space-y-1">
-              <li>• Say just the letter sound (not the letter name)</li>
+              <li>• Say how this letter sounds when YOU say your child's name</li>
+              <li>• Don't worry about "correct" phonetics - use YOUR pronunciation</li>
               <li>• Keep it short - 1-2 seconds maximum</li>
-              <li>• Use your natural pronunciation</li>
               <li>• Record in a quiet environment</li>
             </ul>
           </div>
