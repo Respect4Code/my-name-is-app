@@ -11,7 +11,7 @@ const phonicsMap: Record<string, { sound: string; exampleWord: string }> = {
   A: { sound: "/æ/", exampleWord: "apple" },
   B: { sound: "/b/", exampleWord: "ball" },
   C: { sound: "/k/", exampleWord: "cat" },    // Hard C - most common
-  D: { sound: "/d/", exampleWord: "dog" },
+  D: { sound: "/dʌ/", exampleWord: "dog" },
   E: { sound: "/ɛ/", exampleWord: "egg" },    // Short E - matches "egg"
   F: { sound: "/f/", exampleWord: "fish" },
   G: { sound: "/g/", exampleWord: "go" },     // Hard G - most common
