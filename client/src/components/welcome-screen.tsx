@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Settings } from "lucide-react";
+import { Settings, Mic } from "lucide-react";
+import { useParentRecordings } from "@/hooks/use-parent-recordings";
 
 interface WelcomeScreenProps {
   onCreateFlashcards: (name: string) => void;
@@ -11,6 +12,7 @@ interface WelcomeScreenProps {
 
 export default function WelcomeScreen({ onCreateFlashcards, onOpenSettings, recentNames }: WelcomeScreenProps) {
   const [nameInput, setNameInput] = useState("");
+  const { getCompletionStatus } = useParentRecordings();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,16 +92,25 @@ export default function WelcomeScreen({ onCreateFlashcards, onOpenSettings, rece
           <div className="mb-6">
             <div className="text-sm text-gray-500 mb-3">Recent names:</div>
             <div className="flex flex-wrap justify-center gap-2">
-              {recentNames.map((name) => (
-                <Button
-                  key={name}
-                  variant="outline"
-                  onClick={() => handleRecentClick(name)}
-                  className="px-3 py-2 bg-green-100 text-green-700 rounded-full text-sm font-medium hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-400 transition-colors duration-200 border-green-200"
-                >
-                  {name}
-                </Button>
-              ))}
+              {recentNames.map((name) => {
+                const completion = getCompletionStatus(name);
+                return (
+                  <div key={name} className="relative">
+                    <Button
+                      variant="outline"
+                      onClick={() => handleRecentClick(name)}
+                      className="px-3 py-2 bg-green-100 text-green-700 rounded-full text-sm font-medium hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-400 transition-colors duration-200 border-green-200"
+                    >
+                      {name}
+                    </Button>
+                    {completion.recorded > 0 && (
+                      <div className="absolute -top-1 -right-1 bg-purple-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                        <Mic className="w-3 h-3" />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

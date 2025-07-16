@@ -1,15 +1,22 @@
 import { PhonicsData } from "@/lib/phonics";
+import type { Settings } from "@/pages/home";
+import ParentRecordingButton from "./parent-recording-button";
+import { useParentRecordings } from "@/hooks/use-parent-recordings";
 
 interface FlashcardProps {
   phonics: PhonicsData;
-  name: string;
   isFlipped: boolean;
   onFlip: () => void;
+  onPlaySound: () => void;
   isPlaying: boolean;
-  settings: { deafMode: boolean };
+  settings: Settings;
+  name: string;
 }
 
-export default function Flashcard({ phonics, name, isFlipped, onFlip, isPlaying, settings }: FlashcardProps) {
+export default function Flashcard({ phonics, isFlipped, onFlip, onPlaySound, isPlaying, settings, name }: FlashcardProps) {
+  const { getRecording } = useParentRecordings();
+  const parentRecording = getRecording(name, phonics.letter, phonics.position);
+
   return (
     <div 
       className={`flip-card h-96 cursor-pointer ${isPlaying ? 'sound-indicator playing' : 'sound-indicator'}`}
@@ -48,7 +55,7 @@ export default function Flashcard({ phonics, name, isFlipped, onFlip, isPlaying,
             </svg>
           </div>
         </div>
-        
+
         {/* Back of Card */}
         <div className="flip-card-back bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl shadow-2xl flex flex-col items-center justify-center p-8 text-white border-4 border-purple-300">
           <div className="text-6xl mb-4">{phonics.letter}</div>
