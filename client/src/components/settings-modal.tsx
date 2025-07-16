@@ -23,7 +23,7 @@ export default function SettingsModal({ isOpen, onClose, settings, onSettingsCha
   };
 
   const handleReset = () => {
-    const defaultSettings: Settings = {
+    const defaultSettings: SettingsType = {
       speechMode: true,
       visualMode: false,
       animations: true,
@@ -34,7 +34,7 @@ export default function SettingsModal({ isOpen, onClose, settings, onSettingsCha
     onSettingsChange(defaultSettings);
   };
 
-  const handleSettingChange = (key: keyof Settings, value: any) => {
+  const handleSettingChange = (key: keyof SettingsType, value: any) => {
     setLocalSettings(prev => ({ ...prev, [key]: value }));
   };
 
