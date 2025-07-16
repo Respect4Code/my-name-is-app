@@ -23,7 +23,7 @@ const defaultSettings: Settings = {
 };
 
 export default function Home() {
-  const [currentScreen, setCurrentScreen] = useState<'welcome' | 'flashcards'>('welcome');
+  const [currentScreen, setCurrentScreen] = useState<'welcome' | 'recording' | 'flashcards'>('welcome');
   const [currentName, setCurrentName] = useState<string>('');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [settings, setSettings] = useLocalStorage<Settings>('mynameIs_settings', defaultSettings);
