@@ -1,3 +1,4 @@
+
 export interface PhonicsData {
   letter: string;
   sound: string;
@@ -5,32 +6,33 @@ export interface PhonicsData {
   exampleWord: string;
 }
 
+// Core English phonics - single letters with most common sounds
 const phonicsMap: Record<string, { sound: string; exampleWord: string }> = {
   A: { sound: "/æ/", exampleWord: "apple" },
   B: { sound: "/b/", exampleWord: "ball" },
-  C: { sound: "/k/", exampleWord: "cat" },
+  C: { sound: "/k/", exampleWord: "cat" },    // Hard C - most common
   D: { sound: "/d/", exampleWord: "dog" },
-  E: { sound: "/ɛ/", exampleWord: "egg" },
+  E: { sound: "/e/", exampleWord: "egg" },    // Short E
   F: { sound: "/f/", exampleWord: "fish" },
-  G: { sound: "/g/", exampleWord: "go" },
+  G: { sound: "/g/", exampleWord: "go" },     // Hard G - most common
   H: { sound: "/h/", exampleWord: "hat" },
-  I: { sound: "/ɪ/", exampleWord: "igloo" },
+  I: { sound: "/ɪ/", exampleWord: "igloo" },  // Short I
   J: { sound: "/dʒ/", exampleWord: "jump" },
   K: { sound: "/k/", exampleWord: "kite" },
   L: { sound: "/l/", exampleWord: "lion" },
   M: { sound: "/m/", exampleWord: "moon" },
   N: { sound: "/n/", exampleWord: "nest" },
-  O: { sound: "/ɒ/", exampleWord: "octopus" },
+  O: { sound: "/ɒ/", exampleWord: "octopus" }, // UK pronunciation
   P: { sound: "/p/", exampleWord: "pig" },
   Q: { sound: "/kw/", exampleWord: "queen" },
   R: { sound: "/r/", exampleWord: "rabbit" },
   S: { sound: "/s/", exampleWord: "sun" },
   T: { sound: "/t/", exampleWord: "tiger" },
-  U: { sound: "/ʌ/", exampleWord: "umbrella" },
+  U: { sound: "/ʌ/", exampleWord: "umbrella" }, // Short U
   V: { sound: "/v/", exampleWord: "van" },
   W: { sound: "/w/", exampleWord: "water" },
   X: { sound: "/ks/", exampleWord: "box" },
-  Y: { sound: "/j/", exampleWord: "yes" },
+  Y: { sound: "/j/", exampleWord: "yes" },     // Y as consonant
   Z: { sound: "/z/", exampleWord: "zebra" },
 };
 
@@ -57,3 +59,8 @@ export function generatePhonicsData(name: string): PhonicsData[] {
     };
   });
 }
+
+// Export for reference chart
+export const letterSounds = Object.fromEntries(
+  Object.entries(phonicsMap).map(([letter, data]) => [letter, data.sound])
+);
