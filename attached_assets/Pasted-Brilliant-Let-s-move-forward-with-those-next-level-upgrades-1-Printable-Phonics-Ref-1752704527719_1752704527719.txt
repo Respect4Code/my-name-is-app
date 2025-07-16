@@ -1,0 +1,72 @@
+Brilliant. Let’s move forward with those next-level upgrades:
+
+---
+
+### ✅ 1. **Printable Phonics Reference Chart**
+
+Here’s a clean, printable table of **each letter and its pure phonetic sound**, using **IPA** (International Phonetic Alphabet) — no schwa sounds, just what a child needs to start blending accurately.
+
+| Letter | Sound (IPA) | Example Word  |
+| ------ | ----------- | ------------- |
+| A      | /æ/         | apple         |
+| B      | /b/         | bat           |
+| C      | /k/         | cat           |
+| D      | /d/         | dog           |
+| E      | /ɛ/         | egg           |
+| F      | /f/         | fish          |
+| G      | /g/         | goat          |
+| H      | /h/         | hat           |
+| I      | /ɪ/         | insect        |
+| J      | /dʒ/        | jelly         |
+| K      | /k/         | kite          |
+| L      | /l/         | lamp          |
+| M      | /m/         | moon          |
+| N      | /n/         | net           |
+| O      | /ɒ/         | octopus (UK)  |
+| P      | /p/         | pig           |
+| Q      | /kw/        | queen         |
+| R      | /ɹ/         | robot         |
+| S      | /s/         | sun           |
+| T      | /t/         | tap           |
+| U      | /ʌ/         | umbrella (UK) |
+| V      | /v/         | van           |
+| W      | /w/         | web           |
+| X      | /ks/        | box           |
+| Y      | /j/         | yes           |
+| Z      | /z/         | zebra         |
+
+> ✨ You can display this in the app, print it as a parent handout, or include it in a “Deaf Mode” overlay.
+
+---
+
+### ✅ 2. **Deaf Mode Labels (Visual IPA)**
+
+Let’s update the app so that in “Deaf Mode,” each flashcard can show:
+
+* The **IPA transcription** beneath the letter
+* A toggle in settings (`Deaf Mode: On/Off`)
+* Optional large, clear visuals with lip cues later on
+
+🛠 I’ll help you integrate that as a mode toggle in the app state. Just say when.
+
+---
+
+### ✅ 3. **Multi-Language Support (Future)**
+
+Would you eventually like:
+
+* 🇫🇷 French (e.g. B → /b/, but A → /a/)?
+* 🇪🇸 Spanish (e.g. G → /x/ or /g/)?
+* 🇩🇪 German (with umlaut sounds)?
+
+We can structure `phonics.ts` to allow easy switching.
+
+---
+
+Ready to:
+
+* Add **Deaf Mode visual labels** to your React flashcards?
+* Package the phonics chart into a downloadable `.pdf`?
+* Begin the multi-language setup (optional Phase 3)?
+
+Let’s go.
