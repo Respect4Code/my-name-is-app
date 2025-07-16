@@ -1,4 +1,3 @@
-
 export interface PhonicsData {
   letter: string;
   sound: string;
@@ -6,60 +5,30 @@ export interface PhonicsData {
   exampleWord: string;
 }
 
-// Synthetic phonics letter sounds - no schwa endings
-export const letterSounds: Record<string, string> = {
-  A: "/æ/",      // short a as in apple
-  B: "/b/",      // not 'buh'
-  C: "/k/",      // hard c, as in cat
-  D: "/d/",
-  E: "/ɛ/",      // short e as in elephant
-  F: "/f/",
-  G: "/g/",      // hard g as in goat
-  H: "/h/",
-  I: "/ɪ/",      // short i as in insect
-  J: "/dʒ/",
-  K: "/k/",
-  L: "/l/",
-  M: "/m/",
-  N: "/n/",
-  O: "/ɒ/",      // short o as in octopus (UK), use /ɑ/ for US
-  P: "/p/",
-  Q: "/kw/",
-  R: "/r/",      // light r
-  S: "/s/",      // unvoiced s
-  T: "/t/",
-  U: "/ʌ/",      // short u as in umbrella
-  V: "/v/",
-  W: "/w/",
-  X: "/ks/",     // as in box
-  Y: "/j/",
-  Z: "/z/"
-};
-
 const phonicsMap: Record<string, { sound: string; exampleWord: string }> = {
   A: { sound: "/æ/", exampleWord: "apple" },
-  B: { sound: "/b/", exampleWord: "bat" },
+  B: { sound: "/b/", exampleWord: "ball" },
   C: { sound: "/k/", exampleWord: "cat" },
   D: { sound: "/d/", exampleWord: "dog" },
   E: { sound: "/ɛ/", exampleWord: "egg" },
   F: { sound: "/f/", exampleWord: "fish" },
-  G: { sound: "/g/", exampleWord: "goat" },
+  G: { sound: "/g/", exampleWord: "go" },
   H: { sound: "/h/", exampleWord: "hat" },
-  I: { sound: "/ɪ/", exampleWord: "insect" },
-  J: { sound: "/dʒ/", exampleWord: "jelly" },
+  I: { sound: "/ɪ/", exampleWord: "igloo" },
+  J: { sound: "/dʒ/", exampleWord: "jump" },
   K: { sound: "/k/", exampleWord: "kite" },
-  L: { sound: "/l/", exampleWord: "lamp" },
+  L: { sound: "/l/", exampleWord: "lion" },
   M: { sound: "/m/", exampleWord: "moon" },
-  N: { sound: "/n/", exampleWord: "net" },
+  N: { sound: "/n/", exampleWord: "nest" },
   O: { sound: "/ɒ/", exampleWord: "octopus" },
   P: { sound: "/p/", exampleWord: "pig" },
   Q: { sound: "/kw/", exampleWord: "queen" },
-  R: { sound: "/r/", exampleWord: "robot" },
+  R: { sound: "/r/", exampleWord: "rabbit" },
   S: { sound: "/s/", exampleWord: "sun" },
-  T: { sound: "/t/", exampleWord: "tap" },
+  T: { sound: "/t/", exampleWord: "tiger" },
   U: { sound: "/ʌ/", exampleWord: "umbrella" },
   V: { sound: "/v/", exampleWord: "van" },
-  W: { sound: "/w/", exampleWord: "web" },
+  W: { sound: "/w/", exampleWord: "water" },
   X: { sound: "/ks/", exampleWord: "box" },
   Y: { sound: "/j/", exampleWord: "yes" },
   Z: { sound: "/z/", exampleWord: "zebra" },
@@ -69,22 +38,17 @@ const getPositionName = (index: number, total: number): string => {
   if (total === 1) return "only";
   if (index === 0) return "first";
   if (index === total - 1) return "last";
-  
+
   const positions = ["", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth", "eleventh", "twelfth"];
   return positions[index + 1] || `${index + 1}th`;
 };
 
-// Helper function for quick sound lookup
-export const getLetterSound = (letter: string): string => {
-  return letterSounds[letter.toUpperCase()] || `/${letter.toLowerCase()}/`;
-};
-
 export function generatePhonicsData(name: string): PhonicsData[] {
   const letters = name.toUpperCase().split('');
-  
+
   return letters.map((letter, index) => {
-    const phonics = phonicsMap[letter] || { sound: getLetterSound(letter), exampleWord: "word" };
-    
+    const phonics = phonicsMap[letter] || { sound: `/${letter.toLowerCase()}/`, exampleWord: "word" };
+
     return {
       letter,
       sound: phonics.sound,
