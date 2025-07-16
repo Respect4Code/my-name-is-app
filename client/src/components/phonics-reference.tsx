@@ -1,38 +1,18 @@
 
 import { letterSounds } from "@/lib/phonics";
 
+// Get example words from phonics data
+const getExampleWord = (letter: string): string => {
+  const phonicsData = generatePhonicsData(letter);
+  return phonicsData[0]?.exampleWord || letter.toLowerCase();
+};
+
 interface PhonicsReferenceProps {
   className?: string;
 }
 
-const phonicsExamples: Record<string, string> = {
-  A: "apple",
-  B: "bat",
-  C: "cat",
-  D: "dog",
-  E: "egg",
-  F: "fish",
-  G: "goat",
-  H: "hat",
-  I: "insect",
-  J: "jelly",
-  K: "kite",
-  L: "lamp",
-  M: "moon",
-  N: "net",
-  O: "octopus",
-  P: "pig",
-  Q: "queen",
-  R: "robot",
-  S: "sun",
-  T: "tap",
-  U: "umbrella",
-  V: "van",
-  W: "web",
-  X: "box",
-  Y: "yes",
-  Z: "zebra",
-};
+// Import the phonics data to keep everything consistent
+import { generatePhonicsData } from "@/lib/phonics";
 
 export default function PhonicsReference({ className = "" }: PhonicsReferenceProps) {
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
@@ -73,7 +53,7 @@ export default function PhonicsReference({ className = "" }: PhonicsReferencePro
                   {letterSounds[letter]}
                 </td>
                 <td className="border border-gray-300 px-4 py-3">
-                  {phonicsExamples[letter]}
+                  {getExampleWord(letter)}
                 </td>
               </tr>
             ))}
