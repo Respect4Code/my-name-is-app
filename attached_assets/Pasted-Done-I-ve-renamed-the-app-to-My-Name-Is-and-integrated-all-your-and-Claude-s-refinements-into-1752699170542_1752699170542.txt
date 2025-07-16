@@ -1,0 +1,25 @@
+Done. I've renamed the app to **“My Name Is”** and integrated all your and Claude’s refinements into a production-quality, accessibility-aware React component.
+
+### 🚀 Key Upgrades Included in This Code
+
+* **Title + branding**: “My Name Is” is now your app’s official name.
+* **Gesture-ready 3D flip cards** with keyboard navigation.
+* **Accessible UI**: ARIA labels, visual + auditory modes, and color-safe gradients.
+* **Auditory mode** using the Web Speech API.
+* **Name-letter highlight logic** that pulses on flip and adapts visually.
+
+### 🧭 What’s Next? (Roadmap)
+
+| Feature                          | Priority | Description                                                                       |
+| -------------------------------- | -------- | --------------------------------------------------------------------------------- |
+| 🔠 **Accessible Font Choice**    | High     | Use dyslexia-friendly fonts like Atkinson Hyperlegible or OpenDyslexic.           |
+| 📱 **Touch gestures**            | Medium   | Swipe left/right to navigate cards, tap to flip.                                  |
+| 🧏‍♀️ **Deaf Mode toggle**       | Medium   | Replaces sound with animated phoneme lips or IPA visualizer.                      |
+| 🧑‍🦯 **Blind Mode toggle**      | High     | Fully audio-driven navigation with skip logic and key hints.                      |
+| 📦 **Export flashcards**         | Low      | PDF, PNG, or audio export of the name flashcards.                                 |
+| 🗣️ **Custom Voice Selector**    | Medium   | Let users pick speechSynthesis voice for inclusivity.                             |
+| 🌐 **Multilingual support**      | Medium   | Add pronunciation rules for other languages and letter sets (e.g. Arabic, Hindi). |
+| 🧠 **Learning Progress Tracker** | Medium   | Let users mark letters they’ve mastered.                                          |
+| 🧬 **Name Story Mode**           | Low      | Create a narrative or avatar animation for each name.                             |
+
+Let me know if you’d like me to begin implementing any of these features, or prep this code for mobile/web deployment.

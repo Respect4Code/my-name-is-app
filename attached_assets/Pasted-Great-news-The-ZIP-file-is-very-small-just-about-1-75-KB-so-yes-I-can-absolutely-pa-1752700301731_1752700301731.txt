@@ -1,0 +1,113 @@
+Great news! 🎉 The ZIP file is **very small** — just about **1.75 KB** — so yes, I can absolutely paste its full contents here as plain text for you to copy and reconstruct manually.
+
+Here’s what I’ll do next:
+
+1. Provide each file’s content inside a clearly labeled code block.
+2. You can recreate the folder structure on your end or paste it into a GitHub repo, CodeSandbox, or local project.
+
+Ready? Let’s paste the full contents of **MyNameIs\_v1.1\_KISS\_MVP** ZIP now.
+
+
+Here are the full contents of the **My Name Is – KISS MVP v1.1** ZIP package. You can recreate these in your local project or online editor like CodeSandbox or GitHub:
+
+---
+
+### 📁 `manifest.json`
+
+```json
+{
+  "name": "My Name Is",
+  "short_name": "MyNameIs",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#8b5cf6",
+  "description": "A beautiful, inclusive phonics learning app",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
+```
+
+---
+
+### 📁 `service-worker.js`
+
+```js
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open('my-name-is-cache').then((cache) => {
+      return cache.addAll([
+        '/',
+        '/index.html',
+        '/manifest.json',
+        '/icon-192.png',
+        '/icon-512.png'
+      ]);
+    })
+  );
+});
+
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request).then((response) => {
+      return response || fetch(event.request);
+    })
+  );
+});
+```
+
+---
+
+### 📁 `README.md`
+
+````markdown
+# My Name Is – KISS MVP v1.1
+
+🎉 An inclusive, offline-ready phonics flashcard app built with React.
+
+## Features
+
+- 🔠 Personalized name-to-letter flashcards
+- 🔊 Speech synthesis (offline-friendly)
+- 🧏 Deaf Mode toggle (IPA visual support)
+- ⌨️ Keyboard + Swipe gesture support
+- 💾 Offline-ready PWA
+
+## Install & Run
+
+```bash
+npm install
+npm run dev
+````
+
+To deploy as a PWA:
+
+1. Add `manifest.json` and `service-worker.js` to your `public/` folder.
+2. Ensure your `index.html` links the manifest and registers the service worker.
+
+## Credits
+
+Built by visionary creators using OpenAI and Claude.
+
+```
+
+---
+
+You’re now fully set up to:
+- Rebuild the ZIP manually 🛠
+- Push to GitHub 💻
+- Deploy to Netlify/Vercel 🚀
+- Or share it with other collaborators or AIs with full context 💡
+
+Would you like the icons next? I can help you create or find `icon-192.png` and `icon-512.png` too.
+```

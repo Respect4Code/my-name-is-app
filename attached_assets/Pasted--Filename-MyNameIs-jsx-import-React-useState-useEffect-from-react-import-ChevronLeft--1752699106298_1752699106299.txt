@@ -1,0 +1,203 @@
+// Filename: MyNameIs.jsx
+
+import React, { useState, useEffect } from 'react';
+import { ChevronLeft, ChevronRight, RotateCcw, Volume2, ArrowLeft, Sparkles, Eye, Ear } from 'lucide-react';
+
+// Utility functions
+const getLetterSound = (letter, index, name) => {
+  const sounds = {
+    'A': '/æ/', 'E': '/ɛ/', 'I': '/ɪ/', 'O': '/ɒ/', 'U': '/ʌ/',
+    'B': '/b/', 'C': '/k/', 'D': '/d/', 'F': '/f/', 'G': '/g/',
+    'H': '/h/', 'J': '/dʒ/', 'K': '/k/', 'L': '/l/', 'M': '/m/',
+    'N': '/n/', 'P': '/p/', 'Q': '/kw/', 'R': '/r/', 'S': '/s/',
+    'T': '/t/', 'V': '/v/', 'W': '/w/', 'X': '/ks/', 'Y': '/j/', 'Z': '/z/'
+  };
+  if (letter === 'I' && name === 'DIVINE' && index === 3) return '/aɪ/';
+  return sounds[letter.toUpperCase()] || `/${letter.toLowerCase()}/`;
+};
+
+const getPosition = (index, length) => {
+  const pos = ['first', 'second', 'third', 'fourth', 'fifth'];
+  return index === 0 ? 'first' : index === length - 1 ? 'last' : pos[index] || `${index + 1}th`;
+};
+
+const generateFlashcards = (name) => {
+  const upper = name.toUpperCase().trim();
+  return upper.split('').map((letter, i) => ({
+    letter,
+    nameHighlight: upper,
+    highlightIndex: i,
+    sound: getLetterSound(letter, i, upper),
+    position: getPosition(i, upper.length)
+  }));
+};
+
+const NameInput = ({ onSubmit }) => {
+  const [name, setName] = useState('');
+  const examples = ['DIVINE', 'EMMA', 'JAMES', 'ZARA'];
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-indigo-600 flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-2xl">
+        <div className="text-6xl mb-6">✨</div>
+        <h1 className="text-3xl font-bold text-gray-800 mb-4">My Name Is</h1>
+        <p className="text-gray-600 mb-8">Enter a name to create personalized, accessible phonics flashcards.</p>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value.replace(/[^a-zA-Z]/g, ''))}
+          placeholder="Enter your name..."
+          maxLength={12}
+          className="w-full p-4 text-2xl text-center border-2 border-purple-200 rounded-xl focus:outline-none focus:border-purple-500 mb-4"
+          aria-label="Name input"
+        />
+        <div className="text-sm text-gray-500 mb-4">Try:</div>
+        <div className="flex flex-wrap justify-center gap-2 mb-6">
+          {examples.map(ex => (
+            <button
+              key={ex}
+              onClick={() => setName(ex)}
+              className="px-3 py-1 bg-purple-100 text-purple-600 rounded-full text-sm hover:bg-purple-200"
+            >
+              {ex}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => name.length >= 2 && onSubmit(name)}
+          disabled={name.length < 2}
+          className={`w-full py-4 rounded-xl font-bold text-xl transition-all ${
+            name.length >= 2
+              ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:scale-105 shadow-lg'
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          }`}
+        >
+          Create Flashcards 🚀
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const MyNameIs = () => {
+  const [currentName, setCurrentName] = useState(null);
+
+  return (
+    <>
+      {currentName ? (
+        <Flashcards name={currentName} onBack={() => setCurrentName(null)} />
+      ) : (
+        <NameInput onSubmit={setCurrentName} />
+      )}
+    </>
+  );
+};
+
+const Flashcards = ({ name, onBack }) => {
+  const [currentCard, setCurrentCard] = useState(0);
+  const [isFlipped, setIsFlipped] = useState(false);
+
+  const cards = generateFlashcards(name);
+  const card = cards[currentCard];
+
+  const playSound = (text) => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.7;
+    utterance.pitch = 1.0;
+    speechSynthesis.speak(utterance);
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowRight') setCurrentCard((c) => Math.min(c + 1, cards.length - 1));
+      if (e.key === 'ArrowLeft') setCurrentCard((c) => Math.max(c - 1, 0));
+      if (e.key === 'Enter') setIsFlipped(f => !f);
+      if (e.key === 'Escape') onBack();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const highlightName = (name, index) => name.split('').map((l, i) => (
+    <span key={i} className={`text-4xl px-2 py-1 font-bold rounded ${i === index ? 'bg-yellow-400 text-purple-800 animate-pulse' : 'text-white/70'}`}>{l}</span>
+  ));
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-indigo-600 p-4 text-white">
+      <div className="max-w-4xl mx-auto flex flex-col h-screen">
+        <header className="flex justify-between items-center mb-6">
+          <button onClick={onBack} className="flex items-center gap-2 px-4 py-2 bg-white/20 rounded-full hover:bg-white/30"><ArrowLeft size={16} />Back</button>
+          <div className="flex items-center gap-3">
+            <Eye className="text-white opacity-60" title="Visual Mode" />
+            <Ear className="text-white opacity-60" title="Auditory Mode" />
+          </div>
+        </header>
+
+        <div className="text-center mb-4">
+          <h1 className="text-3xl font-bold">
+            <Sparkles className="inline-block mr-2" />{name}'s Flashcards
+          </h1>
+          <p className="text-white/80">Learn how to read, hear and feel your name letter-by-letter.</p>
+        </div>
+
+        <div className="flex justify-center mb-4">
+          {cards.map((_, i) => (
+            <span
+              key={i}
+              className={`w-3 h-3 rounded-full mx-1 ${i === currentCard ? 'bg-yellow-400 scale-125' : 'bg-white/30'}`}
+            />
+          ))}
+        </div>
+
+        <div className="flex-1 flex justify-center items-center">
+          <div
+            onClick={() => setIsFlipped(!isFlipped)}
+            className="relative w-full max-w-sm h-96 cursor-pointer"
+            style={{ perspective: '1000px' }}
+          >
+            <div
+              className={`absolute w-full h-full transition-transform duration-700 ${isFlipped ? 'rotate-y-180' : ''}`}
+              style={{ transformStyle: 'preserve-3d' }}
+            >
+              <div
+                className="absolute w-full h-full bg-white text-purple-800 rounded-3xl shadow-xl flex flex-col justify-center items-center p-6"
+                style={{ backfaceVisibility: 'hidden' }}
+              >
+                <div className="text-8xl font-bold mb-4">{card.letter}</div>
+                <div className="text-lg mb-6">The {card.position} letter</div>
+                <div>{highlightName(card.nameHighlight, card.highlightIndex)}</div>
+                <div className="mt-6 text-sm text-gray-500">Tap to flip</div>
+              </div>
+              <div
+                className="absolute w-full h-full bg-gradient-to-br from-purple-700 to-pink-600 text-white rounded-3xl shadow-xl flex flex-col justify-center items-center p-6 rotate-y-180"
+                style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+              >
+                <div className="text-7xl font-bold mb-4">{card.letter}</div>
+                <div className="text-2xl mb-4">Sound: {card.sound}</div>
+                <button onClick={(e) => { e.stopPropagation(); playSound(card.sound); }} className="p-3 bg-white/20 rounded-full hover:bg-white/30"><Volume2 size={24} /></button>
+                <div className="mt-4 text-center bg-white/20 p-4 rounded-xl">
+                  <div className="text-lg mb-2">Your name:</div>
+                  {highlightName(card.nameHighlight, card.highlightIndex)}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <footer className="flex justify-between items-center mt-6">
+          <button onClick={() => setCurrentCard(Math.max(currentCard - 1, 0))} disabled={currentCard === 0} className="flex items-center gap-2 px-4 py-2 rounded-full bg-white text-purple-700 disabled:opacity-30">
+            <ChevronLeft /> Prev
+          </button>
+          <button onClick={() => setCurrentCard(0)} className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 hover:bg-white/30">
+            <RotateCcw size={16} /> Start Over
+          </button>
+          <button onClick={() => setCurrentCard(Math.min(currentCard + 1, cards.length - 1))} disabled={currentCard === cards.length - 1} className="flex items-center gap-2 px-4 py-2 rounded-full bg-white text-purple-700 disabled:opacity-30">
+            Next <ChevronRight />
+          </button>
+        </footer>
+      </div>
+    </div>
+  );
+};
+
+export default MyNameIs;
