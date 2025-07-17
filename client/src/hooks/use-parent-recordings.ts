@@ -1,165 +1,94 @@
+import { useLocalStorage } from './use-local-storage';
+import type { Recording } from './use-recording';
 
-import { useState, useEffect, useCallback } from "react";
-import { Recording } from "./use-recording";
-
-interface ParentRecordings {
-  [nameKey: string]: {
-    [letterPosition: string]: Recording;
-  };
+interface StoredRecording {
+  id: string;
+  blob: string; // base64 encoded
+  timestamp: number;
+  type: string;
+  stage: string;
 }
 
 export function useParentRecordings() {
-  const [recordings, setRecordings] = useState<ParentRecordings>({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [recordings, setRecordings] = useLocalStorage<Record<string, StoredRecording>>('mynameIs_parentRecordings', {});
 
-  // Create a key for storing recordings by name
-  const getNameKey = useCallback((name: string) => {
-    return name.toLowerCase().replace(/[^a-z]/g, '');
-  }, []);
-
-  // Create a key for letter position
-  const getLetterKey = useCallback((letter: string, position: string) => {
-    return `${letter}-${position}`;
-  }, []);
-
-  // Load recordings from localStorage on mount
-  useEffect(() => {
+  const saveRecording = async (key: string, recording: Recording) => {
     try {
-      const stored = localStorage.getItem('mynameIs_parentRecordings');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        // Convert stored blob URLs back to recordings
-        const restoredRecordings: ParentRecordings = {};
-        
-        Object.entries(parsed).forEach(([nameKey, nameRecordings]) => {
-          restoredRecordings[nameKey] = {};
-          Object.entries(nameRecordings as any).forEach(([letterKey, recording]: [string, any]) => {
-            // Note: We'll need to re-record these as blob URLs don't persist
-            // This is intentional for privacy - recordings don't persist across sessions
-            if (recording && recording.id) {
-              restoredRecordings[nameKey][letterKey] = {
-                ...recording,
-                audioUrl: '', // Will need to be re-recorded
-                audioBlob: new Blob()
-              };
-            }
-          });
-        });
-        
-        setRecordings(restoredRecordings);
-      }
-    } catch (error) {
-      console.error('Error loading parent recordings:', error);
-    }
-  }, []);
+      // Convert blob to base64
+      const arrayBuffer = await recording.blob.arrayBuffer();
+      const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
 
-  // Save recordings to localStorage
-  const saveToStorage = useCallback((updatedRecordings: ParentRecordings) => {
-    try {
-      // Convert recordings for storage (excluding blob data for privacy)
-      const toStore: any = {};
-      Object.entries(updatedRecordings).forEach(([nameKey, nameRecordings]) => {
-        toStore[nameKey] = {};
-        Object.entries(nameRecordings).forEach(([letterKey, recording]) => {
-          toStore[nameKey][letterKey] = {
-            id: recording.id,
-            letter: recording.letter,
-            position: recording.position,
-            duration: recording.duration,
-            createdAt: recording.createdAt,
-            // Don't store audioBlob or audioUrl for privacy
-          };
-        });
-      });
-      
-      localStorage.setItem('mynameIs_parentRecordings', JSON.stringify(toStore));
-    } catch (error) {
-      console.error('Error saving parent recordings:', error);
-    }
-  }, []);
-
-  // Add or update a recording
-  const saveRecording = useCallback((name: string, recording: Recording) => {
-    const nameKey = getNameKey(name);
-    const letterKey = getLetterKey(recording.letter, recording.position);
-    
-    setRecordings(prev => {
-      const updated = {
-        ...prev,
-        [nameKey]: {
-          ...prev[nameKey],
-          [letterKey]: recording
-        }
+      const storedRecording: StoredRecording = {
+        id: recording.id,
+        blob: base64,
+        timestamp: recording.timestamp,
+        type: recording.type,
+        stage: recording.stage
       };
-      saveToStorage(updated);
-      return updated;
-    });
-  }, [getNameKey, getLetterKey, saveToStorage]);
 
-  // Get recording for specific letter/position in a name
-  const getRecording = useCallback((name: string, letter: string, position: string): Recording | null => {
-    const nameKey = getNameKey(name);
-    const letterKey = getLetterKey(letter, position);
-    return recordings[nameKey]?.[letterKey] || null;
-  }, [recordings, getNameKey, getLetterKey]);
+      setRecordings(prev => ({
+        ...prev,
+        [key]: storedRecording
+      }));
+    } catch (error) {
+      console.error('Error saving recording:', error);
+    }
+  };
 
-  // Get all recordings for a name
-  const getNameRecordings = useCallback((name: string): Recording[] => {
-    const nameKey = getNameKey(name);
-    const nameRecordings = recordings[nameKey] || {};
-    return Object.values(nameRecordings);
-  }, [recordings, getNameKey]);
+  const getRecording = (key: string): Recording | null => {
+    const stored = recordings[key];
+    if (!stored) return null;
 
-  // Delete a specific recording
-  const deleteRecording = useCallback((name: string, letter: string, position: string) => {
-    const nameKey = getNameKey(name);
-    const letterKey = getLetterKey(letter, position);
-    
+    try {
+      // Convert base64 back to blob
+      const binaryString = atob(stored.blob);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const blob = new Blob([bytes], { type: stored.type });
+      const url = URL.createObjectURL(blob);
+
+      return {
+        id: stored.id,
+        blob,
+        url,
+        timestamp: stored.timestamp,
+        type: stored.type,
+        stage: stored.stage
+      };
+    } catch (error) {
+      console.error('Error loading recording:', error);
+      return null;
+    }
+  };
+
+  const deleteRecording = (key: string) => {
     setRecordings(prev => {
       const updated = { ...prev };
-      if (updated[nameKey]) {
-        const { [letterKey]: deleted, ...rest } = updated[nameKey];
-        updated[nameKey] = rest;
-        
-        // Clean up the name entry if it's empty
-        if (Object.keys(updated[nameKey]).length === 0) {
-          delete updated[nameKey];
-        }
-      }
-      saveToStorage(updated);
+      delete updated[key];
       return updated;
     });
-  }, [getNameKey, getLetterKey, saveToStorage]);
+  };
 
-  // Check if we have recordings for a name
-  const hasRecordings = useCallback((name: string): boolean => {
-    const nameKey = getNameKey(name);
-    return Object.keys(recordings[nameKey] || {}).length > 0;
-  }, [recordings, getNameKey]);
+  const getNameRecordings = (name: string) => {
+    const nameKeys = Object.keys(recordings).filter(key => key.startsWith(`${name}-`));
+    return nameKeys.map(key => ({
+      key,
+      recording: getRecording(key)
+    })).filter(item => item.recording !== null);
+  };
 
-  // Get recording completion status for a name
-  const getCompletionStatus = useCallback((name: string) => {
-    const letters = name.split('');
-    const nameRecordings = getNameRecordings(name);
-    const recordedCount = nameRecordings.length;
-    const totalCount = letters.length;
-    
-    return {
-      recorded: recordedCount,
-      total: totalCount,
-      percentage: totalCount > 0 ? Math.round((recordedCount / totalCount) * 100) : 0,
-      isComplete: recordedCount === totalCount
-    };
-  }, [getNameRecordings]);
+  const hasRecordingsForName = (name: string) => {
+    return Object.keys(recordings).some(key => key.startsWith(`${name}-`));
+  };
 
   return {
-    recordings,
-    isLoading,
     saveRecording,
     getRecording,
-    getNameRecordings,
     deleteRecording,
-    hasRecordings,
-    getCompletionStatus
+    getNameRecordings,
+    hasRecordingsForName,
+    recordings
   };
 }

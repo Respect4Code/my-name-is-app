@@ -1,72 +1,76 @@
-
-import { useState, useCallback, useRef } from "react";
+import { useState, useRef, useCallback } from 'react';
 
 export interface Recording {
   id: string;
-  letter: string;
-  position: string;
-  audioBlob: Blob;
-  audioUrl: string;
-  duration: number;
-  createdAt: string;
+  blob: Blob;
+  url: string;
+  timestamp: number;
+  type: string;
+  stage: string;
 }
 
 export function useRecording() {
   const [isRecording, setIsRecording] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [currentRecording, setCurrentRecording] = useState<Recording | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
 
-  const startRecording = useCallback(async (letter: string, position: string) => {
+  const startRecording = useCallback(async (id: string, stage: string) => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          sampleRate: 44100
+          autoGainControl: true
         } 
       });
-      
+
+      streamRef.current = stream;
+
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: 'audio/webm;codecs=opus'
       });
-      
-      chunksRef.current = [];
-      
+
+      const chunks: BlobPart[] = [];
+
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
-          chunksRef.current.push(event.data);
+          chunks.push(event.data);
         }
       };
-      
+
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm;codecs=opus' });
-        const audioUrl = URL.createObjectURL(audioBlob);
-        
+        const blob = new Blob(chunks, { type: 'audio/webm;codecs=opus' });
+        const url = URL.createObjectURL(blob);
+
         const recording: Recording = {
-          id: `${letter}-${position}-${Date.now()}`,
-          letter,
-          position,
-          audioBlob,
-          audioUrl,
-          duration: 0, // Will be calculated when played
-          createdAt: new Date().toISOString()
+          id,
+          blob,
+          url,
+          timestamp: Date.now(),
+          type: 'audio/webm',
+          stage
         };
-        
+
         setCurrentRecording(recording);
-        
-        // Stop all tracks to release microphone
-        stream.getTracks().forEach(track => track.stop());
+
+        // Clean up stream
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => track.stop());
+          streamRef.current = null;
+        }
       };
-      
+
       mediaRecorderRef.current = mediaRecorder;
       mediaRecorder.start();
       setIsRecording(true);
+
     } catch (error) {
       console.error('Error starting recording:', error);
-      throw new Error('Could not access microphone. Please check permissions.');
+      throw new Error('Failed to start recording. Please check microphone permissions.');
     }
   }, []);
 
@@ -83,16 +87,12 @@ export function useRecording() {
       audioRef.current = null;
     }
 
-    const audio = new Audio(recording.audioUrl);
+    const audio = new Audio(recording.url);
     audioRef.current = audio;
 
-    audio.onloadedmetadata = () => {
-      recording.duration = audio.duration;
-    };
-
     audio.onplay = () => setIsPlaying(true);
-    audio.onpause = () => setIsPlaying(false);
     audio.onended = () => setIsPlaying(false);
+    audio.onerror = () => setIsPlaying(false);
 
     audio.play().catch(error => {
       console.error('Error playing recording:', error);
@@ -100,35 +100,20 @@ export function useRecording() {
     });
   }, []);
 
-  const stopPlaying = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      setIsPlaying(false);
+  const clearRecording = useCallback(() => {
+    if (currentRecording) {
+      URL.revokeObjectURL(currentRecording.url);
+      setCurrentRecording(null);
     }
-  }, []);
-
-  const deleteRecording = useCallback((recording: Recording) => {
-    if (recording.audioUrl) {
-      URL.revokeObjectURL(recording.audioUrl);
-    }
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
-    setCurrentRecording(null);
-    setIsPlaying(false);
-  }, []);
+  }, [currentRecording]);
 
   return {
     isRecording,
-    isPlaying,
     currentRecording,
+    isPlaying,
     startRecording,
     stopRecording,
     playRecording,
-    stopPlaying,
-    deleteRecording,
-    setCurrentRecording
+    clearRecording
   };
 }
