@@ -14,7 +14,7 @@ interface RecordingModalProps {
   onSave: (recording: Recording) => void;
 }
 
-type RecordingStage = 'full-name' | 'phonetic' | 'singing';
+type RecordingStage = 'full-name' | 'phonetic' | 'singing' | 'sentence';
 
 const stageConfig = {
   'full-name': {
@@ -49,6 +49,17 @@ const stageConfig = {
       '• 3-5 seconds is perfect'
     ],
     buttonColor: 'bg-green-500 hover:bg-green-600'
+  },
+  'sentence': {
+    title: 'Say Your Child\'s Name in a Sentence',
+    description: 'Use your child\'s name naturally in an everyday sentence',
+    instructions: [
+      '• Say something like "Come here [name]" or "[name], it\'s time for lunch"',
+      '• Use your natural tone and rhythm',
+      '• This captures how your child actually hears their name',
+      '• 3-5 seconds is perfect'
+    ],
+    buttonColor: 'bg-orange-500 hover:bg-orange-600'
   }
 };
 
@@ -75,7 +86,7 @@ export default function RecordingModal({
   const [currentStage, setCurrentStage] = useState<RecordingStage>('full-name');
   const [stageRecordings, setStageRecordings] = useState<Partial<Record<RecordingStage, Recording>>>({});
 
-  const stages: RecordingStage[] = ['full-name', 'phonetic', 'singing'];
+  const stages: RecordingStage[] = ['full-name', 'phonetic', 'singing', 'sentence'];
   const currentStageIndex = stages.indexOf(currentStage);
   const config = stageConfig[currentStage];
 
