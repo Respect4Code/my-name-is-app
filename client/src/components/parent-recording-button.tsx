@@ -6,16 +6,19 @@ import RecordingModal from "./recording-modal";
 import { PhonicsData } from "@/lib/phonics";
 import { useParentRecordings } from "@/hooks/use-parent-recordings";
 import { Recording } from "@/hooks/use-recording";
+import type { Settings } from "@/pages/home";
 
 interface ParentRecordingButtonProps {
   name: string;
   phonicsData: PhonicsData;
+  settings: Settings;
   className?: string;
 }
 
 export default function ParentRecordingButton({ 
   name, 
   phonicsData, 
+  settings,
   className = "" 
 }: ParentRecordingButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -52,9 +55,9 @@ export default function ParentRecordingButton({
       <RecordingModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        phonicsData={phonicsData}
-        existingRecording={existingRecording || undefined}
-        onSave={handleSave}
+        phonics={phonicsData}
+        name={name}
+        settings={settings}
       />
     </>
   );

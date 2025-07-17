@@ -59,6 +59,7 @@ export default function Flashcard({ phonics, isFlipped, onFlip, onPlaySound, isP
             <ParentRecordingButton 
               name={name}
               phonicsData={phonics}
+              settings={settings}
               className="w-full"
             />
           </div>
