@@ -50,7 +50,7 @@ export default function Home() {
     const cleanName = name.trim().toUpperCase();
     if (cleanName && cleanName.length >= 2 && cleanName.length <= 12) {
       setCurrentName(cleanName);
-      setCurrentScreen('child-interaction');
+      setCurrentScreen('flashcards');
 
       // Add to recent names
       const updatedRecent = [cleanName, ...recentNames.filter(n => n !== cleanName)].slice(0, 5);
@@ -61,6 +61,10 @@ export default function Home() {
   const handleGoBack = () => {
     setCurrentScreen('welcome');
     setCurrentName('');
+  };
+
+  const handleStartChildInteraction = () => {
+    setCurrentScreen('child-interaction');
   };
 
   const handleChildInteractionComplete = () => {
@@ -103,6 +107,7 @@ export default function Home() {
           name={currentName}
           onGoBack={handleGoBack}
           onOpenSettings={handleOpenSettings}
+          onStartChildInteraction={handleStartChildInteraction}
           settings={settings}
         />
       )}

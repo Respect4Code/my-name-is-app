@@ -12,10 +12,17 @@ interface FlashcardsScreenProps {
   name: string;
   onGoBack: () => void;
   onOpenSettings: () => void;
+  onStartChildInteraction: () => void;
   settings: SettingsType;
 }
 
-export default function FlashcardsScreen({ name, onGoBack, onOpenSettings, settings }: FlashcardsScreenProps) {
+export default function FlashcardsScreen({ 
+  name, 
+  onGoBack, 
+  onOpenSettings, 
+  onStartChildInteraction,
+  settings 
+}: FlashcardsScreenProps) {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
 
@@ -128,14 +135,26 @@ export default function FlashcardsScreen({ name, onGoBack, onOpenSettings, setti
           </p>
         </div>
 
-        <Button
-          variant="ghost"
-          onClick={onOpenSettings}
-          className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-200"
-          aria-label="Open settings"
-        >
-          <SettingsIcon className="w-5 h-5" />
-        </Button>
+        <div className="flex space-x-2">
+            <Button
+              onClick={onStartChildInteraction}
+              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl font-medium"
+              aria-label="Start child interaction"
+            >
+              <span className="mr-2">👦</span>
+              Child Mode
+            </Button>
+
+            <Button
+              variant="ghost"
+              onClick={onOpenSettings}
+              className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-4 py-2 rounded-xl font-medium focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-200"
+              aria-label="Open settings"
+            >
+              <SettingsIcon className="w-5 h-5" />
+              Settings
+            </Button>
+          </div>
       </header>
 
       {/* Main Flashcard Area */}
