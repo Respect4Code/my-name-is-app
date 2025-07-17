@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -16,7 +15,7 @@ interface RecordingModalProps {
   onClose: () => void;
   phonics: PhonicsData;
   name: string;
-  settings: Settings;
+  settings?: Settings;
 }
 
 const stageConfig = {
@@ -71,7 +70,7 @@ export default function RecordingModal({
   onClose, 
   phonics, 
   name, 
-  settings 
+  settings = { speechRate: 0.8, speechMode: true, visualMode: false, animations: true, highContrast: false, deafMode: false }
 }: RecordingModalProps) {
   const [currentStage, setCurrentStage] = useState<RecordingStage>('full-name');
   const [stageRecordings, setStageRecordings] = useState<Partial<Record<RecordingStage, Recording>>>({});
@@ -104,7 +103,7 @@ export default function RecordingModal({
         const key = stage === 'phonetic' 
           ? `${name}-${phonics.letter}-${phonics.position}-${stage}`
           : `${name}-${stage}`;
-        
+
         const recording = getRecording(key);
         if (recording) {
           recordings[stage] = recording;
@@ -122,7 +121,7 @@ export default function RecordingModal({
       const recordingKey = currentStage === 'phonetic' 
         ? `${name}-${phonics.letter}-${phonics.position}-${currentStage}`
         : `${name}-${currentStage}`;
-      
+
       await startRecording(recordingKey, currentStage);
     } catch (error) {
       console.error('Recording failed:', error);
@@ -150,10 +149,10 @@ export default function RecordingModal({
       const recordingKey = currentStage === 'phonetic' 
         ? `${name}-${phonics.letter}-${phonics.position}-${currentStage}`
         : `${name}-${currentStage}`;
-      
+
       saveRecording(recordingKey, currentStageRecording);
       setCompletedStages(prev => new Set([...prev, currentStage]));
-      
+
       // Auto-advance to next stage if not on last stage
       const stages: RecordingStage[] = ['full-name', 'phonetic', 'singing', 'sentence'];
       const currentIndex = stages.indexOf(currentStage);
@@ -284,7 +283,7 @@ export default function RecordingModal({
                     <Play className="w-4 h-4" />
                     <span>{isPlayingRecording ? 'Playing...' : 'Play'}</span>
                   </Button>
-                  
+
                   <Button
                     onClick={handleDiscardRecording}
                     variant="outline"
@@ -326,7 +325,7 @@ export default function RecordingModal({
                 </Button>
               ))}
             </div>
-            
+
             <div className="flex space-x-2">
               <Button variant="ghost" onClick={handleSkipStage}>
                 Skip Stage

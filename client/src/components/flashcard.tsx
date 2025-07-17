@@ -29,7 +29,8 @@ export default function Flashcard({ phonics, isFlipped, onFlip, onPlaySound, isP
       }}
       tabIndex={0}
       role="button"
-      aria-label={`Flashcard for letter ${phonics.letter} - click to flip`}
+      aria-label={`Flashcard for letter ${phonics.letter} - ${isFlipped ? 'showing back' : 'showing front'} - press Enter to flip`}
+      aria-pressed={isFlipped}
     >
       <div className={`flip-card-inner ${isFlipped ? 'flipped' : ''}`}>
         {/* Front of Card */}
@@ -55,7 +56,7 @@ export default function Flashcard({ phonics, isFlipped, onFlip, onPlaySound, isP
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728"></path>
               </svg>
             </div>
-            
+
             <ParentRecordingButton 
               name={name}
               phonicsData={phonics}
