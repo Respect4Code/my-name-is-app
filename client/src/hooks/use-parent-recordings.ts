@@ -83,12 +83,20 @@ export function useParentRecordings() {
     return Object.keys(recordings).some(key => key.startsWith(`${name}-`));
   };
 
+  const getCompletionStatus = (name: string) => {
+    const nameKeys = Object.keys(recordings).filter(key => key.startsWith(`${name}-`));
+    const recorded = nameKeys.length;
+    const total = 4; // full-name, phonetic, singing, sentence
+    return { recorded, total, percentage: total > 0 ? (recorded / total) * 100 : 0 };
+  };
+
   return {
     saveRecording,
     getRecording,
     deleteRecording,
     getNameRecordings,
     hasRecordingsForName,
+    getCompletionStatus,
     recordings
   };
 }
