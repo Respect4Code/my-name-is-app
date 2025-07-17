@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import WelcomeScreen from "@/components/welcome-screen";
 import FlashcardsScreen from "@/components/flashcards-screen";
+import ChildInteractionScreen from "@/components/child-interaction-screen";
 import SettingsModal from "@/components/settings-modal";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 
@@ -23,7 +24,7 @@ const defaultSettings: Settings = {
 };
 
 export default function Home() {
-  const [currentScreen, setCurrentScreen] = useState<'welcome' | 'recording' | 'flashcards'>('welcome');
+  const [currentScreen, setCurrentScreen] = useState<'welcome' | 'recording' | 'flashcards' | 'child-interaction'>('welcome');
   const [currentName, setCurrentName] = useState<string>('');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [settings, setSettings] = useLocalStorage<Settings>('mynameIs_settings', defaultSettings);
@@ -49,7 +50,7 @@ export default function Home() {
     const cleanName = name.trim().toUpperCase();
     if (cleanName && cleanName.length >= 2 && cleanName.length <= 12) {
       setCurrentName(cleanName);
-      setCurrentScreen('flashcards');
+      setCurrentScreen('child-interaction');
 
       // Add to recent names
       const updatedRecent = [cleanName, ...recentNames.filter(n => n !== cleanName)].slice(0, 5);
@@ -60,6 +61,10 @@ export default function Home() {
   const handleGoBack = () => {
     setCurrentScreen('welcome');
     setCurrentName('');
+  };
+
+  const handleChildInteractionComplete = () => {
+    setCurrentScreen('flashcards');
   };
 
   const handleOpenSettings = () => {
@@ -81,6 +86,15 @@ export default function Home() {
           onCreateFlashcards={handleCreateFlashcards}
           onOpenSettings={handleOpenSettings}
           recentNames={recentNames}
+        />
+      )}
+
+      {currentScreen === 'child-interaction' && (
+        <ChildInteractionScreen
+          name={currentName}
+          onComplete={handleChildInteractionComplete}
+          onGoBack={handleGoBack}
+          settings={settings}
         />
       )}
 
