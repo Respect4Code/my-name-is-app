@@ -2,6 +2,9 @@ import { useState, useCallback } from "react";
 
 export function useSpeech(rate: number = 0.8) {
   const [isPlaying, setIsPlaying] = useState(false);
+  
+  // Ensure rate is a valid number
+  const speechRate = typeof rate === 'number' && !isNaN(rate) ? rate : 0.8;
 
   const speak = useCallback((text: string) => {
     if ('speechSynthesis' in window) {
@@ -9,7 +12,7 @@ export function useSpeech(rate: number = 0.8) {
       speechSynthesis.cancel();
       
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = rate;
+      utterance.rate = speechRate;
       utterance.pitch = 1;
       utterance.volume = 1;
       
@@ -19,7 +22,7 @@ export function useSpeech(rate: number = 0.8) {
       
       speechSynthesis.speak(utterance);
     }
-  }, [rate]);
+  }, [speechRate]);
 
   const stop = useCallback(() => {
     if ('speechSynthesis' in window) {
