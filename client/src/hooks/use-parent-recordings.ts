@@ -12,7 +12,7 @@ interface StoredRecording {
 export function useParentRecordings() {
   const [recordings, setRecordings] = useLocalStorage<Record<string, StoredRecording>>('mynameIs_parentRecordings', {});
 
-  const saveRecording = async (key: string, recording: Recording) => {
+  const saveRecording = async (name: string, recording: Recording) => {
     try {
       // Check if browser APIs are available
       if (typeof window === 'undefined' || !window.btoa || !recording.blob?.arrayBuffer) {
@@ -32,6 +32,8 @@ export function useParentRecordings() {
         stage: recording.stage
       };
 
+      const key = `${name}-${recording.id}`;
+      console.log('🎵 Saving recording with key:', key);
       setRecordings(prev => ({
         ...prev,
         [key]: storedRecording
@@ -41,7 +43,9 @@ export function useParentRecordings() {
     }
   };
 
-  const getRecording = (key: string): Recording | null => {
+  const getRecording = (name: string, letter: string, position: string): Recording | null => {
+    const key = `${name}-${letter}-${position}`;
+    console.log('🎵 Getting recording with key:', key, 'Available keys:', Object.keys(recordings));
     const stored = recordings[key];
     if (!stored) return null;
 

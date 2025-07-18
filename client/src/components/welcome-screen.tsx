@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Settings, Mic } from "lucide-react";
 import { useParentRecordings } from "@/hooks/use-parent-recordings";
+import TestRecording from "./test-recording";
 
 interface WelcomeScreenProps {
   onCreateFlashcards: (name: string) => void;
@@ -146,6 +147,12 @@ export default function WelcomeScreen({ onCreateFlashcards, onOpenSettings, rece
           <Settings className="w-5 h-5" />
           <span className="text-sm">Accessibility Settings</span>
         </Button>
+        
+        {/* Test Recording Component for debugging */}
+        <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+          <h3 className="text-lg font-semibold mb-2">Test Recording (Debug Mode)</h3>
+          <TestRecording />
+        </div>
       </div>
     </div>
   );

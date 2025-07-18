@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Parent Recording Functionality</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        button { margin: 5px; padding: 10px 15px; }
+        .status { margin: 10px 0; padding: 10px; background: #f0f0f0; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <h1>Test Parent Recording Functionality</h1>
+    
+    <div class="test-section">
+        <h2>Step 1: Test Recording Permission</h2>
+        <button onclick="testMicrophoneAccess()">Test Microphone Access</button>
+        <div id="mic-status" class="status"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Step 2: Test Recording</h2>
+        <button onclick="startRecording()">Start Recording</button>
+        <button onclick="stopRecording()">Stop Recording</button>
+        <div id="recording-status" class="status"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Step 3: Test Playback</h2>
+        <button onclick="playRecording()">Play Recording</button>
+        <div id="playback-status" class="status"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Step 4: Test Storage</h2>
+        <button onclick="testStorage()">Test LocalStorage</button>
+        <div id="storage-status" class="status"></div>
+    </div>
+
+    <script>
+        let mediaRecorder;
+        let recordedChunks = [];
+        let recordedBlob;
+        let recordedUrl;
+
+        async function testMicrophoneAccess() {
+            const status = document.getElementById('mic-status');
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                status.className = 'status success';
+                status.textContent = '✓ Microphone access granted';
+                stream.getTracks().forEach(track => track.stop());
+            } catch (error) {
+                status.className = 'status error';
+                status.textContent = '✗ Microphone access denied: ' + error.message;
+            }
+        }
+
+        async function startRecording() {
+            const status = document.getElementById('recording-status');
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: 'audio/webm;codecs=opus'
+                });
+                
+                recordedChunks = [];
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = () => {
+                    recordedBlob = new Blob(recordedChunks, { type: 'audio/webm;codecs=opus' });
+                    recordedUrl = URL.createObjectURL(recordedBlob);
+                    status.className = 'status success';
+                    status.textContent = '✓ Recording saved. Size: ' + recordedBlob.size + ' bytes';
+                    stream.getTracks().forEach(track => track.stop());
+                };
+
+                mediaRecorder.start();
+                status.className = 'status';
+                status.textContent = '🎤 Recording... (speak now)';
+            } catch (error) {
+                status.className = 'status error';
+                status.textContent = '✗ Recording failed: ' + error.message;
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+            }
+        }
+
+        function playRecording() {
+            const status = document.getElementById('playback-status');
+            if (!recordedUrl) {
+                status.className = 'status error';
+                status.textContent = '✗ No recording to play. Record something first.';
+                return;
+            }
+
+            const audio = new Audio(recordedUrl);
+            audio.onplay = () => {
+                status.className = 'status';
+                status.textContent = '🔊 Playing recording...';
+            };
+            audio.onended = () => {
+                status.className = 'status success';
+                status.textContent = '✓ Playback completed';
+            };
+            audio.onerror = () => {
+                status.className = 'status error';
+                status.textContent = '✗ Playback failed';
+            };
+            audio.play();
+        }
+
+        function testStorage() {
+            const status = document.getElementById('storage-status');
+            try {
+                // Test localStorage
+                localStorage.setItem('test-recording', 'test-value');
+                const retrieved = localStorage.getItem('test-recording');
+                localStorage.removeItem('test-recording');
+                
+                if (retrieved === 'test-value') {
+                    status.className = 'status success';
+                    status.textContent = '✓ LocalStorage working correctly';
+                } else {
+                    status.className = 'status error';
+                    status.textContent = '✗ LocalStorage not working';
+                }
+            } catch (error) {
+                status.className = 'status error';
+                status.textContent = '✗ LocalStorage error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
