@@ -36,6 +36,9 @@ class ErrorBoundary extends React.Component<
 
   static getDerivedStateFromError(error: Error) {
     console.error('React Error Boundary caught error:', error);
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
     return { hasError: true };
   }
 
@@ -57,7 +60,11 @@ class ErrorBoundary extends React.Component<
             <p className="mb-4">Please refresh the page to try again.</p>
             <details className="mb-4 text-left bg-white/10 p-4 rounded text-sm">
               <summary className="cursor-pointer font-semibold">Technical Details</summary>
-              <p className="mt-2">Check the browser console (F12) for error details.</p>
+              <div className="mt-2 text-xs font-mono">
+                <p>Check the browser console (F12) for full error details.</p>
+                <p className="mt-1">Open DevTools → Console tab</p>
+                <p className="mt-1">Look for red error messages</p>
+              </div>
             </details>
             <button
               onClick={() => window.location.reload()}
