@@ -47,9 +47,13 @@ class ErrorBoundary extends React.Component<
     if (this.state.hasError) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 to-blue-600 text-white">
-          <div className="text-center p-8">
+          <div className="text-center p-8 max-w-md">
             <h1 className="text-2xl font-bold mb-4">Oops! Something went wrong</h1>
             <p className="mb-4">Please refresh the page to try again.</p>
+            <details className="mb-4 text-left bg-white/10 p-4 rounded text-sm">
+              <summary className="cursor-pointer font-semibold">Technical Details</summary>
+              <p className="mt-2">Check the browser console (F12) for error details.</p>
+            </details>
             <button
               onClick={() => window.location.reload()}
               className="px-4 py-2 bg-white text-purple-600 rounded-lg hover:bg-gray-100 transition-colors"
