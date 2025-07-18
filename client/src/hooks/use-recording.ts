@@ -1,12 +1,23 @@
 import { useState, useRef, useCallback } from 'react';
 
+export interface Recording {
+  id: string;
+  blob: Blob;
+  url: string;
+  timestamp: number;
+  type: string;
+  stage: string;
+}
+
 export function useRecording() {
   const [isRecording, setIsRecording] = useState(false);
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [currentRecording, setCurrentRecording] = useState<Recording | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const startRecording = useCallback(async () => {
+  const startRecording = useCallback(async (id: string, stage: string) => {
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error('Media recording not supported');
@@ -28,7 +39,16 @@ export function useRecording() {
 
       recorder.onstop = () => {
         const blob = new Blob(chunks, { type: 'audio/webm;codecs=opus' });
-        setAudioBlob(blob);
+        const url = URL.createObjectURL(blob);
+        const recording: Recording = {
+          id,
+          blob,
+          url,
+          timestamp: Date.now(),
+          type: 'audio/webm;codecs=opus',
+          stage
+        };
+        setCurrentRecording(recording);
         stream.getTracks().forEach(track => track.stop());
       };
 
@@ -56,17 +76,46 @@ export function useRecording() {
     }
   }, [isRecording]);
 
+  const playRecording = useCallback((recording: Recording) => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+
+    const audio = new Audio(recording.url);
+    audioRef.current = audio;
+
+    audio.onplay = () => setIsPlaying(true);
+    audio.onended = () => setIsPlaying(false);
+    audio.onerror = () => {
+      setIsPlaying(false);
+      setError('Failed to play recording');
+    };
+
+    audio.play().catch(() => {
+      setIsPlaying(false);
+      setError('Failed to play recording');
+    });
+  }, []);
+
   const clearRecording = useCallback(() => {
-    setAudioBlob(null);
+    setCurrentRecording(null);
     setError(null);
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    setIsPlaying(false);
   }, []);
 
   return {
     isRecording,
-    audioBlob,
+    currentRecording,
+    isPlaying,
     error,
     startRecording,
     stopRecording,
+    playRecording,
     clearRecording,
   };
 }
