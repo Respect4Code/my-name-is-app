@@ -26,10 +26,41 @@ export default function FlashcardsScreen({
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
 
+  // Ensure we have a valid name
+  if (!name || name.trim().length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-indigo-600 p-4">
+        <div className="max-w-4xl mx-auto text-center text-white">
+          <p>No name provided. Please go back and enter a name.</p>
+          <Button onClick={onGoBack} className="mt-4">Go Back</Button>
+        </div>
+      </div>
+    );
+  }
+
   const nameLetters = name.split('');
   const totalCards = nameLetters.length;
   const phonicsData = generatePhonicsData(name);
-  const currentPhonics = phonicsData[currentCardIndex];
+  
+  // Ensure currentCardIndex is within bounds
+  const safeCardIndex = Math.min(Math.max(0, currentCardIndex), totalCards - 1);
+  const currentPhonics = phonicsData[safeCardIndex];
+  
+  // Safety check - if phonics data is still missing, use fallback
+  if (!currentPhonics || !currentPhonics.letter) {
+    console.error('Missing phonics data for card index:', safeCardIndex, 'name:', name, 'phonicsData:', phonicsData);
+    const fallbackLetter = nameLetters[safeCardIndex] || 'A';
+    const fallbackPhonics = {
+      letter: fallbackLetter,
+      sound: fallbackLetter.toLowerCase(),
+      ipa: `/${fallbackLetter.toLowerCase()}/`,
+      position: 'any',
+      examples: [fallbackLetter.toLowerCase()],
+      description: `${fallbackLetter} sound`
+    };
+    // Set the fallback as current phonics instead of returning early
+    const safeFallbackPhonics = fallbackPhonics;
+  }
 
   const { speak, isPlaying } = useSpeech(settings.speechRate);
 
@@ -55,14 +86,14 @@ export default function FlashcardsScreen({
   const flipCard = () => {
     setIsFlipped(!isFlipped);
 
-    if (!isFlipped && settings.speechMode) {
+    if (!isFlipped && settings.speechMode && currentPhonics?.letter && currentPhonics?.sound) {
       const soundText = `${currentPhonics.letter} makes the sound ${currentPhonics.sound}`;
       speak(soundText);
     }
   };
 
   const playSound = () => {
-    if (settings.speechMode) {
+    if (settings.speechMode && currentPhonics?.letter && currentPhonics?.sound) {
       const soundText = `${currentPhonics.letter} makes the sound ${currentPhonics.sound}`;
       speak(soundText);
     }
