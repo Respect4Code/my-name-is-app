@@ -46,11 +46,12 @@ export default function FlashcardsScreen({
   const safeCardIndex = Math.min(Math.max(0, currentCardIndex), totalCards - 1);
   const currentPhonics = phonicsData[safeCardIndex];
   
-  // Safety check - if phonics data is still missing, use fallback
-  if (!currentPhonics || !currentPhonics.letter) {
+  // Create safe phonics data with fallback
+  let safeCurrentPhonics = currentPhonics;
+  if (!safeCurrentPhonics || !safeCurrentPhonics.letter) {
     console.error('Missing phonics data for card index:', safeCardIndex, 'name:', name, 'phonicsData:', phonicsData);
     const fallbackLetter = nameLetters[safeCardIndex] || 'A';
-    const fallbackPhonics = {
+    safeCurrentPhonics = {
       letter: fallbackLetter,
       sound: fallbackLetter.toLowerCase(),
       ipa: `/${fallbackLetter.toLowerCase()}/`,
@@ -58,8 +59,6 @@ export default function FlashcardsScreen({
       examples: [fallbackLetter.toLowerCase()],
       description: `${fallbackLetter} sound`
     };
-    // Set the fallback as current phonics instead of returning early
-    const safeFallbackPhonics = fallbackPhonics;
   }
 
   const { speak, isPlaying } = useSpeech(settings.speechRate);
@@ -86,15 +85,15 @@ export default function FlashcardsScreen({
   const flipCard = () => {
     setIsFlipped(!isFlipped);
 
-    if (!isFlipped && settings.speechMode && currentPhonics?.letter && currentPhonics?.sound) {
-      const soundText = `${currentPhonics.letter} makes the sound ${currentPhonics.sound}`;
+    if (!isFlipped && settings.speechMode && safeCurrentPhonics?.letter && safeCurrentPhonics?.sound) {
+      const soundText = `${safeCurrentPhonics.letter} makes the sound ${safeCurrentPhonics.sound}`;
       speak(soundText);
     }
   };
 
   const playSound = () => {
-    if (settings.speechMode && currentPhonics?.letter && currentPhonics?.sound) {
-      const soundText = `${currentPhonics.letter} makes the sound ${currentPhonics.sound}`;
+    if (settings.speechMode && safeCurrentPhonics?.letter && safeCurrentPhonics?.sound) {
+      const soundText = `${safeCurrentPhonics.letter} makes the sound ${safeCurrentPhonics.sound}`;
       speak(soundText);
     }
   };
@@ -144,7 +143,7 @@ export default function FlashcardsScreen({
     <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-indigo-600 p-4" {...swipeHandlers}>
       {/* Live region for screen readers */}
       <div id="live-region" className="sr-only" aria-live="polite" aria-atomic="true">
-        Card {currentCardIndex + 1} of {totalCards}. Letter {currentPhonics.letter} in position {currentPhonics.position} of {name}.
+        Card {currentCardIndex + 1} of {totalCards}. Letter {safeCurrentPhonics.letter} in position {safeCurrentPhonics.position} of {name}.
       </div>
 
       {/* Header with Navigation */}
@@ -212,7 +211,7 @@ export default function FlashcardsScreen({
         {/* Flashcard Container */}
         <div className="perspective-1000 mb-8">
           <Flashcard 
-          phonics={currentPhonics}
+          phonics={safeCurrentPhonics}
           name={name}
           isFlipped={isFlipped}
           onFlip={flipCard}
