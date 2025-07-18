@@ -1,0 +1,468 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { ChevronLeft, ChevronRight, Mic, Play, StopCircle, Settings, Eye, Volume2 } from 'lucide-react';
+
+// === Core App Component ===
+export default function MyNameIsApp() {
+  const [currentScreen, setCurrentScreen] = useState('welcome'); // 'welcome', 'flashcards'
+  const [childName, setChildName] = useState('');
+  const [settings, setSettings] = useState({
+    deafMode: false,
+    mouthShapeMode: false,
+    speechRate: 0.7
+  });
+
+  // Load saved name on mount
+  useEffect(() => {
+    const savedName = localStorage.getItem('myNameIs_childName');
+    if (savedName) {
+      setChildName(savedName);
+      setCurrentScreen('flashcards');
+    }
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-indigo-600">
+      {currentScreen === 'welcome' && (
+        <WelcomeScreen 
+          onNameSubmit={(name) => {
+            setChildName(name);
+            localStorage.setItem('myNameIs_childName', name);
+            setCurrentScreen('flashcards');
+          }}
+        />
+      )}
+      
+      {currentScreen === 'flashcards' && (
+        <FlashcardScreen 
+          name={childName}
+          settings={settings}
+          onSettingsChange={setSettings}
+          onBack={() => {
+            setCurrentScreen('welcome');
+            localStorage.removeItem('myNameIs_childName');
+          }}
+        />
+      )}
+      
+      {/* Attribution Footer */}
+      <footer className="fixed bottom-0 w-full text-center text-xs text-white/60 py-2">
+        Built with ❤️ for every child to learn their name
+      </footer>
+    </div>
+  );
+}
+
+// === Welcome Screen ===
+function WelcomeScreen({ onNameSubmit }) {
+  const [name, setName] = useState('');
+  const examples = ['SOPHIE', 'JAMES', 'AISHA', 'MATEO', 'ZARA'];
+  
+  return (
+    <div className="flex items-center justify-center min-h-screen p-4">
+      <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl text-center">
+        <h1 className="text-4xl font-bold text-gray-800 mb-2">My Name Is</h1>
+        <p className="text-gray-600 mb-8">
+          A personalized phonics app for learning your child's name
+        </p>
+        
+        <div className="space-y-4">
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value.replace(/[^a-zA-Z]/g, ''))}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && name.length >= 2) {
+                onNameSubmit(name.toUpperCase());
+              }
+            }}
+            placeholder="Enter your child's name"
+            className="w-full p-4 text-2xl text-center border-2 border-purple-200 rounded-xl focus:outline-none focus:border-purple-500"
+            maxLength={12}
+            autoFocus
+          />
+          
+          <div className="text-sm text-gray-500">
+            Try an example:
+            <div className="flex flex-wrap justify-center gap-2 mt-2">
+              {examples.map(ex => (
+                <button
+                  key={ex}
+                  onClick={() => setName(ex)}
+                  className="px-3 py-1 bg-purple-100 text-purple-600 rounded-full hover:bg-purple-200 transition-colors"
+                >
+                  {ex}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          <button
+            onClick={() => {
+              if (name.length >= 2) {
+                onNameSubmit(name.toUpperCase());
+              }
+            }}
+            disabled={name.length < 2}
+            className={`w-full py-4 rounded-xl font-bold text-xl transition-all ${
+              name.length >= 2
+                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:scale-105 shadow-lg'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
+          >
+            Create Flashcards
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// === Flashcard Screen ===
+function FlashcardScreen({ name, settings, onSettingsChange, onBack }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [recordings, setRecordings] = useState({});
+  
+  // Generate cards from the name
+  const cards = name.split('').map((letter, index) => ({
+    letter,
+    position: index,
+    id: `${name}-${index}`
+  }));
+  
+  const currentCard = cards[currentIndex];
+  
+  // Load recordings from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem(`recordings_${name}`);
+    if (saved) {
+      setRecordings(JSON.parse(saved));
+    }
+  }, [name]);
+  
+  // Navigation
+  const goNext = () => {
+    if (currentIndex < cards.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+      setIsFlipped(false);
+    }
+  };
+  
+  const goPrev = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+      setIsFlipped(false);
+    }
+  };
+  
+  // Play sound
+  const playSound = () => {
+    const recordingKey = `${name}-${currentIndex}`;
+    
+    if (recordings[recordingKey]) {
+      // Play parent recording
+      const audio = new Audio(recordings[recordingKey]);
+      audio.play();
+    } else {
+      // Fallback to speech synthesis
+      const utterance = new SpeechSynthesisUtterance(currentCard.letter.toLowerCase());
+      utterance.rate = settings.speechRate;
+      speechSynthesis.speak(utterance);
+    }
+  };
+  
+  return (
+    <div className="min-h-screen p-4">
+      {/* Header */}
+      <header className="max-w-4xl mx-auto flex justify-between items-center mb-6">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors"
+        >
+          <ChevronLeft size={16} /> Change Name
+        </button>
+        
+        <button
+          onClick={() => setShowSettings(true)}
+          className="p-2 rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors"
+        >
+          <Settings size={20} />
+        </button>
+      </header>
+      
+      {/* Title */}
+      <div className="text-center mb-8">
+        <h2 className="text-3xl font-bold text-white mb-2">Learning: {name}</h2>
+        <div className="flex justify-center gap-1">
+          {cards.map((_, i) => (
+            <div
+              key={i}
+              className={`w-2 h-2 rounded-full transition-all ${
+                i === currentIndex ? 'bg-yellow-400 w-8' : 'bg-white/30'
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Flashcard */}
+      <div className="max-w-md mx-auto">
+        <Flashcard
+          card={currentCard}
+          name={name}
+          isFlipped={isFlipped}
+          onFlip={() => setIsFlipped(!isFlipped)}
+          onPlaySound={playSound}
+          recording={recordings[`${name}-${currentIndex}`]}
+          onRecord={(audioBlob) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              const newRecordings = {
+                ...recordings,
+                [`${name}-${currentIndex}`]: reader.result
+              };
+              setRecordings(newRecordings);
+              localStorage.setItem(`recordings_${name}`, JSON.stringify(newRecordings));
+            };
+            reader.readAsDataURL(audioBlob);
+          }}
+          settings={settings}
+        />
+      </div>
+      
+      {/* Navigation */}
+      <div className="max-w-md mx-auto flex justify-between items-center mt-8">
+        <button
+          onClick={goPrev}
+          disabled={currentIndex === 0}
+          className="flex items-center gap-2 px-6 py-3 rounded-full bg-white text-purple-600 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 transition-all"
+        >
+          <ChevronLeft size={20} /> Previous
+        </button>
+        
+        <span className="text-white font-medium">
+          {currentIndex + 1} of {cards.length}
+        </span>
+        
+        <button
+          onClick={goNext}
+          disabled={currentIndex === cards.length - 1}
+          className="flex items-center gap-2 px-6 py-3 rounded-full bg-white text-purple-600 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 transition-all"
+        >
+          Next <ChevronRight size={20} />
+        </button>
+      </div>
+      
+      {/* Settings Modal */}
+      {showSettings && (
+        <SettingsModal
+          settings={settings}
+          onSettingsChange={onSettingsChange}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+// === Flashcard Component ===
+function Flashcard({ card, name, isFlipped, onFlip, onPlaySound, recording, onRecord, settings }) {
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef(null);
+  const chunksRef = useRef([]);
+  
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      chunksRef.current = [];
+      
+      mediaRecorder.ondataavailable = (e) => {
+        chunksRef.current.push(e.data);
+      };
+      
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        onRecord(blob);
+        stream.getTracks().forEach(track => track.stop());
+      };
+      
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      alert('Please allow microphone access to record');
+    }
+  };
+  
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+  
+  return (
+    <div
+      className="relative w-full h-96 cursor-pointer"
+      style={{ perspective: '1000px' }}
+      onClick={onFlip}
+    >
+      <div
+        className={`absolute inset-0 w-full h-full transition-transform duration-700 ${
+          isFlipped ? 'rotate-y-180' : ''
+        }`}
+        style={{ transformStyle: 'preserve-3d' }}
+      >
+        {/* Front of card */}
+        <div
+          className="absolute inset-0 w-full h-full bg-white rounded-3xl shadow-2xl flex flex-col items-center justify-center backface-hidden"
+          style={{ backfaceVisibility: 'hidden' }}
+        >
+          <h1 className="text-8xl font-bold text-purple-600">{card.letter}</h1>
+          <p className="text-gray-500 mt-4">Letter {card.position + 1} of {name}</p>
+          <p className="text-sm text-gray-400 mt-8">Tap to flip</p>
+        </div>
+        
+        {/* Back of card */}
+        <div
+          className="absolute inset-0 w-full h-full bg-gradient-to-br from-purple-700 to-pink-600 rounded-3xl shadow-2xl flex flex-col items-center justify-center p-6 backface-hidden"
+          style={{ 
+            backfaceVisibility: 'hidden',
+            transform: 'rotateY(180deg)'
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h2 className="text-6xl font-bold text-white mb-6">{card.letter}</h2>
+          
+          {/* Sound button */}
+          <button
+            onClick={onPlaySound}
+            className="flex items-center gap-2 px-6 py-3 bg-white/20 text-white rounded-full hover:bg-white/30 transition-colors mb-4"
+          >
+            <Volume2 size={20} />
+            Play Sound
+          </button>
+          
+          {/* Recording section */}
+          <div className="mt-6 text-center">
+            {!isRecording && !recording && (
+              <button
+                onClick={startRecording}
+                className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+              >
+                <Mic size={16} />
+                Record Your Sound
+              </button>
+            )}
+            
+            {isRecording && (
+              <button
+                onClick={stopRecording}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-full animate-pulse"
+              >
+                <StopCircle size={16} />
+                Stop Recording
+              </button>
+            )}
+            
+            {recording && (
+              <div className="space-y-2">
+                <p className="text-green-300 text-sm">✓ Parent sound recorded</p>
+                <button
+                  onClick={startRecording}
+                  className="text-white/70 text-sm underline hover:text-white"
+                >
+                  Re-record
+                </button>
+              </div>
+            )}
+          </div>
+          
+          {/* Optional features based on settings */}
+          {settings.deafMode && (
+            <p className="text-white/70 mt-4">
+              Visual: Mouth shape for "{card.letter}"
+            </p>
+          )}
+          
+          {settings.mouthShapeMode && (
+            <div className="mt-4 text-center">
+              <div className="text-4xl mb-2">👄</div>
+              <p className="text-sm text-white/70">
+                Mouth shape guide available
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// === Settings Modal ===
+function SettingsModal({ settings, onSettingsChange, onClose }) {
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl p-6 max-w-sm w-full">
+        <h3 className="text-xl font-bold mb-4">Settings</h3>
+        
+        <div className="space-y-4">
+          <label className="flex items-center justify-between">
+            <span>Deaf Mode (Visual Cues)</span>
+            <input
+              type="checkbox"
+              checked={settings.deafMode}
+              onChange={(e) => onSettingsChange({...settings, deafMode: e.target.checked})}
+              className="w-5 h-5"
+            />
+          </label>
+          
+          <label className="flex items-center justify-between">
+            <span>Mouth Shape Mode</span>
+            <input
+              type="checkbox"
+              checked={settings.mouthShapeMode}
+              onChange={(e) => onSettingsChange({...settings, mouthShapeMode: e.target.checked})}
+              className="w-5 h-5"
+            />
+          </label>
+          
+          <div>
+            <label className="block mb-2">Speech Speed</label>
+            <input
+              type="range"
+              min="0.5"
+              max="1.5"
+              step="0.1"
+              value={settings.speechRate}
+              onChange={(e) => onSettingsChange({...settings, speechRate: parseFloat(e.target.value)})}
+              className="w-full"
+            />
+          </div>
+        </div>
+        
+        <button
+          onClick={onClose}
+          className="w-full mt-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+        >
+          Done
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// CSS for 3D card flip
+const style = document.createElement('style');
+style.textContent = `
+  .rotate-y-180 {
+    transform: rotateY(180deg);
+  }
+  .backface-hidden {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+`;
+document.head.appendChild(style);
