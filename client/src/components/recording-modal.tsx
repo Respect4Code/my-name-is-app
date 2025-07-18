@@ -207,7 +207,7 @@ export default function RecordingModal({
   const playInstructions = () => {
     if (safeSettings?.speechMode) {
       const instructionText = `${currentConfig.title}. ${currentConfig.description}`;
-      speakInstructions(instructionText);
+      speak(instructionText);
     }
   };
 

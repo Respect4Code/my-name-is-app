@@ -1,21 +1,12 @@
 import { useState, useRef, useCallback } from 'react';
 
-export interface Recording {
-  id: string;
-  blob: Blob;
-  url: string;
-  timestamp: number;
-  type: string;
-  stage: string;
-}
-
 export function useRecording() {
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
 
-  const startRecording = async () => {
+  const startRecording = useCallback(async () => {
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error('Media recording not supported');
@@ -48,7 +39,7 @@ export function useRecording() {
       };
 
       recorder.start();
-      setMediaRecorder(recorder);
+      mediaRecorderRef.current = recorder;
       setIsRecording(true);
       setError(null);
     } catch (error) {
@@ -56,7 +47,7 @@ export function useRecording() {
       setError('Failed to start recording. Please check microphone permissions.');
       setIsRecording(false);
     }
-  }, [isRecording]);
+  }, []);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && isRecording) {
@@ -65,39 +56,17 @@ export function useRecording() {
     }
   }, [isRecording]);
 
-  const playRecording = useCallback((recording: Recording) => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
-
-    const audio = new Audio(recording.url);
-    audioRef.current = audio;
-
-    audio.onplay = () => setIsPlaying(true);
-    audio.onended = () => setIsPlaying(false);
-    audio.onerror = () => setIsPlaying(false);
-
-    audio.play().catch(error => {
-      console.error('Error playing recording:', error);
-      setIsPlaying(false);
-    });
-  }, []);
-
   const clearRecording = useCallback(() => {
-    if (currentRecording) {
-      URL.revokeObjectURL(currentRecording.url);
-      setCurrentRecording(null);
-    }
-  }, [currentRecording]);
+    setAudioBlob(null);
+    setError(null);
+  }, []);
 
   return {
     isRecording,
-    currentRecording,
-    isPlaying,
+    audioBlob,
+    error,
     startRecording,
     stopRecording,
-    playRecording,
-    clearRecording
+    clearRecording,
   };
 }
