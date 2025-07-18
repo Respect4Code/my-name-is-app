@@ -192,6 +192,18 @@ export default function RecordingModal({
     });
   };
 
+  // Text-to-speech for instructions
+  const speakInstructions = (text: string) => {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.8;
+      utterance.pitch = 1;
+      utterance.volume = 0.8;
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
   const playInstructions = () => {
     if (safeSettings?.speechMode) {
       const instructionText = `${currentConfig.title}. ${currentConfig.description}`;
