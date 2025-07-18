@@ -1,5 +1,4 @@
-
-const CACHE_NAME = 'mynameisapp-v1';
+const CACHE_NAME = 'my-name-is-v1';
 const urlsToCache = [
   '/',
   '/manifest.json',
@@ -8,32 +7,30 @@ const urlsToCache = [
 ];
 
 self.addEventListener('install', (event) => {
+  console.log('Service Worker installing');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        return cache.addAll(urlsToCache);
-      })
-      .catch((error) => {
-        console.log('Cache install failed:', error);
+        console.log('Caching files');
+        return cache.addAll(urlsToCache).catch(err => {
+          console.log('Cache addAll failed:', err);
+        });
       })
   );
 });
 
 self.addEventListener('fetch', (event) => {
-  // Only cache GET requests
-  if (event.request.method !== 'GET') {
-    return;
-  }
-
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
-        // Return cached version or fetch from network
-        return response || fetch(event.request);
-      })
-      .catch(() => {
-        // Fallback for offline
-        return caches.match('/');
-      })
+        if (response) {
+          return response;
+        }
+        return fetch(event.request).catch(() => {
+          // Return offline page or basic response
+          return new Response('Offline', { status: 200 });
+        });
+      }
+    )
   );
 });
