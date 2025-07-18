@@ -11,8 +11,12 @@ interface WelcomeScreenProps {
 }
 
 export default function WelcomeScreen({ onCreateFlashcards, onOpenSettings, recentNames }: WelcomeScreenProps) {
+  console.log('👋 WelcomeScreen component initializing...');
   const [nameInput, setNameInput] = useState("");
+  
+  console.log('👋 About to initialize useParentRecordings hook...');
   const { getCompletionStatus } = useParentRecordings();
+  console.log('👋 useParentRecordings hook initialized successfully');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

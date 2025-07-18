@@ -25,11 +25,16 @@ const defaultSettings: Settings = {
 };
 
 export default function Home() {
+  console.log('🏠 Home component initializing...');
+  
   const [currentScreen, setCurrentScreen] = useState<'welcome' | 'recording' | 'flashcards' | 'child-interaction'>('welcome');
   const [currentName, setCurrentName] = useState<string>('');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  
+  console.log('🏠 About to initialize localStorage hooks...');
   const [settings, setSettings] = useLocalStorage<Settings>('mynameIs_settings', defaultSettings);
   const [recentNames, setRecentNames] = useLocalStorage<string[]>('mynameIs_recentNames', []);
+  console.log('🏠 localStorage hooks initialized successfully');
 
   useEffect(() => {
     // Apply high contrast mode
@@ -84,14 +89,19 @@ export default function Home() {
     setSettings(newSettings);
   };
 
+  console.log('🏠 Rendering Home component, currentScreen:', currentScreen);
+  
   return (
     <div className="min-h-screen">
       {currentScreen === 'welcome' && (
-        <WelcomeScreen
-          onCreateFlashcards={handleCreateFlashcards}
-          onOpenSettings={handleOpenSettings}
-          recentNames={recentNames}
-        />
+        <>
+          {console.log('🏠 Rendering WelcomeScreen...')}
+          <WelcomeScreen
+            onCreateFlashcards={handleCreateFlashcards}
+            onOpenSettings={handleOpenSettings}
+            recentNames={recentNames}
+          />
+        </>
       )}
 
       {currentScreen === 'child-interaction' && (
