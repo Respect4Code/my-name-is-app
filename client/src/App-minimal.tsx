@@ -1,33 +1,15 @@
-
 /**
  * My Name Is - Personalized Phonics Learning App
- * Created by BoredMamaApp
- * 
- * An inclusive phonics tool where parents record their child's name pronunciation
+ * Created by BoredMamaApp - An inclusive phonics tool where parents record their child's name pronunciation
  * Licensed under Creative Commons BY-NC-SA 4.0
- * 
  * Built with love for every child to learn their name ❤️
  */
 
-import React, { Suspense } from 'react';
-import { Route, Switch } from 'wouter';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from '@/components/ui/toaster';
-import Home from '@/pages/home';
-import NotFound from '@/pages/not-found';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
-    },
-  },
-});
+import React from 'react';
 
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
-  { hasError: boolean }
+  { hasError: boolean; error?: Error }
 > {
   constructor(props: { children: React.ReactNode }) {
     super(props);
@@ -36,7 +18,7 @@ class ErrorBoundary extends React.Component<
 
   static getDerivedStateFromError(error: Error) {
     console.error('React Error Boundary caught error:', error);
-    return { hasError: true };
+    return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
@@ -44,7 +26,6 @@ class ErrorBoundary extends React.Component<
     console.error('Component stack:', errorInfo.componentStack);
     console.error('Error message:', error.message);
     console.error('Error stack:', error.stack);
-    // Make error available globally for debugging
     (window as any).lastError = { error, errorInfo };
   }
 
@@ -54,10 +35,10 @@ class ErrorBoundary extends React.Component<
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 to-blue-600 text-white">
           <div className="text-center p-8 max-w-md">
             <h1 className="text-2xl font-bold mb-4">Oops! Something went wrong</h1>
-            <p className="mb-4">Please refresh the page to try again.</p>
+            <p className="mb-4">Error details available in console</p>
             <details className="mb-4 text-left bg-white/10 p-4 rounded text-sm">
-              <summary className="cursor-pointer font-semibold">Technical Details</summary>
-              <p className="mt-2">Check the browser console (F12) for error details.</p>
+              <summary className="cursor-pointer font-semibold">Error Message</summary>
+              <p className="mt-2 font-mono text-xs">{this.state.error?.message || 'Unknown error'}</p>
             </details>
             <button
               onClick={() => window.location.reload()}
@@ -74,24 +55,27 @@ class ErrorBoundary extends React.Component<
   }
 }
 
+function MinimalApp() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-indigo-600 flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl p-8 max-w-lg w-full text-center shadow-2xl">
+        <h1 className="text-3xl font-bold text-gray-800 mb-4">My Name Is</h1>
+        <p className="text-gray-600 mb-6">Minimal version for debugging</p>
+        <button 
+          onClick={() => console.log('Button clicked')}
+          className="px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-colors"
+        >
+          Test Button
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <div className="min-h-screen bg-background text-foreground">
-          <Suspense fallback={
-            <div className="min-h-screen flex items-center justify-center">
-              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-            </div>
-          }>
-            <Switch>
-              <Route path="/" component={Home} />
-              <Route component={NotFound} />
-            </Switch>
-          </Suspense>
-          <Toaster />
-        </div>
-      </QueryClientProvider>
+      <MinimalApp />
     </ErrorBoundary>
   );
 }
