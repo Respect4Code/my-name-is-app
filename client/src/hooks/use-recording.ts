@@ -18,34 +18,45 @@ export function useRecording() {
   const startRecording = async () => {
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('MediaDevices API not supported');
+        throw new Error('Media recording not supported');
       }
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      chunksRef.current = [];
 
-      mediaRecorder.ondataavailable = (event) => {
+      const recorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus'
+      });
+
+      const chunks: BlobPart[] = [];
+
+      recorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
-          chunksRef.current.push(event.data);
+          chunks.push(event.data);
         }
       };
 
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: 'audio/wav' });
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'audio/webm;codecs=opus' });
         setAudioBlob(blob);
-        // Clean up stream
         stream.getTracks().forEach(track => track.stop());
       };
 
-      mediaRecorder.start();
+      recorder.onerror = (event) => {
+        console.error('Recording error:', event);
+        setError('Recording failed');
+        setIsRecording(false);
+      };
+
+      recorder.start();
+      setMediaRecorder(recorder);
       setIsRecording(true);
+      setError(null);
     } catch (error) {
       console.error('Error starting recording:', error);
-      alert('Could not access microphone. Please check permissions.');
+      setError('Failed to start recording. Please check microphone permissions.');
+      setIsRecording(false);
     }
-  };
+  }, [isRecording]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && isRecording) {
