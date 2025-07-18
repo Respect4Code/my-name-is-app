@@ -20,6 +20,10 @@ export function useRecording() {
 
   const startRecording = useCallback(async (id: string, stage: string) => {
     try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Recording not supported in this browser');
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
@@ -62,6 +66,12 @@ export function useRecording() {
           streamRef.current.getTracks().forEach(track => track.stop());
           streamRef.current = null;
         }
+      };
+
+      mediaRecorder.onerror = (event) => {
+        console.error('MediaRecorder error:', event);
+        streamRef.current?.getTracks().forEach(track => track.stop());
+        setIsRecording(false);
       };
 
       mediaRecorderRef.current = mediaRecorder;

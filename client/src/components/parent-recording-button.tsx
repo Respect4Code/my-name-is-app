@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Mic, Volume2 } from "lucide-react";
@@ -23,7 +22,7 @@ export default function ParentRecordingButton({
 }: ParentRecordingButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { getRecording, saveRecording } = useParentRecordings();
-  
+
   const existingRecording = getRecording(name, phonicsData.letter, phonicsData.position);
   const hasRecording = !!existingRecording;
 

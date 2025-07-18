@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Mic, MicOff, Play, Pause, RotateCcw, Check, X, Volume2 } from "lucide-react";
 import { useRecording, type Recording } from "@/hooks/use-recording";
 import { useParentRecordings } from "@/hooks/use-parent-recordings";
@@ -76,7 +76,7 @@ export default function RecordingModal({
   const [stageRecordings, setStageRecordings] = useState<Partial<Record<RecordingStage, Recording>>>({});
   const [completedStages, setCompletedStages] = useState<Set<RecordingStage>>(new Set());
 
-  const { speak } = useSpeech(settings.speechRate);
+  const { speak } = useSpeech(settings?.speechRate || 0.8);
   const {
     isRecording,
     currentRecording,
@@ -184,7 +184,7 @@ export default function RecordingModal({
   };
 
   const playInstructions = () => {
-    if (settings.speechMode) {
+    if (settings?.speechMode) {
       const instructionText = `${currentConfig.title}. ${currentConfig.description}`;
       speak(instructionText);
     }
@@ -197,6 +197,9 @@ export default function RecordingModal({
           <DialogTitle className="text-2xl font-bold text-purple-600">
             {currentConfig.title}
           </DialogTitle>
+          <DialogDescription>
+            {currentConfig.description}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">

@@ -4,6 +4,34 @@ const urlsToCache = [
   '/',
   '/manifest.json',
   '/icon-192.svg',
+  '/icon-512.svg'
+];
+
+self.addEventListener('install', function(event) {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(function(cache) {
+        return cache.addAll(urlsToCache);
+      })
+  );
+});
+
+self.addEventListener('fetch', function(event) {
+  event.respondWith(
+    caches.match(event.request)
+      .then(function(response) {
+        if (response) {
+          return response;
+        }
+        return fetch(event.request);
+      }
+    )
+  );
+});
+const urlsToCache = [
+  '/',
+  '/manifest.json',
+  '/icon-192.svg',
   '/icon-512.svg',
   '/src/main.tsx',
   '/src/index.css',
