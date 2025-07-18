@@ -5,12 +5,21 @@ import './index.css';
 
 // Global error handler for better debugging
 window.onerror = (message, source, lineno, colno, error) => {
-  console.error('Global error:', { message, source, lineno, colno, error });
+  console.error('=== GLOBAL ERROR ===');
+  console.error('Message:', message);
+  console.error('Source:', source);
+  console.error('Line:', lineno, 'Column:', colno);
+  console.error('Error object:', error);
+  console.error('Stack:', error?.stack);
+  console.error('===================');
   return false;
 };
 
 window.addEventListener('unhandledrejection', (event) => {
-  console.error('Unhandled promise rejection:', event.reason);
+  console.error('=== UNHANDLED PROMISE REJECTION ===');
+  console.error('Reason:', event.reason);
+  console.error('Promise:', event.promise);
+  console.error('===================================');
 });
 
 try {
