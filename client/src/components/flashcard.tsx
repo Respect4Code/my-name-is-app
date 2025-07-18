@@ -7,14 +7,27 @@ interface FlashcardProps {
   phonics: PhonicsData;
   isFlipped: boolean;
   onFlip: () => void;
-  onPlaySound: () => void;
   isPlaying: boolean;
   settings: Settings;
   name: string;
 }
 
-export default function Flashcard({ phonics, isFlipped, onFlip, onPlaySound, isPlaying, settings, name }: FlashcardProps) {
+export default function Flashcard({ phonics, isFlipped, onFlip, isPlaying, settings, name }: FlashcardProps) {
   const { getRecording } = useParentRecordings();
+  
+  // Safety check for phonics properties
+  if (!phonics || !phonics.letter || !phonics.position) {
+    console.error('💳 Flashcard - Invalid phonics data:', phonics);
+    return (
+      <div className="flip-card h-96 bg-red-100 rounded-2xl flex items-center justify-center">
+        <div className="text-red-600 text-center">
+          <p>Error: Invalid phonics data</p>
+          <p className="text-sm">Please go back and try again</p>
+        </div>
+      </div>
+    );
+  }
+  
   const parentRecording = getRecording(name, phonics.letter, phonics.position);
 
   return (

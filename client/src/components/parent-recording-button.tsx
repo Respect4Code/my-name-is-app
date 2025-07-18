@@ -8,9 +8,10 @@ import { Recording } from "@/hooks/use-recording";
 import type { Settings } from "@/pages/home";
 
 interface ParentRecordingButtonProps {
-  phonics: PhonicsData;
+  phonicsData: PhonicsData;
   name: string;
   settings?: Settings;
+  className?: string;
 }
 
 const defaultSettings: Settings = {
@@ -22,13 +23,13 @@ const defaultSettings: Settings = {
   deafMode: false
 };
 
-export default function ParentRecordingButton({ phonics, name, settings }: ParentRecordingButtonProps) {
+export default function ParentRecordingButton({ phonicsData, name, settings, className }: ParentRecordingButtonProps) {
   const safeSettings = settings || defaultSettings;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { getRecording, saveRecording } = useParentRecordings();
 
-  const existingRecording = getRecording(name, phonics.letter, phonics.position);
+  const existingRecording = getRecording(name, phonicsData.letter, phonicsData.position);
   const hasRecording = !!existingRecording;
 
   const handleSave = (recording: Recording) => {
@@ -41,7 +42,7 @@ export default function ParentRecordingButton({ phonics, name, settings }: Paren
         variant={hasRecording ? "default" : "outline"}
         size="sm"
         onClick={() => setIsModalOpen(true)}
-        className={`flex items-center space-x-2 ${hasRecording ? 'bg-green-600 hover:bg-green-700 text-white' : 'border-purple-300 text-purple-600 hover:bg-purple-50'} `}
+        className={`flex items-center space-x-2 ${hasRecording ? 'bg-green-600 hover:bg-green-700 text-white' : 'border-purple-300 text-purple-600 hover:bg-purple-50'} ${className || ''}`}
       >
         {hasRecording ? (
           <>
@@ -59,7 +60,7 @@ export default function ParentRecordingButton({ phonics, name, settings }: Paren
       <RecordingModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          phonics={phonics}
+          phonics={phonicsData}
           name={name}
           settings={safeSettings}
         />
