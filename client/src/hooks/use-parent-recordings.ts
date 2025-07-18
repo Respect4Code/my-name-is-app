@@ -14,6 +14,12 @@ export function useParentRecordings() {
 
   const saveRecording = async (key: string, recording: Recording) => {
     try {
+      // Check if browser APIs are available
+      if (typeof window === 'undefined' || !window.btoa || !recording.blob?.arrayBuffer) {
+        console.warn('Browser APIs not available for recording storage');
+        return;
+      }
+      
       // Convert blob to base64
       const arrayBuffer = await recording.blob.arrayBuffer();
       const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
@@ -40,6 +46,12 @@ export function useParentRecordings() {
     if (!stored) return null;
 
     try {
+      // Check if browser APIs are available
+      if (typeof window === 'undefined' || !window.atob || !window.URL?.createObjectURL) {
+        console.warn('Browser APIs not available for recording retrieval');
+        return null;
+      }
+      
       // Convert base64 back to blob
       const binaryString = atob(stored.blob);
       const bytes = new Uint8Array(binaryString.length);
