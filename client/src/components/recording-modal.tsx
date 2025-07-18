@@ -85,7 +85,7 @@ export default function RecordingModal({
   const [stageRecordings, setStageRecordings] = useState<Partial<Record<RecordingStage, Recording>>>({});
   const [completedStages, setCompletedStages] = useState<Set<RecordingStage>>(new Set());
 
-  const { speak } = useSpeech(safeSettings?.speechRate || 0.8);
+  const { speak } = useSpeech(safeSettings.speechRate);
   const {
     isRecording,
     currentRecording,
@@ -206,7 +206,7 @@ export default function RecordingModal({
           <DialogTitle className="text-2xl font-bold text-purple-600">
             {currentConfig.title}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-gray-600 mb-4">
             {currentConfig.description}
           </DialogDescription>
         </DialogHeader>

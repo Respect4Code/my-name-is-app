@@ -1,4 +1,5 @@
-const CACHE_NAME = 'my-name-is-v2';
+
+const CACHE_NAME = 'mynameisapp-v1';
 const urlsToCache = [
   '/',
   '/manifest.json',
@@ -6,39 +7,33 @@ const urlsToCache = [
   '/icon-512.svg'
 ];
 
-self.addEventListener('install', function(event) {
+self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(function(cache) {
+      .then((cache) => {
         return cache.addAll(urlsToCache);
+      })
+      .catch((error) => {
+        console.log('Cache install failed:', error);
       })
   );
 });
 
-self.addEventListener('fetch', function(event) {
+self.addEventListener('fetch', (event) => {
+  // Only cache GET requests
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
-      .then(function(response) {
-        if (response) {
-          return response;
-        }
-
-        const fetchRequest = event.request.clone();
-
-        return fetch(fetchRequest).then((response) => {
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
-          }
-
-          const responseToCache = response.clone();
-
-          caches.open(CACHE_NAME)
-            .then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
-
-          return response;
-        });
+      .then((response) => {
+        // Return cached version or fetch from network
+        return response || fetch(event.request);
+      })
+      .catch(() => {
+        // Fallback for offline
+        return caches.match('/');
       })
   );
 });
