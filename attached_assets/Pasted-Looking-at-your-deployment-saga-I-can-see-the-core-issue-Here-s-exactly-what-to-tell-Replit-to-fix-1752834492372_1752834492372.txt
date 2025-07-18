@@ -1,0 +1,76 @@
+Looking at your deployment saga, I can see the core issue. Here's exactly what to tell Replit to fix this once and for all:
+
+---
+
+# 🚨 URGENT: DEPLOYMENT FIX FOR "MY NAME IS" APP
+
+## THE PROBLEM
+The app works perfectly in development but fails on deployment at https://name-badge-cyclone-media.replit.app
+
+## THE ROOT CAUSE
+Your deployment is configured for **Static Deployment** but your app has an **Express server**. This is a fundamental mismatch.
+
+## THE SOLUTION
+
+### Option 1: Switch to AUTOSCALE Deployment (Recommended)
+Your app has a Node.js/Express server (`server/index.ts`), so it needs **Autoscale** deployment, not Static.
+
+**Steps:**
+1. Cancel current Static deployment
+2. Choose **Autoscale** deployment instead
+3. Settings:
+   - Build command: `npm run build`
+   - Start command: `npm start`
+   - No "public directory" setting (Autoscale doesn't use this)
+
+### Option 2: Remove the Server (Make it truly static)
+If you want to keep Static deployment, remove all server code:
+1. Delete `server/` directory
+2. Update `package.json` scripts:
+   ```json
+   "build": "vite build",
+   "preview": "vite preview"
+   ```
+3. Update `vite.config.ts`:
+   ```javascript
+   build: {
+     outDir: "dist",
+     emptyOutDir: true
+   }
+   ```
+4. Deploy with:
+   - Build command: `npm run build`
+   - Public directory: `dist`
+
+## WHY THIS IS HAPPENING
+
+Your app structure shows:
+- `server/index.ts` - Express server
+- `server/vite.ts` - Server-side Vite handling
+- Production expects: `npm start` → `node dist/index.js`
+
+**This is NOT a static app!** It's a full-stack app with:
+- Express server handling routing
+- Server-side static file serving
+- Production build creating both server and client code
+
+## IMMEDIATE FIX
+
+**Tell Replit:**
+1. "This app has an Express server, it needs Autoscale deployment, not Static"
+2. "Please switch my deployment type to Autoscale"
+3. "Keep build command as `npm run build` and start command as `npm start`"
+
+## TEST CONFIRMATION
+
+The deployment works when:
+1. https://name-badge-cyclone-media.replit.app loads
+2. You see "My Name Is" welcome screen
+3. You can enter a name and see flashcards
+4. Parent recording feature works
+
+---
+
+**BOTTOM LINE: You need AUTOSCALE deployment because you have a server. Static deployment will never work with your current architecture.**
+
+**Please switch to Autoscale deployment immediately to resolve this issue.**
