@@ -253,6 +253,10 @@ export default function FlashcardsScreen({
           </div>
         </div>
       </main>
+      
+      <footer className="text-center text-xs text-white/60 py-2 mt-4">
+        Created with ❤️ by BoredMamaApp • CC BY-NC-SA 4.0
+      </footer>
     </div>
   );
 }

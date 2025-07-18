@@ -1,4 +1,14 @@
 
+/**
+ * My Name Is - Personalized Phonics Learning App
+ * Created by BoredMamaApp
+ * 
+ * An inclusive phonics tool where parents record their child's name pronunciation
+ * Licensed under Creative Commons BY-NC-SA 4.0
+ * 
+ * Built with love for every child to learn their name ❤️
+ */
+
 import React, { Suspense } from 'react';
 import { Route, Switch } from 'wouter';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';

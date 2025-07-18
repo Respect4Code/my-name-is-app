@@ -70,7 +70,7 @@ export default function RecordingModal({
   onClose, 
   phonics, 
   name, 
-  settings = { speechRate: 0.8, speechMode: true, visualMode: false, animations: true, highContrast: false, deafMode: false }
+  settings
 }: RecordingModalProps) {
   // Ensure settings has default values - fix for undefined settings error
   const safeSettings = settings || { 
