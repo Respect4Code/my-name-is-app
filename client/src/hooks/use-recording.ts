@@ -24,6 +24,11 @@ export function useRecording() {
         throw new Error('Recording not supported in this browser');
       }
 
+      // Check if we're in HTTPS or localhost
+      if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+        throw new Error('Recording requires HTTPS or localhost');
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
@@ -80,7 +85,14 @@ export function useRecording() {
 
     } catch (error) {
       console.error('Error starting recording:', error);
-      throw new Error('Failed to start recording. Please check microphone permissions.');
+      if (error instanceof Error) {
+        if (error.name === 'NotAllowedError') {
+          throw new Error('Please allow microphone access to record sounds for your child.');
+        } else if (error.name === 'NotFoundError') {
+          throw new Error('No microphone found. Please connect a microphone and try again.');
+        }
+      }
+      throw error;
     }
   }, []);
 

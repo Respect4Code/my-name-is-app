@@ -72,11 +72,20 @@ export default function RecordingModal({
   name, 
   settings = { speechRate: 0.8, speechMode: true, visualMode: false, animations: true, highContrast: false, deafMode: false }
 }: RecordingModalProps) {
+  // Ensure settings has default values - fix for undefined settings error
+  const safeSettings = settings || { 
+    speechMode: true, 
+    visualMode: false, 
+    speechRate: 0.8,
+    animations: true,
+    highContrast: false,
+    deafMode: false
+  };
   const [currentStage, setCurrentStage] = useState<RecordingStage>('full-name');
   const [stageRecordings, setStageRecordings] = useState<Partial<Record<RecordingStage, Recording>>>({});
   const [completedStages, setCompletedStages] = useState<Set<RecordingStage>>(new Set());
 
-  const { speak } = useSpeech(settings?.speechRate || 0.8);
+  const { speak } = useSpeech(safeSettings?.speechRate || 0.8);
   const {
     isRecording,
     currentRecording,
@@ -184,7 +193,7 @@ export default function RecordingModal({
   };
 
   const playInstructions = () => {
-    if (settings?.speechMode) {
+    if (safeSettings?.speechMode) {
       const instructionText = `${currentConfig.title}. ${currentConfig.description}`;
       speak(instructionText);
     }
