@@ -1,0 +1,174 @@
+// 📁 App.jsx (Complete with updates: auto-play, large letters, new options)
+
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  Mic,
+  Volume2,
+  Play,
+  Home,
+  ArrowLeft,
+  Music,
+  Sparkles
+} from 'lucide-react';
+
+const defaultName = "DIVINE";
+const defaultSentence = `${defaultName}, time for bed!`;
+
+const screens = {
+  welcome: 'WELCOME',
+  photo: 'PHOTO',
+  record: 'RECORD',
+  menu: 'MENU',
+  flashcards: 'FLASHCARDS',
+};
+
+export default function MyNameIs() {
+  const [screen, setScreen] = useState(screens.welcome);
+  const [name, setName] = useState(defaultName);
+  const [photo, setPhoto] = useState(null);
+  const [recordings, setRecordings] = useState({});
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const nameLetters = name.toUpperCase().split("");
+  const tasks = [name, ...nameLetters, defaultSentence];
+
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setPhoto(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const recordAudio = async (task) => {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mediaRecorder = new MediaRecorder(stream);
+    const chunks = [];
+
+    mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(chunks, { type: 'audio/webm' });
+      const url = URL.createObjectURL(blob);
+      setRecordings((prev) => ({ ...prev, [task]: url }));
+    };
+
+    mediaRecorder.start();
+    setTimeout(() => mediaRecorder.stop(), 2000);
+  };
+
+  const playAudio = (task) => {
+    const audio = new Audio(recordings[task]);
+    audio.play();
+  };
+
+  const goNext = () => setCurrentIndex((i) => Math.min(i + 1, nameLetters.length - 1));
+  const goBack = () => setCurrentIndex((i) => Math.max(i - 1, 0));
+
+  const autoPlay = useRef(null);
+  useEffect(() => {
+    if (screen === screens.flashcards && recordings[defaultSentence]) {
+      autoPlay.current = new Audio(recordings[defaultSentence]);
+      autoPlay.current.play();
+    }
+  }, [screen]);
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-pink-400 to-purple-600 text-white px-4">
+      {screen === screens.welcome && (
+        <div className="text-center space-y-6">
+          <h1 className="text-4xl font-bold">My Name Is</h1>
+          <input
+            className="text-black rounded p-2"
+            value={name}
+            onChange={(e) => setName(e.target.value.toUpperCase())}
+          />
+          <button onClick={() => setScreen(screens.photo)} className="bg-white text-pink-600 px-4 py-2 rounded shadow">
+            Next
+          </button>
+        </div>
+      )}
+
+      {screen === screens.photo && (
+        <div className="bg-white text-black rounded-xl p-6 shadow-xl text-center w-full max-w-md">
+          <h2 className="text-2xl font-bold mb-2">Add {name}'s Photo</h2>
+          <p className="mb-4">This helps {name} recognize themselves</p>
+          <label className="border-2 border-purple-400 rounded-lg p-6 cursor-pointer block">
+            <input type="file" accept="image/*" onChange={handlePhotoUpload} hidden />
+            {photo ? <img src={photo} alt="Uploaded" className="mx-auto rounded-full h-32 w-32 object-cover" /> : (
+              <div className="text-purple-600"><Mic size={48} className="mx-auto" />Add Photo</div>
+            )}
+          </label>
+          <div className="text-xs text-gray-600 mt-2">
+            <span role="img" aria-label="lock">🔒</span> <strong>Privacy Promise:</strong> This photo stays on your device only.
+          </div>
+          <button onClick={() => setScreen(screens.record)} className="mt-4 bg-purple-600 text-white px-4 py-2 rounded shadow w-full">Next</button>
+        </div>
+      )}
+
+      {screen === screens.record && (
+        <div className="bg-white text-black rounded-xl p-6 shadow-xl w-full max-w-md">
+          <button onClick={() => setScreen(screens.menu)} className="text-purple-600 flex items-center mb-2">
+            <ArrowLeft className="mr-1" size={16} /> Back
+          </button>
+          <h2 className="text-2xl font-bold mb-4">Record Your Voice</h2>
+          <div className="space-y-2">
+            {tasks.map((task) => (
+              <button
+                key={task}
+                onClick={() => recordAudio(task)}
+                className={`w-full p-2 rounded ${recordings[task] ? 'bg-green-200 text-green-800' : 'bg-purple-100 text-purple-800'}`}
+              >
+                {task === name ? `Say "${name}"` :
+                 task === defaultSentence ? `Say "${defaultSentence}"` :
+                 `Say the SOUND of "${task}" (not the letter name)`}
+              </button>
+            ))}
+          </div>
+          <button onClick={() => setScreen(screens.menu)} className="mt-4 bg-green-500 text-white px-4 py-2 rounded shadow w-full">Create Flashcards!</button>
+        </div>
+      )}
+
+      {screen === screens.menu && (
+        <div className="space-y-4 text-center">
+          <h2 className="text-3xl font-bold">Hi {name}!</h2>
+          <button onClick={() => setScreen(screens.flashcards)} className="bg-purple-500 px-4 py-2 rounded text-white">Play Flashcards</button>
+          <button onClick={() => setScreen(screens.record)} className="bg-purple-300 px-4 py-2 rounded text-white">Re-record Voice</button>
+          <button className="bg-pink-300 px-4 py-2 rounded text-white flex justify-center items-center mx-auto">
+            <Music size={18} className="mr-2" /> Sing Your Name (coming soon)
+          </button>
+          <button className="bg-yellow-300 px-4 py-2 rounded text-black flex justify-center items-center mx-auto">
+            <Sparkles size={18} className="mr-2" /> Put Your Name in a Rhyme (coming soon)
+          </button>
+        </div>
+      )}
+
+      {screen === screens.flashcards && (
+        <div className="bg-white text-black rounded-xl p-6 shadow-xl w-full max-w-md text-center">
+          <h2 className="text-2xl font-bold mb-2">{name}</h2>
+          {photo && <img src={photo} alt="" className="mx-auto rounded-full w-32 h-32 object-cover mb-2" />}
+          <div className="text-purple-600 bg-purple-100 rounded-full p-4 text-4xl w-32 h-32 mx-auto flex items-center justify-center mb-4">
+            {nameLetters[currentIndex]}
+          </div>
+          <button
+            onClick={() => playAudio(nameLetters[currentIndex])}
+            className="bg-purple-500 px-4 py-2 rounded text-white w-full mb-2"
+          >
+            <Volume2 className="inline mr-2" size={18} /> Play Letter Sound
+          </button>
+          <button
+            onClick={() => playAudio(name)}
+            className="bg-green-500 px-4 py-2 rounded text-white w-full"
+          >
+            <Play className="inline mr-2" size={18} /> Play Full Name
+          </button>
+          <div className="flex justify-between mt-4">
+            <button onClick={goBack} disabled={currentIndex === 0} className="text-gray-500">◀</button>
+            <span className="text-sm">Letter {currentIndex + 1} of {nameLetters.length}</span>
+            <button onClick={goNext} disabled={currentIndex === nameLetters.length - 1} className="text-gray-500">▶</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
