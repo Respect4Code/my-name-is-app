@@ -1,0 +1,166 @@
+// ✅ Replit-Ready Full App Scaffold: My Name Is
+
+// === File: index.html ===
+
+/*
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>My Name Is</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-purple-100">
+    <div id="root"></div>
+  </body>
+</html>
+*/
+
+// === File: vite.config.js ===
+
+/*
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+});
+*/
+
+// === File: package.json ===
+
+/*
+{
+  "name": "my-name-is",
+  "version": "1.0.0",
+  "description": "Simple React app to teach kids their name with voice and photo.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "lucide-react": "^0.263.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.0.0",
+    "vite": "^4.5.0"
+  }
+}
+*/
+
+// === File: src/main.jsx ===
+
+/*
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import MyNameIsApp from './App';
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <MyNameIsApp />
+  </React.StrictMode>
+);
+*/
+
+// === File: src/App.jsx ===
+
+/*
+import React, { useState } from 'react';
+import NameInput from './components/NameInput';
+import PhotoUpload from './components/PhotoUpload';
+import Recording from './components/Recording';
+import FlashcardScreen from './components/FlashcardScreen';
+
+export default function MyNameIsApp() {
+  const [step, setStep] = useState('name');
+  const [name, setName] = useState('');
+  const [photo, setPhoto] = useState(null);
+
+  return (
+    <main className="min-h-screen bg-gradient-to-b from-purple-700 to-purple-900 text-white p-4">
+      {step === 'name' && (
+        <NameInput
+          onSubmit={(childName) => {
+            setName(childName.toUpperCase());
+            setStep('photo');
+          }}
+        />
+      )}
+      {step === 'photo' && (
+        <PhotoUpload
+          onUpload={(img) => {
+            setPhoto(img);
+            setStep('record');
+          }}
+        />
+      )}
+      {step === 'record' && (
+        <Recording
+          name={name}
+          onComplete={() => setStep('learn')}
+        />
+      )}
+      {step === 'learn' && <FlashcardScreen name={name} photo={photo} />}
+    </main>
+  );
+}
+*/
+
+// === File: src/components/NameInput.jsx ===
+
+/*
+import React, { useState } from 'react';
+
+export default function NameInput({ onSubmit }) {
+  const [name, setName] = useState('');
+
+  return (
+    <div className="text-center space-y-4">
+      <h1 className="text-3xl font-bold">What’s your child’s name?</h1>
+      <input
+        type="text"
+        className="p-2 rounded text-black"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="Enter name"
+      />
+      <button
+        className="px-4 py-2 bg-white text-purple-700 rounded"
+        onClick={() => name && onSubmit(name)}
+      >
+        Continue
+      </button>
+    </div>
+  );
+}
+*/
+
+// === File: src/components/PhotoUpload.jsx ===
+
+/*
+import React from 'react';
+
+export default function PhotoUpload({ onUpload }) {
+  const handleFile = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => onUpload(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  return (
+    <div className="text-center space-y-4">
+      <h2 className="text-2xl">Upload a photo of your child</h2>
+      <input type="file" accept="image/*" onChange={handleFile} />
+    </div>
+  );
+}
+*/
+
+// ✅ NEXT FILES COMING: Recording.jsx, FlashcardScreen.jsx
