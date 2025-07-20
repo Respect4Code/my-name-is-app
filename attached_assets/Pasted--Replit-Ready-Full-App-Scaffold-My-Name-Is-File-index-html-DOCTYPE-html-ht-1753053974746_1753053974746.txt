@@ -1,0 +1,132 @@
+// ✅ Replit-Ready Full App Scaffold: My Name Is
+
+// === File: index.html ===
+
+/*
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>My Name Is</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-purple-100">
+    <div id="root"></div>
+  </body>
+</html>
+*/
+
+// === File: vite.config.js ===
+
+/*
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+});
+*/
+
+// === File: package.json ===
+
+/*
+{
+  "name": "my-name-is",
+  "version": "1.0.0",
+  "description": "Simple React app to teach kids their name with voice and photo.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "lucide-react": "^0.263.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.0.0",
+    "vite": "^4.5.0"
+  }
+}
+*/
+
+// === File: src/main.jsx ===
+
+/*
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import MyNameIsApp from './App';
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <MyNameIsApp />
+  </React.StrictMode>
+);
+*/
+
+// === File: src/App.jsx ===
+
+/*
+// 💡 Include updated components here:
+// - WelcomeScreen
+// - PhotoScreen
+// - RecordingScreen (now includes default sentence: "Divine, it's time for bed")
+// - FlashcardScreen (now includes: enlarged letter, Play Sentence button, optional Sing My Name)
+
+// ✅ Ensure your App.jsx includes:
+import React, { useState, useEffect, useRef } from 'react';
+import { Camera, Mic, Play, Check, ChevronRight, ChevronLeft, RefreshCw, Home, Volume2 } from 'lucide-react';
+
+// 🧠 All logic for:
+// - Name input
+// - Photo upload
+// - Recording (full name, per-letter, default sentence)
+// - Playback (with large letter display, letter/full/sentence buttons)
+// - Optional: sing name audio
+*/
+
+// === Replit Setup Notes ===
+
+/*
+1. Create a new Replit project (choose "Vite + React")
+2. Replace:
+   - index.html
+   - vite.config.js
+   - package.json
+   - src/main.jsx
+   - src/App.jsx (with full updated code)
+3. Run `npm install` to get dependencies
+4. Click "Run" to launch the app
+*/
+
+// === LICENSE: Creative Commons BY-NC-SA 4.0 ===
+/*
+This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
+*/
+
+// === README.md (included as text) ===
+/*
+# My Name Is — Offline Phonics App
+
+A parent-powered phonics flashcard app to help children learn their names with their photo and voice.
+
+## Features
+- Upload child’s name and photo
+- Record your own pronunciation (letters, full name, default sentence)
+- Play back flashcards with audio
+- Works 100% offline
+- Tailored to *your* child’s name
+
+## Installation (Replit or Local)
+1. Clone or paste all code files
+2. `npm install`
+3. `npm run dev`
+
+## Privacy
+All data stays on your device. No upload. No tracking.
+
+---
+Built with ❤️ using React + Vite + Tailwind
+*/
