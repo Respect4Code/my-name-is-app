@@ -1,0 +1,224 @@
+// 📁 index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Name Is - Learn with Photos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+  <div id="root"></div>
+</body>
+</html>
+
+// 📁 package.json
+{
+  "name": "my-name-is",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "lucide-react": "^0.263.1"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
+
+// 📁 vite.config.js
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+});
+
+// 📁 main.jsx
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import MyNameIs from './App.jsx';
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <MyNameIs />
+  </React.StrictMode>
+);
+
+// 📁 App.jsx
+// ✅ Paste your full App code below — simplified version with Name → Photo → Record → Flashcards flow
+
+import React, { useState, useRef, useEffect } from 'react';
+import { Camera, Mic, Play, Check, ChevronRight, ChevronLeft } from 'lucide-react';
+
+const WelcomeScreen = ({ onNext }) => {
+  const [name, setName] = useState('');
+
+  return (
+    <div className="flex flex-col items-center justify-center h-screen gap-4 p-6 text-center">
+      <h1 className="text-3xl font-bold">What is your name?</h1>
+      <input
+        value={name}
+        onChange={e => setName(e.target.value)}
+        className="border p-2 text-xl rounded"
+        placeholder="Type your name"
+      />
+      <button
+        onClick={() => name && onNext(name)}
+        className="bg-purple-500 text-white px-4 py-2 rounded text-xl"
+      >
+        Next <ChevronRight className="inline-block ml-2" />
+      </button>
+    </div>
+  );
+};
+
+const PhotoScreen = ({ onNext }) => {
+  const [photoURL, setPhotoURL] = useState(null);
+
+  const handleUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) setPhotoURL(URL.createObjectURL(file));
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center h-screen gap-4">
+      <h2 className="text-2xl font-bold">Add your photo</h2>
+      {photoURL && <img src={photoURL} className="w-48 h-48 object-cover rounded-full" alt="child" />}
+      <input type="file" onChange={handleUpload} accept="image/*" />
+      <button
+        onClick={() => photoURL && onNext(photoURL)}
+        className="bg-purple-500 text-white px-4 py-2 rounded text-xl"
+      >
+        Next <ChevronRight className="inline-block ml-2" />
+      </button>
+    </div>
+  );
+};
+
+const RecordingScreen = ({ name, onNext }) => {
+  const [recordings, setRecordings] = useState({});
+  const mediaRef = useRef(null);
+
+  const recordLetter = async (letter) => {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const recorder = new MediaRecorder(stream);
+    const chunks = [];
+
+    recorder.ondataavailable = e => chunks.push(e.data);
+    recorder.onstop = () => {
+      const blob = new Blob(chunks);
+      const url = URL.createObjectURL(blob);
+      setRecordings(r => ({ ...r, [letter]: url }));
+    };
+
+    recorder.start();
+    setTimeout(() => recorder.stop(), 1500);
+  };
+
+  const letters = [...new Set(name.toUpperCase().split(''))];
+
+  return (
+    <div className="p-6">
+      <h2 className="text-2xl mb-4">Record each letter</h2>
+      <div className="grid grid-cols-4 gap-4">
+        {letters.map(letter => (
+          <div key={letter} className="border p-4 rounded text-center">
+            <div className="text-2xl font-bold">{letter}</div>
+            <button
+              onClick={() => recordLetter(letter)}
+              className="bg-purple-500 text-white px-2 py-1 rounded mt-2"
+            >
+              <Mic className="inline-block mr-1" /> Record
+            </button>
+            {recordings[letter] && (
+              <button onClick={() => new Audio(recordings[letter]).play()} className="mt-2">
+                <Play className="inline-block" />
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+      <button
+        onClick={() => onNext(recordings)}
+        className="bg-green-500 text-white px-4 py-2 rounded text-xl mt-6"
+      >
+        Done <Check className="inline-block ml-2" />
+      </button>
+    </div>
+  );
+};
+
+const FlashcardScreen = ({ name, photoURL, recordings }) => {
+  const [index, setIndex] = useState(0);
+  const letters = [...new Set(name.toUpperCase().split(''))];
+  const current = letters[index];
+
+  const play = () => {
+    if (recordings[current]) new Audio(recordings[current]).play();
+  };
+
+  return (
+    <div className="p-6 text-center">
+      <img src={photoURL} alt="child" className="mx-auto mb-4 w-32 h-32 rounded-full" />
+      <div className="text-6xl font-bold mb-4">{current}</div>
+      <div className="flex justify-center gap-4">
+        <button onClick={() => setIndex(i => Math.max(i - 1, 0))}><ChevronLeft /></button>
+        <button onClick={play}><Volume2 /></button>
+        <button onClick={() => setIndex(i => Math.min(i + 1, letters.length - 1))}><ChevronRight /></button>
+      </div>
+    </div>
+  );
+};
+
+export default function MyNameIs() {
+  const [step, setStep] = useState('welcome');
+  const [name, setName] = useState('');
+  const [photoURL, setPhotoURL] = useState(null);
+  const [recordings, setRecordings] = useState(null);
+
+  if (step === 'welcome') return <WelcomeScreen onNext={n => { setName(n); setStep('photo'); }} />;
+  if (step === 'photo') return <PhotoScreen onNext={url => { setPhotoURL(url); setStep('record'); }} />;
+  if (step === 'record') return <RecordingScreen name={name} onNext={recs => { setRecordings(recs); setStep('cards'); }} />;
+  return <FlashcardScreen name={name} photoURL={photoURL} recordings={recordings} />;
+}
+
+// 📄 LICENSE.txt
+/*
+Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)
+
+You are free to:
+- Share — copy and redistribute the material
+- Adapt — remix and build upon it
+
+Under these terms:
+- Attribution — Credit to "BoredMamaCode"
+- NonCommercial — Not for commercial use
+- ShareAlike — Must license under same terms
+*/
+
+// 📘 README.md
+/*
+# My Name Is – A Parent-Recorded Flashcard App
+
+A privacy-first, child-centered phonics tool. Parents upload a photo, record their pronunciation, and generate flashcards based on their child’s name.
+
+## Features
+- Offline, fully localStorage-based
+- Built with React, Tailwind, Vite
+- Focus on your child’s name and voice
+
+## Setup
+1. Paste this full code into Replit (Vite+React project)
+2. Run `npm install`
+3. Hit "Run" and test!
+
+## License
+Creative Commons BY-NC-SA 4.0 — Attribution to BoredMamaCode
+*/
