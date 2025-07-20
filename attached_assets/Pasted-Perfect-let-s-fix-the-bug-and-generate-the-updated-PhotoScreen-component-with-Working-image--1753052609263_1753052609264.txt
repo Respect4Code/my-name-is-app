@@ -1,0 +1,104 @@
+Perfect — let’s fix the bug and generate the updated `PhotoScreen` component with:
+
+* Working image upload via `<input type="file" />`
+* Triggered from the “Add Photo” box
+* Proper state management
+* Enabling the **Next** button once a photo is selected
+
+---
+
+## ✅ Fixed `PhotoScreen` Component (Drop-in Replacement)
+
+```jsx
+import React, { useState, useRef } from 'react';
+import { Camera, ChevronRight } from 'lucide-react';
+
+const PhotoScreen = ({ name, onNext, onPhotoCaptured }) => {
+  const [photo, setPhoto] = useState(null);
+  const fileInputRef = useRef();
+
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result;
+      setPhoto(base64);
+      onPhotoCaptured(base64);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-300 to-pink-300 p-4">
+      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md text-center">
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Add {name}'s Photo</h1>
+        <p className="text-gray-500 mb-6">This helps {name} recognize themselves</p>
+
+        <div
+          className="cursor-pointer border-2 border-purple-400 rounded-xl bg-purple-50 py-8 px-4 hover:bg-purple-100"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          {photo ? (
+            <img
+              src={photo}
+              alt="Preview"
+              className="w-40 h-40 object-cover rounded-full mx-auto mb-2 border-4 border-purple-300"
+            />
+          ) : (
+            <>
+              <Camera className="mx-auto mb-2 text-purple-500" size={36} />
+              <p className="text-purple-600 font-medium">Add Photo</p>
+            </>
+          )}
+        </div>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handlePhotoUpload}
+          className="hidden"
+        />
+
+        <div className="mt-4 text-sm text-gray-600 bg-purple-50 rounded-md p-2">
+          <span className="font-semibold text-purple-700">🔒 Privacy Promise:</span> This photo
+          stays on your device only. It's never uploaded anywhere.
+        </div>
+
+        <button
+          onClick={onNext}
+          disabled={!photo}
+          className={`mt-6 w-full py-2 rounded-lg text-white flex justify-center items-center gap-2 ${
+            photo ? 'bg-purple-600 hover:bg-purple-700' : 'bg-gray-400 cursor-not-allowed'
+          }`}
+        >
+          Next <ChevronRight size={20} />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default PhotoScreen;
+```
+
+---
+
+## 🛠 Where to Update in Your Project
+
+Replace the `PhotoScreen` component in your existing `App.jsx` or split files setup with the one above. The props (`name`, `onNext`, `onPhotoCaptured`) are kept consistent with your current flow.
+
+---
+
+## 📣 What This Fixes
+
+* File picker now works on all browsers and devices
+* Preview image shows up when selected
+* "Next" button only activates once photo is uploaded
+* Fully client-side; no uploads to server
+
+---
+
+Would you like me to regenerate the full **one-document Claude bundle** with this version of `PhotoScreen` included?
