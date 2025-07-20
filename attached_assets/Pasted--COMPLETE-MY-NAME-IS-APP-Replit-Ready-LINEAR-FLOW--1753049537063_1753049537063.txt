@@ -1,0 +1,93 @@
+// =====================================
+// COMPLETE "MY NAME IS" APP (Replit Ready)
+// LINEAR FLOW — NAME > PHOTO > RECORD > FLASHCARDS
+// =====================================
+
+// --- FILE: index.html (root) ---
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>My Name Is</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-purple-100">
+    <div id="root"></div>
+  </body>
+</html>
+
+// --- FILE: vite.config.js ---
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+});
+
+// --- FILE: package.json ---
+{
+  "name": "my-name-is",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "lucide-react": "^0.263.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.0.0",
+    "vite": "^4.5.0"
+  }
+}
+
+// --- FILE: src/main.jsx ---
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App.jsx';
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+// --- FILE: src/App.jsx ---
+// (Paste your complete App.jsx content here from earlier)
+
+// --- FILE: src/screens/NameInput.jsx ---
+// (Paste complete NameInput code here from earlier)
+
+// --- FILE: src/screens/PhotoUpload.jsx ---
+// (Paste complete PhotoUpload code here from earlier)
+
+// --- FILE: src/screens/Recording.jsx ---
+// (Paste complete Recording code here from earlier)
+
+// --- FILE: src/screens/MenuScreen.jsx ---
+// (Paste complete MenuScreen code here from earlier)
+
+// --- FILE: src/screens/FlashcardScreen.jsx ---
+// (Paste complete FlashcardScreen code here from earlier)
+
+// =====================================
+// WHAT WAS MISSING & WHY THIS FIXES IT:
+// =====================================
+// ✅ You already had: App.jsx and screen components
+// ❌ Missing:
+//     - index.html: Mount point for React
+//     - vite.config.js: Needed for React to run with Vite
+//     - package.json: Defines dependencies and dev scripts
+//     - main.jsx: Renders <App /> into #root
+//
+// 🛠 Without these, Replit (or any Vite-based React project) doesn't know how to start, serve, or compile your app.
+// ✅ This version includes every required file, ready for Replit or local dev.
+
+// IN REPLIT:
+// 1. Create a new Vite + React project
+// 2. Replace auto-generated files with the ones above
+// 3. Run with `npm install` then `npm run dev`

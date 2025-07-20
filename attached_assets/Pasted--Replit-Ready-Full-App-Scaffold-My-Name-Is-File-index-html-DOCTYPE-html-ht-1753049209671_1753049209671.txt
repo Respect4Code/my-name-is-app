@@ -1,0 +1,96 @@
+// ✅ Replit-Ready Full App Scaffold: My Name Is
+
+// === File: index.html ===
+
+/*
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>My Name Is</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-purple-100">
+    <div id="root"></div>
+  </body>
+</html>
+*/
+
+// === File: vite.config.js ===
+
+/*
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+});
+*/
+
+// === File: package.json ===
+
+/*
+{
+  "name": "my-name-is",
+  "version": "1.0.0",
+  "description": "Simple React app to teach kids their name with voice and photo.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "lucide-react": "^0.263.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.0.0",
+    "vite": "^4.5.0"
+  }
+}
+*/
+
+// === File: src/main.jsx ===
+
+/*
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+*/
+
+// === File: src/App.jsx ===
+
+// 💡 PASTE FULL "My Name Is" React Component (multi-screen) here
+// (NameInput, PhotoUpload, Recording, MenuScreen, FlashcardScreen)
+
+// ✅ Finalized version is already in your last shared post.
+// Simply paste all code from your previous message into src/App.jsx
+
+// === Replit Setup Instructions ===
+
+/*
+1. Create a new Replit project (choose "Vite + React")
+2. Delete everything inside `src` and create fresh:
+   - App.jsx (paste your full code)
+   - main.jsx (as above)
+   - screens/ folder with components
+3. Replace index.html, vite.config.js, and package.json from above
+4. Run `npm install`
+5. Click "Run" — you’re live!
+
+✨ Notes:
+- No backend needed — everything is client-side
+- Data stays in localStorage
+- Audio uses MediaRecorder API
+- Works on most mobile/desktop browsers
+*/
+
+// 🎉 You’re ready to go!
