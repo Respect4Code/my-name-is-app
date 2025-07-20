@@ -1,0 +1,118 @@
+// ✅ Replit-Ready Full App Scaffold: My Name Is
+
+// === File: index.html ===
+
+/*
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>My Name Is</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-purple-100">
+    <div id="root"></div>
+  </body>
+</html>
+*/
+
+// === File: vite.config.js ===
+
+/*
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+});
+*/
+
+// === File: package.json ===
+
+/*
+{
+  "name": "my-name-is",
+  "version": "1.0.0",
+  "description": "Simple React app to teach kids their name with voice and photo.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "lucide-react": "^0.263.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.0.0",
+    "vite": "^4.5.0"
+  }
+}
+*/
+
+// === File: src/main.jsx ===
+
+/*
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import MyNameIsApp from './App';
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <MyNameIsApp />
+  </React.StrictMode>
+);
+*/
+
+// === File: src/App.jsx ===
+
+/*
+Paste the full component code here that includes:
+✅ Welcome Screen with name input
+✅ Parent photo upload and 4-stage voice recording
+✅ Flashcards showing only letters in name
+✅ Mouth Shape Mode and Deaf Mode toggles
+✅ Audio playback prioritizing parent recordings, then fallback
+✅ Stored in localStorage
+✅ 3D flip animation
+✅ Tailwind for all styles
+*/
+
+// === Assets Required ===
+
+// Place these in /public/mouth/
+// b.png, d.png, p.png, m.png, f.png (use Claude’s photorealistic images or generate)
+
+// === Setup Instructions (Replit) ===
+
+/*
+1. Create a new Replit using "Vite + React"
+2. Replace the following files:
+   - index.html (in the root/public folder)
+   - vite.config.js
+   - package.json
+   - src/main.jsx
+   - src/App.jsx (paste your full app logic here)
+3. Add image files to /public/mouth/ (drag into the sidebar)
+4. Click "Run" to launch the app
+5. Optionally deploy to Netlify or Vercel
+*/
+
+// === Why This Build Is Special ===
+
+/*
+🎯 It focuses only on the letters in the child's name
+🎤 Parent-recorded audio is the default (not TTS)
+👄 Mouth shapes are helpful extras, not required
+🧏 Deaf mode with IPA and visual modes for accessibility
+📱 Touch + keyboard friendly
+🎓 Built with parent intuition at the center
+*/
+
+// 💬 Footer Suggestion
+
+/*
+Built with ❤️ by BoredMamaCode | Open-sourced for good | CC BY-NC-SA 4.0
+*/

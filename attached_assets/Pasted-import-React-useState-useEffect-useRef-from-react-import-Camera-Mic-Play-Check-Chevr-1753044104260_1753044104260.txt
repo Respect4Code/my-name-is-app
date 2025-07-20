@@ -1,0 +1,519 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Camera, Mic, Play, Check, ChevronRight, ChevronLeft, RefreshCw, Home } from 'lucide-react';
+
+// Main App Component
+export default function MyNameIs() {
+  const [currentStep, setCurrentStep] = useState('welcome');
+  const [childName, setChildName] = useState('');
+  const [childPhoto, setChildPhoto] = useState('');
+  const [recordings, setRecordings] = useState({});
+  const [currentFlashcard, setCurrentFlashcard] = useState(0);
+
+  // Load saved data on mount
+  useEffect(() => {
+    const savedName = localStorage.getItem('childName');
+    const savedPhoto = localStorage.getItem('childPhoto');
+    const savedRecordings = localStorage.getItem('recordings');
+    
+    if (savedName && savedPhoto && savedRecordings) {
+      setChildName(savedName);
+      setChildPhoto(savedPhoto);
+      setRecordings(JSON.parse(savedRecordings));
+      setCurrentStep('menu');
+    }
+  }, []);
+
+  // Save recordings whenever they change
+  useEffect(() => {
+    if (Object.keys(recordings).length > 0) {
+      localStorage.setItem('recordings', JSON.stringify(recordings));
+    }
+  }, [recordings]);
+
+  const resetApp = () => {
+    if (confirm('This will delete all data. Are you sure?')) {
+      localStorage.clear();
+      setChildName('');
+      setChildPhoto('');
+      setRecordings({});
+      setCurrentStep('welcome');
+      setCurrentFlashcard(0);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-500 to-pink-500 text-white">
+      {currentStep === 'welcome' && <WelcomeScreen onNext={(name) => { setChildName(name); setCurrentStep('photo'); }} />}
+      {currentStep === 'photo' && <PhotoScreen name={childName} onNext={(photo) => { setChildPhoto(photo); setCurrentStep('record'); }} />}
+      {currentStep === 'record' && <RecordingScreen name={childName} recordings={recordings} setRecordings={setRecordings} onComplete={() => setCurrentStep('menu')} />}
+      {currentStep === 'menu' && <MenuScreen name={childName} onPlay={() => setCurrentStep('flashcards')} onRecord={() => setCurrentStep('record')} onReset={resetApp} />}
+      {currentStep === 'flashcards' && <FlashcardScreen name={childName} photo={childPhoto} recordings={recordings} current={currentFlashcard} setCurrent={setCurrentFlashcard} onHome={() => setCurrentStep('menu')} />}
+    </div>
+  );
+}
+
+// Welcome Screen - Step 1
+function WelcomeScreen({ onNext }) {
+  const [name, setName] = useState('');
+  
+  return (
+    <div className="flex items-center justify-center min-h-screen p-4">
+      <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-2xl">
+        <h1 className="text-4xl font-bold text-gray-800 mb-2">My Name Is</h1>
+        <p className="text-gray-600 mb-8">Help your child learn their name with your voice</p>
+        
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value.replace(/[^a-zA-Z]/g, ''))}
+          placeholder="Enter your child's name"
+          className="w-full p-4 text-2xl text-center border-2 border-purple-200 rounded-xl text-gray-800 mb-6"
+          maxLength={12}
+          autoFocus
+        />
+        
+        <button
+          onClick={() => name.length >= 2 && onNext(name.toUpperCase())}
+          disabled={name.length < 2}
+          className={`w-full py-4 rounded-xl font-bold text-xl transition-all flex items-center justify-center gap-2 ${
+            name.length >= 2
+              ? 'bg-purple-500 text-white hover:bg-purple-600'
+              : 'bg-gray-300 text-gray-500'
+          }`}
+        >
+          Next <ChevronRight />
+        </button>
+        
+        <p className="text-xs text-gray-500 mt-8">
+          Your data never leaves your device • CC BY-NC-SA 4.0
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// Photo Screen - Step 2
+function PhotoScreen({ name, onNext }) {
+  const fileInputRef = useRef(null);
+  const [photoPreview, setPhotoPreview] = useState('');
+  
+  const handlePhotoSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target.result;
+        setPhotoPreview(result);
+        localStorage.setItem('childPhoto', result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  return (
+    <div className="flex items-center justify-center min-h-screen p-4">
+      <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-2xl">
+        <h2 className="text-3xl font-bold text-gray-800 mb-2">Add {name}'s Photo</h2>
+        <p className="text-gray-600 mb-6">This helps {name} recognize themselves</p>
+        
+        {!photoPreview ? (
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="w-48 h-48 mx-auto bg-purple-100 rounded-2xl flex flex-col items-center justify-center hover:bg-purple-200 transition-colors mb-6"
+          >
+            <Camera size={48} className="text-purple-500 mb-2" />
+            <span className="text-purple-600 font-medium">Add Photo</span>
+          </button>
+        ) : (
+          <div className="relative w-48 h-48 mx-auto mb-6">
+            <img
+              src={photoPreview}
+              alt={name}
+              className="w-full h-full object-cover rounded-2xl"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute bottom-2 right-2 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100"
+            >
+              <RefreshCw size={16} className="text-gray-600" />
+            </button>
+          </div>
+        )}
+        
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handlePhotoSelect}
+          className="hidden"
+        />
+        
+        <div className="bg-blue-50 p-4 rounded-lg mb-6 text-left">
+          <p className="text-sm text-blue-800">
+            🔒 <strong>Privacy Promise:</strong> This photo stays on your device only. 
+            It's never uploaded anywhere.
+          </p>
+        </div>
+        
+        <button
+          onClick={() => photoPreview && onNext(photoPreview)}
+          disabled={!photoPreview}
+          className={`w-full py-4 rounded-xl font-bold text-xl transition-all flex items-center justify-center gap-2 ${
+            photoPreview
+              ? 'bg-purple-500 text-white hover:bg-purple-600'
+              : 'bg-gray-300 text-gray-500'
+          }`}
+        >
+          Next <ChevronRight />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Recording Screen - Step 3
+function RecordingScreen({ name, recordings, setRecordings, onComplete }) {
+  const [currentStage, setCurrentStage] = useState(0);
+  const letters = name.split('');
+  
+  const stages = [
+    { id: 'fullname', label: `Say "${name}"`, key: 'fullname' },
+    ...letters.map((letter, i) => ({
+      id: `letter-${i}`,
+      label: `Say letter "${letter}"`,
+      key: `letter-${i}`
+    })),
+    { id: 'sentence', label: `Say "${name}, time for bed!"`, key: 'sentence' }
+  ];
+  
+  const handleRecordingComplete = (audioBlob, stageKey) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setRecordings(prev => ({
+        ...prev,
+        [stageKey]: e.target.result
+      }));
+      
+      // Auto-advance to next stage
+      if (currentStage < stages.length - 1) {
+        setTimeout(() => setCurrentStage(currentStage + 1), 500);
+      }
+    };
+    reader.readAsDataURL(audioBlob);
+  };
+  
+  const isComplete = stages.every(stage => recordings[stage.key]);
+  
+  return (
+    <div className="min-h-screen p-4 flex items-center justify-center">
+      <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
+        <h2 className="text-3xl font-bold text-gray-800 mb-2 text-center">
+          Record Your Voice
+        </h2>
+        
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm text-gray-600">Progress</span>
+            <span className="text-sm text-gray-600">
+              {Object.keys(recordings).length} / {stages.length}
+            </span>
+          </div>
+          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-purple-500 transition-all duration-300"
+              style={{ width: `${(Object.keys(recordings).length / stages.length) * 100}%` }}
+            />
+          </div>
+        </div>
+        
+        <div className="space-y-3 mb-6">
+          {stages.map((stage, index) => (
+            <RecordingStage
+              key={stage.id}
+              stage={stage}
+              isActive={index === currentStage}
+              isComplete={!!recordings[stage.key]}
+              onRecord={(blob) => handleRecordingComplete(blob, stage.key)}
+              onClick={() => setCurrentStage(index)}
+            />
+          ))}
+        </div>
+        
+        <button
+          onClick={onComplete}
+          disabled={!isComplete}
+          className={`w-full py-4 rounded-xl font-bold text-xl transition-all ${
+            isComplete
+              ? 'bg-green-500 text-white hover:bg-green-600'
+              : 'bg-gray-300 text-gray-500'
+          }`}
+        >
+          {isComplete ? 'Create Flashcards!' : `Record ${stages.length - Object.keys(recordings).length} more`}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Individual Recording Stage
+function RecordingStage({ stage, isActive, isComplete, onRecord, onClick }) {
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef(null);
+  const chunksRef = useRef([]);
+  
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      chunksRef.current = [];
+      
+      mediaRecorder.ondataavailable = (e) => chunksRef.current.push(e.data);
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        onRecord(blob);
+        stream.getTracks().forEach(track => track.stop());
+      };
+      
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      alert('Please allow microphone access');
+    }
+  };
+  
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+  
+  return (
+    <div
+      onClick={onClick}
+      className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${
+        isActive ? 'border-purple-500 bg-purple-50' : 
+        isComplete ? 'border-green-500 bg-green-50' : 
+        'border-gray-200 hover:border-gray-300'
+      }`}
+    >
+      <div className="flex items-center justify-between">
+        <span className={`font-medium ${isActive ? 'text-purple-700' : isComplete ? 'text-green-700' : 'text-gray-700'}`}>
+          {stage.label}
+        </span>
+        
+        {isActive && !isComplete && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              isRecording ? stopRecording() : startRecording();
+            }}
+            className={`p-2 rounded-full transition-all ${
+              isRecording 
+                ? 'bg-red-500 text-white animate-pulse' 
+                : 'bg-purple-500 text-white hover:bg-purple-600'
+            }`}
+          >
+            <Mic size={20} />
+          </button>
+        )}
+        
+        {isComplete && (
+          <Check size={20} className="text-green-600" />
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Menu Screen
+function MenuScreen({ name, onPlay, onRecord, onReset }) {
+  return (
+    <div className="min-h-screen p-4 flex items-center justify-center">
+      <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-2xl">
+        <h2 className="text-3xl font-bold text-gray-800 mb-8">{name}'s Learning</h2>
+        
+        <div className="space-y-4">
+          <button
+            onClick={onPlay}
+            className="w-full py-6 bg-green-500 text-white rounded-xl font-bold text-xl hover:bg-green-600 transition-colors flex items-center justify-center gap-3"
+          >
+            <Play size={28} />
+            Start Learning
+          </button>
+          
+          <button
+            onClick={onRecord}
+            className="w-full py-4 bg-purple-500 text-white rounded-xl font-medium hover:bg-purple-600 transition-colors"
+          >
+            Re-record Voice
+          </button>
+          
+          <button
+            onClick={onReset}
+            className="w-full py-4 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-colors"
+          >
+            Start Over
+          </button>
+        </div>
+        
+        <p className="text-xs text-gray-500 mt-8">
+          Created with ❤️ by BoredMamaApp
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// Flashcard Screen
+function FlashcardScreen({ name, photo, recordings, current, setCurrent, onHome }) {
+  const letters = name.split('');
+  const audioRef = useRef(null);
+  
+  const playSound = (recordingKey) => {
+    const audio = recordings[recordingKey];
+    if (audio) {
+      audioRef.current = new Audio(audio);
+      audioRef.current.play();
+    }
+  };
+  
+  const next = () => {
+    if (current < letters.length - 1) {
+      setCurrent(current + 1);
+      // Auto-play the letter sound
+      setTimeout(() => playSound(`letter-${current + 1}`), 300);
+    }
+  };
+  
+  const prev = () => {
+    if (current > 0) {
+      setCurrent(current - 1);
+      setTimeout(() => playSound(`letter-${current - 1}`), 300);
+    }
+  };
+  
+  // Play current letter on mount
+  useEffect(() => {
+    playSound(`letter-${current}`);
+  }, []);
+  
+  return (
+    <div className="min-h-screen p-4 flex flex-col">
+      <header className="flex justify-between items-center mb-6">
+        <button
+          onClick={onHome}
+          className="p-2 bg-white/20 rounded-full hover:bg-white/30 transition-colors"
+        >
+          <Home size={24} />
+        </button>
+        
+        <h2 className="text-2xl font-bold">Learning: {name}</h2>
+        
+        <button
+          onClick={() => playSound('fullname')}
+          className="p-2 bg-white/20 rounded-full hover:bg-white/30 transition-colors"
+        >
+          <Volume2 size={24} />
+        </button>
+      </header>
+      
+      <div className="flex-1 flex items-center justify-center">
+        <div className="bg-white rounded-2xl p-8 shadow-2xl max-w-md w-full">
+          <div className="relative mb-6">
+            <img
+              src={photo}
+              alt={name}
+              className="w-48 h-48 mx-auto rounded-2xl object-cover"
+            />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="bg-white/90 rounded-2xl p-4">
+                <span className="text-6xl font-bold text-purple-600">
+                  {letters[current]}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="text-center mb-6">
+            <p className="text-gray-600">Letter {current + 1} of {letters.length}</p>
+            <div className="flex justify-center gap-1 mt-2">
+              {letters.map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-2 h-2 rounded-full transition-all ${
+                    i === current ? 'bg-purple-500 w-8' : 'bg-gray-300'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+          
+          <div className="flex justify-center gap-4">
+            <button
+              onClick={() => playSound(`letter-${current}`)}
+              className="px-6 py-3 bg-purple-500 text-white rounded-xl font-medium hover:bg-purple-600 transition-colors flex items-center gap-2"
+            >
+              <Play size={20} />
+              Play Sound
+            </button>
+            
+            <button
+              onClick={() => playSound('sentence')}
+              className="px-6 py-3 bg-pink-500 text-white rounded-xl font-medium hover:bg-pink-600 transition-colors"
+            >
+              Sentence
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <footer className="flex justify-between items-center">
+        <button
+          onClick={prev}
+          disabled={current === 0}
+          className={`px-6 py-3 rounded-xl font-medium transition-all ${
+            current > 0 
+              ? 'bg-white/20 text-white hover:bg-white/30' 
+              : 'bg-white/10 text-white/50'
+          }`}
+        >
+          <ChevronLeft />
+        </button>
+        
+        <button
+          onClick={() => setCurrent(0)}
+          className="px-4 py-2 bg-white/20 text-white rounded-xl hover:bg-white/30 transition-colors"
+        >
+          Start Over
+        </button>
+        
+        <button
+          onClick={next}
+          disabled={current === letters.length - 1}
+          className={`px-6 py-3 rounded-xl font-medium transition-all ${
+            current < letters.length - 1 
+              ? 'bg-white/20 text-white hover:bg-white/30' 
+              : 'bg-white/10 text-white/50'
+          }`}
+        >
+          <ChevronRight />
+        </button>
+      </footer>
+    </div>
+  );
+}
+
+// Inline styles for Tailwind classes
+const style = document.createElement('style');
+style.textContent = `
+  .animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .5; }
+  }
+`;
+document.head.appendChild(style);
