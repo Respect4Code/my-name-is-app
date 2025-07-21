@@ -45,7 +45,7 @@ export default function MyNameIs() {
     <div className="min-h-screen bg-gradient-to-br from-purple-500 to-pink-500 text-white">
       {currentStep === 'welcome' && <WelcomeScreen onNext={(name) => { setChildName(name); localStorage.setItem('childName', name); setCurrentStep('photo'); }} />}
       {currentStep === 'photo' && <PhotoScreen name={childName} onNext={(photo) => { setChildPhoto(photo); setCurrentStep('record'); }} />}
-      {currentStep === 'record' && <RecordingScreen name={childName} recordings={recordings} setRecordings={setRecordings} onComplete={() => setCurrentStep('menu')} />}
+      {currentStep === 'record' && <RecordingScreen name={childName} recordings={recordings} setRecordings={setRecordings} onComplete={() => setCurrentStep('menu')} onBack={() => setCurrentStep('menu')} />}
       {currentStep === 'menu' && <MenuScreen name={childName} onPlay={() => setCurrentStep('flashcards')} onRecord={() => setCurrentStep('record')} onReset={resetApp} />}
       {currentStep === 'flashcards' && <FlashcardScreen name={childName} photo={childPhoto} recordings={recordings} current={currentFlashcard} setCurrent={setCurrentFlashcard} onHome={() => setCurrentStep('menu')} />}
     </div>
@@ -172,11 +172,12 @@ function PhotoScreen({ name, onNext }: { name: string; onNext: (photo: string) =
 }
 
 // Recording Screen - Step 3
-function RecordingScreen({ name, recordings, setRecordings, onComplete }: { 
+function RecordingScreen({ name, recordings, setRecordings, onComplete, onBack }: { 
   name: string; 
   recordings: Record<string, string>; 
   setRecordings: React.Dispatch<React.SetStateAction<Record<string, string>>>; 
   onComplete: () => void; 
+  onBack: () => void;
 }) {
   const [currentStage, setCurrentStage] = useState(0);
   const letters = name.split('');
@@ -188,7 +189,8 @@ function RecordingScreen({ name, recordings, setRecordings, onComplete }: {
       label: `Say the SOUND of "${letter}" (not the letter name)`,
       key: `letter-${i}`
     })),
-    { id: 'sentence', label: `Say "${name}, time for bed!"`, key: 'sentence' }
+    { id: 'sentence', label: `Say "${name}, time for bed!"`, key: 'sentence' },
+    { id: 'rhyme', label: `Put "${name}" in a rhyme or song`, key: 'rhyme' }
   ];
   
   const handleRecordingComplete = (audioBlob: Blob, stageKey: string) => {
@@ -215,9 +217,18 @@ function RecordingScreen({ name, recordings, setRecordings, onComplete }: {
   return (
     <div className="min-h-screen p-4 flex items-center justify-center">
       <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
-        <h2 className="text-3xl font-bold text-gray-800 mb-2 text-center">
-          Record Your Voice
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={onBack}
+            className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+          >
+            <ChevronLeft size={24} className="text-gray-600" />
+          </button>
+          <h2 className="text-3xl font-bold text-gray-800 text-center flex-1">
+            Record Your Voice
+          </h2>
+          <div className="w-10" /> {/* Spacer */}
+        </div>
         
         <div className="mb-6">
           <div className="flex justify-between items-center mb-2">
@@ -438,14 +449,14 @@ function FlashcardScreen({ name, photo, recordings, current, setCurrent, onHome 
       
       {/* Flashcard */}
       <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full text-center mb-6">
-        {/* Child Photo */}
-        <div className="relative mb-6">
+        {/* Child Photo with Large Letter */}
+        <div className="relative mb-6 flex flex-col items-center">
           <img
             src={photo}
             alt={name}
-            className="w-32 h-32 mx-auto rounded-full object-cover shadow-lg"
+            className="w-32 h-32 rounded-full object-cover shadow-lg mb-4"
           />
-          <div className="absolute -bottom-2 -right-2 bg-purple-500 text-white text-4xl font-bold rounded-full w-16 h-16 flex items-center justify-center shadow-lg">
+          <div className="bg-purple-500 text-white text-8xl font-bold rounded-3xl w-40 h-40 flex items-center justify-center shadow-2xl">
             {currentLetter}
           </div>
         </div>
@@ -475,6 +486,32 @@ function FlashcardScreen({ name, photo, recordings, current, setCurrent, onHome 
             <Play size={20} />
             Play Full Name
           </button>
+
+          <button
+            onClick={() => playSound('sentence')}
+            className={`w-full py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
+              playing === 'sentence'
+                ? 'bg-blue-600 text-white animate-pulse'
+                : 'bg-blue-500 text-white hover:bg-blue-600'
+            }`}
+          >
+            <Volume2 size={20} />
+            Play Bedtime Sentence
+          </button>
+
+          {recordings['rhyme'] && (
+            <button
+              onClick={() => playSound('rhyme')}
+              className={`w-full py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
+                playing === 'rhyme'
+                  ? 'bg-pink-600 text-white animate-pulse'
+                  : 'bg-pink-500 text-white hover:bg-pink-600'
+              }`}
+            >
+              <Play size={20} />
+              Play Rhyme
+            </button>
+          )}
         </div>
       </div>
       
