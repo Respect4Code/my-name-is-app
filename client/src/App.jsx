@@ -181,10 +181,11 @@ function WelcomeScreen({ onNext, onGuide }) {
       <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-2xl relative">
         <button
           onClick={onGuide}
-          className="absolute top-4 right-4 p-3 text-purple-600 hover:bg-purple-100 rounded-full border-2 border-purple-200 bg-purple-50 shadow-md"
+          className="absolute top-2 right-2 p-4 text-white bg-purple-600 hover:bg-purple-700 rounded-full shadow-xl z-10 border-4 border-white"
           title="Parent Guide - 5 minute setup"
+          style={{ fontSize: '24px' }}
         >
-          <Info size={20} />
+          <Info size={28} className="text-white" />
         </button>
         
         <h1 className="text-4xl font-bold text-gray-800 mb-2">My Name Is</h1>
