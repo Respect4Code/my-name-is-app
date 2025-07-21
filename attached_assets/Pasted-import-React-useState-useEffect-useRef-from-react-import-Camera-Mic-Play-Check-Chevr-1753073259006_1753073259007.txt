@@ -6,7 +6,7 @@ export default function MyNameIs() {
   const [currentStep, setCurrentStep] = useState('welcome');
   const [childName, setChildName] = useState('');
   const [childPhoto, setChildPhoto] = useState('');
-  const [recordings, setRecordings] = useState<Record<string, string>>({});
+  const [recordings, setRecordings] = useState({});
   const [currentFlashcard, setCurrentFlashcard] = useState(0);
 
   // Load saved data on mount
@@ -53,7 +53,7 @@ export default function MyNameIs() {
 }
 
 // Welcome Screen - Step 1
-function WelcomeScreen({ onNext }: { onNext: (name: string) => void }) {
+function WelcomeScreen({ onNext }) {
   const [name, setName] = useState('');
   
   return (
@@ -94,20 +94,18 @@ function WelcomeScreen({ onNext }: { onNext: (name: string) => void }) {
 }
 
 // Photo Screen - Step 2
-function PhotoScreen({ name, onNext, onBack }: { name: string; onNext: (photo: string) => void; onBack: () => void }) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
+function PhotoScreen({ name, onNext, onBack }) {
+  const fileInputRef = useRef(null);
   const [photoPreview, setPhotoPreview] = useState('');
   
-  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handlePhotoSelect = (e) => {
+    const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        const result = e.target?.result as string;
-        if (result) {
-          setPhotoPreview(result);
-          localStorage.setItem('childPhoto', result);
-        }
+        const result = e.target.result;
+        setPhotoPreview(result);
+        localStorage.setItem('childPhoto', result);
       };
       reader.readAsDataURL(file);
     }
@@ -182,13 +180,7 @@ function PhotoScreen({ name, onNext, onBack }: { name: string; onNext: (photo: s
 }
 
 // Recording Screen - Step 3
-function RecordingScreen({ name, recordings, setRecordings, onComplete, onBack }: { 
-  name: string; 
-  recordings: Record<string, string>; 
-  setRecordings: React.Dispatch<React.SetStateAction<Record<string, string>>>; 
-  onComplete: () => void; 
-  onBack: () => void;
-}) {
+function RecordingScreen({ name, recordings, setRecordings, onComplete, onBack }) {
   const [currentStage, setCurrentStage] = useState(0);
   const [showInstructions, setShowInstructions] = useState(true);
   const letters = name.split('');
@@ -200,7 +192,7 @@ function RecordingScreen({ name, recordings, setRecordings, onComplete, onBack }
       key: 'fullname',
       instruction: `Say their full name clearly: "${name}"`
     },
-    ...letters.map((letter: string, i: number) => ({
+    ...letters.map((letter, i) => ({
       id: `letter-${i}`,
       label: `Letter "${letter}"`,
       key: `letter-${i}`,
@@ -220,20 +212,17 @@ function RecordingScreen({ name, recordings, setRecordings, onComplete, onBack }
     }
   ];
   
-  const handleRecordingComplete = (audioBlob: Blob, stageKey: string) => {
+  const handleRecordingComplete = (audioBlob, stageKey) => {
     const reader = new FileReader();
     reader.onload = (e) => {
-      const result = e.target?.result as string;
-      if (result) {
-        setRecordings(prev => ({
-          ...prev,
-          [stageKey]: result
-        }));
-        
-        // Auto-advance to next stage
-        if (currentStage < stages.length - 1) {
-          setTimeout(() => setCurrentStage(currentStage + 1), 800);
-        }
+      setRecordings(prev => ({
+        ...prev,
+        [stageKey]: e.target.result
+      }));
+      
+      // Auto-advance to next stage
+      if (currentStage < stages.length - 1) {
+        setTimeout(() => setCurrentStage(currentStage + 1), 800);
       }
     };
     reader.readAsDataURL(audioBlob);
@@ -297,7 +286,7 @@ function RecordingScreen({ name, recordings, setRecordings, onComplete, onBack }
               stage={stage}
               isActive={index === currentStage}
               isComplete={!!recordings[stage.key]}
-              onRecord={(blob: Blob) => handleRecordingComplete(blob, stage.key)}
+              onRecord={(blob) => handleRecordingComplete(blob, stage.key)}
               onClick={() => setCurrentStage(index)}
             />
           ))}
@@ -320,17 +309,11 @@ function RecordingScreen({ name, recordings, setRecordings, onComplete, onBack }
 }
 
 // Individual Recording Stage
-function RecordingStage({ stage, isActive, isComplete, onRecord, onClick }: {
-  stage: { id: string; label: string; key: string; instruction: string };
-  isActive: boolean;
-  isComplete: boolean;
-  onRecord: (blob: Blob) => void;
-  onClick: () => void;
-}) {
+function RecordingStage({ stage, isActive, isComplete, onRecord, onClick }) {
   const [isRecording, setIsRecording] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<BlobPart[]>([]);
+  const mediaRecorderRef = useRef(null);
+  const chunksRef = useRef([]);
   
   const startRecording = async () => {
     try {
@@ -413,12 +396,7 @@ function RecordingStage({ stage, isActive, isComplete, onRecord, onClick }: {
 }
 
 // Menu Screen
-function MenuScreen({ name, onPlay, onRecord, onReset }: {
-  name: string;
-  onPlay: () => void;
-  onRecord: () => void;
-  onReset: () => void;
-}) {
+function MenuScreen({ name, onPlay, onRecord, onReset }) {
   return (
     <div className="min-h-screen p-4 flex items-center justify-center">
       <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-2xl">
@@ -456,20 +434,13 @@ function MenuScreen({ name, onPlay, onRecord, onReset }: {
   );
 }
 
-// Flashcard Screen WITH HUGE LETTER (120px)
-function FlashcardScreen({ name, photo, recordings, current, setCurrent, onHome }: {
-  name: string;
-  photo: string;
-  recordings: Record<string, string>;
-  current: number;
-  setCurrent: React.Dispatch<React.SetStateAction<number>>;
-  onHome: () => void;
-}) {
+// Flashcard Screen
+function FlashcardScreen({ name, photo, recordings, current, setCurrent, onHome }) {
   const letters = name.split('');
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState('');
   
-  const playSound = (recordingKey: string, label = '') => {
+  const playSound = (recordingKey, label = '') => {
     const audio = recordings[recordingKey];
     if (audio) {
       setIsPlaying(label);
@@ -635,3 +606,16 @@ function FlashcardScreen({ name, photo, recordings, current, setCurrent, onHome 
     </div>
   );
 }
+
+// Inline styles for animations
+const style = document.createElement('style');
+style.textContent = `
+  .animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .5; }
+  }
+`;
+document.head.appendChild(style);
