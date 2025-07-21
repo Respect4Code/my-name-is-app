@@ -178,10 +178,11 @@ function WelcomeScreen({ onNext, onGuide }) {
   
   return (
     <div className="flex items-center justify-center min-h-screen p-4">
-      <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-2xl">
+      <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-2xl relative">
         <button
           onClick={onGuide}
-          className="absolute top-4 right-4 p-2 text-gray-500 hover:bg-gray-100 rounded-full"
+          className="absolute top-4 right-4 p-3 text-purple-600 hover:bg-purple-100 rounded-full border-2 border-purple-200 bg-purple-50 shadow-md"
+          title="Parent Guide - 5 minute setup"
         >
           <Info size={20} />
         </button>
