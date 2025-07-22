@@ -39,19 +39,19 @@ export default function FlashcardsScreen({
   }
 
   console.log('💳 FlashcardsScreen - name:', name, 'currentCardIndex:', currentCardIndex);
-  
+
   const nameLetters = name.split('');
   const totalCards = nameLetters.length;
   const phonicsData = generatePhonicsData(name);
-  
+
   console.log('💳 FlashcardsScreen - phonicsData:', phonicsData, 'totalCards:', totalCards);
-  
+
   // Ensure currentCardIndex is within bounds
   const safeCardIndex = Math.min(Math.max(0, currentCardIndex), totalCards - 1);
   const currentPhonics = phonicsData[safeCardIndex];
-  
+
   console.log('💳 FlashcardsScreen - safeCardIndex:', safeCardIndex, 'currentPhonics:', currentPhonics);
-  
+
   // Create safe phonics data with fallback
   let safeCurrentPhonics = currentPhonics;
   if (!safeCurrentPhonics || !safeCurrentPhonics.letter) {
@@ -292,7 +292,7 @@ export default function FlashcardsScreen({
           </div>
         </div>
       </main>
-      
+
       <footer className="text-center text-xs text-white/60 py-2 mt-4">
         Created with ❤️ by BoredMamaApp • CC BY-NC-SA 4.0
       </footer>
