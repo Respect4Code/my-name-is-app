@@ -14,7 +14,8 @@ interface FlashcardProps {
 
 export default function Flashcard({ phonics, isFlipped, onFlip, isPlaying, settings, name }: FlashcardProps) {
   const { getRecording } = useParentRecordings();
-  
+  const childPhoto = localStorage.getItem('childPhoto');
+
   // Safety check for phonics properties
   if (!phonics || !phonics.letter || !phonics.position) {
     console.error('💳 Flashcard - Invalid phonics data:', phonics);
@@ -27,7 +28,7 @@ export default function Flashcard({ phonics, isFlipped, onFlip, isPlaying, setti
       </div>
     );
   }
-  
+
   const parentRecording = getRecording(name, phonics.letter, phonics.position);
 
   return (
@@ -70,7 +71,7 @@ export default function Flashcard({ phonics, isFlipped, onFlip, isPlaying, setti
                 {name}
               </div>
             </div>
-            
+
             {/* Large Letter - Right Side */}
             <div className="flex-1 flex flex-col items-center">
               <div className="text-8xl font-bold text-purple-600 mb-2">
@@ -83,7 +84,7 @@ export default function Flashcard({ phonics, isFlipped, onFlip, isPlaying, setti
               )}
             </div>
           </div>
-          
+
           <div className="text-center">
             <div className="text-xl text-gray-600 font-medium mb-2">
               The <span className="text-purple-600 font-bold">{phonics.position}</span> letter

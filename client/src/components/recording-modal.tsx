@@ -1,367 +1,263 @@
-import { useState, useEffect } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+} from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Mic, MicOff, Play, Pause, RotateCcw, Check, X, Volume2 } from "lucide-react";
-import { useRecording, type Recording } from "@/hooks/use-recording";
+import { Slider } from "@/components/ui/slider";
+import { Mic, Play, Stop, Trash2 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { useRecording } from "@/hooks/use-recording";
 import { useParentRecordings } from "@/hooks/use-parent-recordings";
-import { useSpeech } from "@/hooks/use-speech";
-import type { PhonicsData } from "@/lib/phonics";
-import type { Settings } from "@/pages/home";
-
-type RecordingStage = 'full-name' | 'phonetic' | 'singing' | 'sentence';
+import { Settings } from "@/pages/home";
 
 interface RecordingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  phonics: PhonicsData;
+  phonics: any;
   name: string;
-  settings?: Settings;
+  settings: Settings;
 }
 
-const stageConfig = {
-  'full-name': {
-    title: 'Say Your Child\'s Name',
-    description: 'Say your child\'s name naturally, the way you normally pronounce it',
-    instructions: [
-      '• Say the full name in one go',
-      '• Use your normal, everyday pronunciation',
-      '• Keep it natural - like calling them for dinner',
-      '• 2-3 seconds maximum'
-    ],
-    buttonColor: 'bg-blue-500 hover:bg-blue-600'
-  },
-  'phonetic': {
-    title: 'Say This Letter Sound',
-    description: 'How does this letter sound when YOU say your child\'s name?',
-    instructions: [
-      '• Say how this letter sounds when YOU say your child\'s name',
-      '• Don\'t worry about "correct" phonetics - use YOUR pronunciation',
-      '• Keep it short - 1-2 seconds maximum',
-      '• Record in a quiet environment'
-    ],
-    buttonColor: 'bg-purple-500 hover:bg-purple-600'
-  },
-  'singing': {
-    title: 'Sing Your Child\'s Name',
-    description: 'Sing or chant your child\'s name in a fun, memorable way',
-    instructions: [
-      '• Make it musical and fun!',
-      '• Use any melody or rhythm you like',
-      '• Could be like a lullaby or playful chant',
-      '• 3-5 seconds is perfect'
-    ],
-    buttonColor: 'bg-green-500 hover:bg-green-600'
-  },
-  'sentence': {
-    title: 'Say Your Child\'s Name in a Sentence',
-    description: 'Use your child\'s name naturally in an everyday sentence',
-    instructions: [
-      '• Say something like "Come here [name]" or "[name], time for lunch"',
-      '• Use your natural tone and rhythm',
-      '• This captures how your child actually hears their name',
-      '• 3-5 seconds is perfect'
-    ],
-    buttonColor: 'bg-orange-500 hover:bg-orange-600'
-  }
-};
+export default function RecordingModal({ isOpen, onClose, phonics, name, settings }: RecordingModalProps) {
+  const { toast } = useToast();
+  const [showModal, setShowModal] = useState(false);
+  const [volume, setVolume] = useState(50);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
-export default function RecordingModal({ 
-  isOpen, 
-  onClose, 
-  phonics, 
-  name, 
-  settings
-}: RecordingModalProps) {
-  // Ensure settings has default values - fix for undefined settings error
-  const safeSettings = settings || { 
-    speechMode: true, 
-    visualMode: false, 
-    speechRate: 0.8,
-    animations: true,
-    highContrast: false,
-    deafMode: false
-  };
-  const [currentStage, setCurrentStage] = useState<RecordingStage>('full-name');
-  const [stageRecordings, setStageRecordings] = useState<Partial<Record<RecordingStage, Recording>>>({});
-  const [completedStages, setCompletedStages] = useState<Set<RecordingStage>>(new Set());
+  const { getRecording, saveRecording, deleteRecording } = useParentRecordings();
+  const { recording, startRecording, stopRecording, playRecording, stopPlaying, hasRecording } = useRecording({
+    phonics,
+    name,
+    settings,
+  });
 
-  const { speak } = useSpeech(safeSettings.speechRate);
-  const {
-    isRecording,
-    currentRecording,
-    startRecording,
-    stopRecording,
-    playRecording,
-    isPlaying: isPlayingRecording
-  } = useRecording();
+  // Check for existing saved recording
+  const existingRecording = getRecording(name, phonics.letter, phonics.position);
+  const hasSavedRecording = !!existingRecording;
 
-  const { saveRecording, getRecording } = useParentRecordings();
-
-  const currentConfig = stageConfig[currentStage];
-  const currentStageRecording = stageRecordings[currentStage];
-  const allStagesComplete = completedStages.size === 4;
-
-  // Load existing recordings when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      const stages: RecordingStage[] = ['full-name', 'phonetic', 'singing', 'sentence'];
-      const recordings: Partial<Record<RecordingStage, Recording>> = {};
-      const completed = new Set<RecordingStage>();
-
-      stages.forEach(stage => {
-        const key = stage === 'phonetic' 
-          ? `${name}-${phonics.letter}-${phonics.position}-${stage}`
-          : `${name}-${stage}`;
-
-        const recording = getRecording(key);
-        if (recording) {
-          recordings[stage] = recording;
-          completed.add(stage);
-        }
-      });
-
-      setStageRecordings(recordings);
-      setCompletedStages(completed);
-    }
-  }, [isOpen, name, phonics.letter, phonics.position]);
-
-  const handleStartRecording = async () => {
-    try {
-      const recordingKey = currentStage === 'phonetic' 
-        ? `${name}-${phonics.letter}-${phonics.position}-${currentStage}`
-        : `${name}-${currentStage}`;
-
-      await startRecording(recordingKey, currentStage);
-    } catch (error) {
-      console.error('Recording failed:', error);
-    }
-  };
-
-  const handleStopRecording = () => {
-    stopRecording();
-    if (currentRecording) {
-      setStageRecordings(prev => ({
-        ...prev,
-        [currentStage]: currentRecording
-      }));
-    }
-  };
-
-  const handlePlayRecording = () => {
-    if (currentStageRecording) {
-      playRecording(currentStageRecording);
-    }
-  };
-
-  const handleSaveRecording = () => {
-    if (currentStageRecording) {
-      const recordingKey = currentStage === 'phonetic' 
-        ? `${name}-${phonics.letter}-${phonics.position}-${currentStage}`
-        : `${name}-${currentStage}`;
-
-      saveRecording(recordingKey, currentStageRecording);
-      setCompletedStages(prev => new Set([...prev, currentStage]));
-
-      // Auto-advance to next stage if not on last stage
-      const stages: RecordingStage[] = ['full-name', 'phonetic', 'singing', 'sentence'];
-      const currentIndex = stages.indexOf(currentStage);
-      if (currentIndex < stages.length - 1) {
-        setCurrentStage(stages[currentIndex + 1]);
+  // Function to handle playing the recording
+  const handlePlay = async () => {
+    if (recording && !isPlaying) {
+      setIsPlaying(true);
+      try {
+        await playRecording(recording, audioRef);
+      } catch (error) {
+        console.error("Error playing recording:", error);
+        toast({
+          title: "Error Playing",
+          description: "There was an error playing the recording.",
+          variant: "destructive",
+        });
+        setIsPlaying(false);
+      } finally {
+        setIsPlaying(false);
       }
     }
   };
 
-  const handleSkipStage = () => {
-    const stages: RecordingStage[] = ['full-name', 'phonetic', 'singing', 'sentence'];
-    const currentIndex = stages.indexOf(currentStage);
-    if (currentIndex < stages.length - 1) {
-      setCurrentStage(stages[currentIndex + 1]);
+  const handlePlaySaved = async () => {
+    if (existingRecording && !isPlaying) {
+      setIsPlaying(true);
+      try {
+        const audio = new Audio(existingRecording.audioUrl);
+        audio.volume = volume / 100;
+        await audio.play();
+        audio.onended = () => setIsPlaying(false);
+      } catch (error) {
+        console.error("Error playing saved recording:", error);
+        toast({
+          title: "Error Playing",
+          description: "There was an error playing the saved recording.",
+          variant: "destructive",
+        });
+        setIsPlaying(false);
+      }
     }
   };
 
-  const handleDiscardRecording = () => {
-    setStageRecordings(prev => {
-      const updated = { ...prev };
-      delete updated[currentStage];
-      return updated;
-    });
-    setCompletedStages(prev => {
-      const updated = new Set(prev);
-      updated.delete(currentStage);
-      return updated;
-    });
-  };
-
-  // Text-to-speech for instructions
-  const speakInstructions = (text: string) => {
-    if (window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.8;
-      utterance.pitch = 1;
-      utterance.volume = 0.8;
-      window.speechSynthesis.speak(utterance);
+  const handleSave = () => {
+    if (recording) {
+      const recordingData = {
+        id: `${phonics.letter}-${phonics.position}`,
+        audioUrl: recording,
+        letter: phonics.letter,
+        position: phonics.position,
+        type: 'phonetic' as const,
+        createdAt: new Date()
+      };
+      saveRecording(name, recordingData);
+      toast({
+        title: "Recording Saved!",
+        description: `Voice recording for letter ${phonics.letter} has been saved.`,
+      });
     }
   };
 
-  const playInstructions = () => {
-    if (safeSettings?.speechMode) {
-      const instructionText = `${currentConfig.title}. ${currentConfig.description}`;
-      speak(instructionText);
+  const handleDelete = () => {
+    if (existingRecording) {
+      deleteRecording(name, phonics.letter, phonics.position);
+      toast({
+        title: "Recording Deleted",
+        description: `Voice recording for letter ${phonics.letter} has been deleted.`,
+      });
     }
   };
+
+  useEffect(() => {
+    setShowModal(isOpen);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setIsPlaying(false);
+      stopPlaying();
+    }
+  }, [isOpen, stopPlaying]);
+
+  const onVolumeChange = useCallback(
+    (value: number[]) => {
+      setVolume(value[0]);
+      if (audioRef.current) {
+        audioRef.current.volume = value[0] / 100;
+      }
+    },
+    []
+  );
+
+  // Ensure audioRef.current is updated when recording changes
+  useEffect(() => {
+    if (recording && audioRef.current) {
+      audioRef.current.src = recording;
+    }
+  }, [recording]);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={showModal} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-purple-600">
-            {currentConfig.title}
-          </DialogTitle>
-          <DialogDescription className="text-gray-600 mb-4">
-            {currentConfig.description}
+          <DialogTitle>Record Your Voice</DialogTitle>
+          <DialogDescription>
+            Record the sound for letter "{phonics.letter}" in "{name}"
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Stage Progress */}
-          <div className="flex space-x-2">
-            {(['full-name', 'phonetic', 'singing', 'sentence'] as RecordingStage[]).map((stage, index) => (
-              <div
-                key={stage}
-                className={`flex-1 h-2 rounded-full ${
-                  completedStages.has(stage)
-                    ? 'bg-green-500'
-                    : stage === currentStage
-                    ? 'bg-blue-500'
-                    : 'bg-gray-200'
-                }`}
-              />
-            ))}
+        <div className="grid gap-4 py-4">
+          <div className="flex items-center space-x-2">
+            <label htmlFor="volume" className="text-sm font-medium">Volume</label>
+            <Slider
+              id="volume"
+              defaultValue={[volume]}
+              max={100}
+              step={1}
+              onValueChange={onVolumeChange}
+              className="flex-1"
+            />
+            <span className="text-sm text-gray-500 w-10">{volume}%</span>
           </div>
 
-          {/* Context for phonetic stage */}
-          {currentStage === 'phonetic' && (
-            <div className="bg-purple-50 rounded-lg p-4">
-              <h3 className="font-semibold text-lg mb-2">
-                Letter: {phonics.letter}
-              </h3>
-              <p className="text-gray-600">
-                Position: {phonics.position} in "{name}"
-              </p>
-              <p className="text-sm text-gray-500 mt-2">
-                Standard sound: "{phonics.sound}" - but record YOUR pronunciation!
-              </p>
+          <audio ref={audioRef} style={{ display: "none" }} controls />
+
+          {/* Show existing recording if available */}
+          {hasSavedRecording && (
+            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-sm text-green-700 font-medium mb-2">✓ Existing Recording Found</p>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handlePlaySaved}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2 bg-green-100 border-green-300 hover:bg-green-200"
+                  disabled={isPlaying}
+                >
+                  {isPlaying ? (
+                    <div className="w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Play className="w-4 h-4" />
+                  )}
+                  <span>Play Saved</span>
+                </Button>
+                <Button
+                  onClick={handleDelete}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2 bg-red-100 border-red-300 hover:bg-red-200"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Delete</span>
+                </Button>
+              </div>
             </div>
           )}
 
-          {/* Instructions */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-medium">{currentConfig.description}</h3>
-              <Button
-                variant="ghost"
-                onClick={playInstructions}
-                className="p-2"
-                aria-label="Play instructions"
-              >
-                <Volume2 className="w-4 h-4" />
-              </Button>
-            </div>
-            <ul className="text-sm text-gray-600 space-y-1">
-              {currentConfig.instructions.map((instruction, index) => (
-                <li key={index}>{instruction}</li>
-              ))}
-            </ul>
-          </div>
+          {/* Recording controls */}
+          <div className="space-y-2">
+            <p className="text-sm font-medium">
+              {hasSavedRecording ? 'Record New Voice:' : 'Create New Recording:'}
+            </p>
 
-          {/* Recording Controls */}
-          <div className="space-y-4">
-            {!currentStageRecording ? (
-              <div className="text-center space-y-4">
+            {!recording ? (
+              <Button
+                onClick={startRecording}
+                variant="outline"
+                className="w-full flex items-center justify-center gap-2 bg-purple-50 border-purple-200 hover:bg-purple-100"
+              >
+                <Mic className="w-4 h-4" />
+                <span>{hasSavedRecording ? 'Re-record Voice' : 'Start Recording'}</span>
+              </Button>
+            ) : (
+              <div className="space-y-2">
                 <Button
-                  onClick={isRecording ? handleStopRecording : handleStartRecording}
-                  className={`w-32 h-32 rounded-full ${currentConfig.buttonColor} text-white shadow-lg ${
-                    isRecording ? 'animate-pulse' : ''
-                  }`}
+                  onClick={handlePlay}
+                  variant="outline"
+                  className="w-full flex items-center justify-center gap-2 bg-blue-50 border-blue-200 hover:bg-blue-100"
+                  disabled={isPlaying}
                 >
-                  {isRecording ? (
-                    <MicOff className="w-12 h-12" />
+                  {isPlaying ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                      <span>Playing...</span>
+                    </>
                   ) : (
-                    <Mic className="w-12 h-12" />
+                    <>
+                      <Play className="w-4 h-4" />
+                      <span>Play New Recording</span>
+                    </>
                   )}
                 </Button>
-                <p className="text-sm text-gray-600">
-                  {isRecording ? 'Recording... Click to stop' : 'Click to start recording'}
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="flex items-center justify-center space-x-4">
-                  <Button
-                    onClick={handlePlayRecording}
-                    disabled={isPlayingRecording}
-                    variant="outline"
-                    className="flex items-center space-x-2"
-                  >
-                    <Play className="w-4 h-4" />
-                    <span>{isPlayingRecording ? 'Playing...' : 'Play'}</span>
-                  </Button>
-
-                  <Button
-                    onClick={handleDiscardRecording}
-                    variant="outline"
-                    className="flex items-center space-x-2 text-red-600 hover:text-red-700"
-                  >
-                    <X className="w-4 h-4" />
-                    <span>Discard</span>
-                  </Button>
-                </div>
-
-                <div className="flex space-x-2">
-                  <Button
-                    onClick={handleSaveRecording}
-                    className="flex-1 bg-green-500 hover:bg-green-600 text-white"
-                  >
-                    <Check className="w-4 h-4 mr-2" />
-                    Save & Continue
-                  </Button>
-                </div>
+                <Button
+                  onClick={stopRecording}
+                  variant="outline"
+                  className="w-full flex items-center justify-center gap-2 bg-red-50 border-red-200 hover:bg-red-100"
+                >
+                  <Stop className="w-4 h-4" />
+                  <span>Stop & Clear</span>
+                </Button>
               </div>
             )}
           </div>
-
-          {/* Stage Navigation */}
-          <div className="flex justify-between items-center pt-4 border-t">
-            <div className="flex space-x-2">
-              {(['full-name', 'phonetic', 'singing', 'sentence'] as RecordingStage[]).map((stage) => (
-                <Button
-                  key={stage}
-                  variant={stage === currentStage ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setCurrentStage(stage)}
-                  className={completedStages.has(stage) ? "bg-green-100" : ""}
-                >
-                  {completedStages.has(stage) && <Check className="w-3 h-3 mr-1" />}
-                  {stage === 'full-name' ? 'Name' : 
-                   stage === 'phonetic' ? 'Letter' :
-                   stage === 'singing' ? 'Song' : 'Sentence'}
-                </Button>
-              ))}
-            </div>
-
-            <div className="flex space-x-2">
-              <Button variant="ghost" onClick={handleSkipStage}>
-                Skip Stage
-              </Button>
-              {allStagesComplete && (
-                <Button onClick={onClose} className="bg-purple-600 hover:bg-purple-700 text-white">
-                  All Done!
-                </Button>
-              )}
-            </div>
-          </div>
         </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          {recording && (
+            <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700">
+              Save Recording
+            </Button>
+          )}
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

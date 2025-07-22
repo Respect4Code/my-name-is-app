@@ -235,7 +235,7 @@ export default function FlashcardsScreen({
             variant="ghost"
             onClick={goToPrevCard}
             disabled={currentCardIndex === 0}
-            className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-4 rounded-xl font-medium focus:outline-none focus:ring-2 focus:ring-white/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+            className="bg-yellow-500 hover:bg-yellow-600 text-black p-4 rounded-xl font-bold focus:outline-none focus:ring-2 focus:ring-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
             aria-label="Previous card"
           >
             <ArrowLeft className="w-6 h-6" />
@@ -245,17 +245,17 @@ export default function FlashcardsScreen({
             <Button
               variant="ghost"
               onClick={resetToStart}
-              className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-6 py-3 rounded-xl font-medium focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-200"
+              className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-bold focus:outline-none focus:ring-2 focus:ring-orange-400 transition-all duration-200 shadow-lg"
               aria-label="Reset to first card"
             >
               <RotateCcw className="w-5 h-5 mr-2" />
-              Reset
+              Start Over
             </Button>
 
             <Button
               variant="ghost"
               onClick={playSound}
-              className={`bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-6 py-3 rounded-xl font-medium focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-200 ${
+              className={`bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-xl font-bold focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200 shadow-lg ${
                 isPlaying ? 'sound-indicator playing' : 'sound-indicator'
               }`}
               aria-label="Play current letter sound"
@@ -269,7 +269,7 @@ export default function FlashcardsScreen({
             variant="ghost"
             onClick={goToNextCard}
             disabled={currentCardIndex === totalCards - 1}
-            className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-4 rounded-xl font-medium focus:outline-none focus:ring-2 focus:ring-white/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+            className="bg-yellow-500 hover:bg-yellow-600 text-black p-4 rounded-xl font-bold focus:outline-none focus:ring-2 focus:ring-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
             aria-label="Next card"
           >
             <ArrowRight className="w-6 h-6" />
