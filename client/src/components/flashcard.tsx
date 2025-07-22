@@ -32,7 +32,7 @@ export default function Flashcard({ phonics, isFlipped, onFlip, isPlaying, setti
 
   return (
     <div 
-      className={`flip-card h-96 cursor-pointer ${isPlaying ? 'sound-indicator playing' : 'sound-indicator'}`}
+      className={`flip-card h-96 w-full max-w-2xl cursor-pointer ${isPlaying ? 'sound-indicator playing' : 'sound-indicator'}`}
       onClick={onFlip}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -47,23 +47,54 @@ export default function Flashcard({ phonics, isFlipped, onFlip, isPlaying, setti
     >
       <div className={`flip-card-inner ${isFlipped ? 'flipped' : ''}`}>
         {/* Front of Card */}
-        <div className="flip-card-front bg-white rounded-2xl shadow-2xl flex flex-col items-center justify-center p-8 border-4 border-purple-200">
-          <div className="text-8xl font-bold text-purple-600 mb-4">
-            {phonics.letter}
-          </div>
-          {settings.deafMode && (
-            <div className="text-3xl font-mono text-purple-500 mb-2 bg-purple-50 px-4 py-2 rounded-lg">
-              {phonics.sound}
+        <div className="flip-card-front bg-white rounded-2xl shadow-2xl p-6 border-4 border-purple-200">
+          {/* Side-by-side layout for photo and letter */}
+          <div className="flex items-center justify-center gap-6 mb-4">
+            {/* Child's Photo - Left Side */}
+            <div className="flex-1 flex flex-col items-center">
+              {(() => {
+                const storedPhoto = localStorage.getItem('childPhoto');
+                return storedPhoto ? (
+                  <img
+                    src={storedPhoto}
+                    alt={name}
+                    className="w-32 h-32 rounded-full object-cover shadow-lg border-4 border-purple-300"
+                  />
+                ) : (
+                  <div className="w-32 h-32 rounded-full bg-purple-100 shadow-lg border-4 border-purple-300 flex items-center justify-center">
+                    <span className="text-purple-500 text-lg font-medium">📷</span>
+                  </div>
+                );
+              })()}
+              <div className="text-lg text-gray-500 mt-2 font-medium">
+                {name}
+              </div>
             </div>
-          )}
-          <div className="text-2xl text-gray-600 font-medium">
-            The <span className="text-purple-600 font-bold">{phonics.position}</span> letter
+            
+            {/* Large Letter - Right Side */}
+            <div className="flex-1 flex flex-col items-center">
+              <div className="text-8xl font-bold text-purple-600 mb-2">
+                {phonics.letter}
+              </div>
+              {settings.deafMode && (
+                <div className="text-2xl font-mono text-purple-500 bg-purple-50 px-3 py-1 rounded-lg">
+                  {phonics.sound}
+                </div>
+              )}
+            </div>
           </div>
-          <div className="text-lg text-gray-500 mt-2">
-            in <span className="font-semibold">{name}</span>
+          
+          <div className="text-center">
+            <div className="text-xl text-gray-600 font-medium mb-2">
+              The <span className="text-purple-600 font-bold">{phonics.position}</span> letter
+            </div>
+            <div className="text-lg text-gray-500">
+              in <span className="font-semibold">{name}</span>
+            </div>
           </div>
+
           <div className="mt-6 space-y-3">
-            <div className="text-sm text-gray-400 flex items-center gap-2">
+            <div className="text-sm text-gray-400 flex items-center justify-center gap-2">
               <span>{settings.deafMode ? "Visual phonetic sound" : "Click to hear the sound"}</span>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728"></path>
