@@ -49,36 +49,36 @@ export default function Flashcard({ phonics, isFlipped, onFlip, isPlaying, setti
       <div className={`flip-card-inner ${isFlipped ? 'flipped' : ''}`}>
         {/* Front of Card */}
         <div className="flip-card-front bg-white rounded-2xl shadow-2xl p-6 border-4 border-purple-200">
-          {/* Side-by-side layout for photo and letter */}
-          <div className="flex items-center justify-center gap-6 mb-4">
+          {/* Fixed side-by-side layout with proper spacing */}
+          <div className="grid grid-cols-2 gap-8 items-center justify-center mb-6">
             {/* Child's Photo - Left Side */}
-            <div className="flex-1 flex flex-col items-center">
+            <div className="flex flex-col items-center justify-center">
               {(() => {
                 const storedPhoto = localStorage.getItem('childPhoto');
                 return storedPhoto ? (
                   <img
                     src={storedPhoto}
                     alt={name}
-                    className="w-32 h-32 rounded-full object-cover shadow-lg border-4 border-purple-300"
+                    className="w-28 h-28 rounded-full object-cover shadow-lg border-4 border-purple-300"
                   />
                 ) : (
-                  <div className="w-32 h-32 rounded-full bg-purple-100 shadow-lg border-4 border-purple-300 flex items-center justify-center">
+                  <div className="w-28 h-28 rounded-full bg-purple-100 shadow-lg border-4 border-purple-300 flex items-center justify-center">
                     <span className="text-purple-500 text-lg font-medium">📷</span>
                   </div>
                 );
               })()}
-              <div className="text-lg text-gray-500 mt-2 font-medium">
+              <div className="text-sm text-gray-500 mt-2 font-medium text-center">
                 {name}
               </div>
             </div>
 
             {/* Large Letter - Right Side */}
-            <div className="flex-1 flex flex-col items-center">
-              <div className="text-8xl font-bold text-purple-600 mb-2">
+            <div className="flex flex-col items-center justify-center">
+              <div className="text-7xl font-bold text-purple-600 leading-none">
                 {phonics.letter}
               </div>
               {settings.deafMode && (
-                <div className="text-2xl font-mono text-purple-500 bg-purple-50 px-3 py-1 rounded-lg">
+                <div className="text-xl font-mono text-purple-500 bg-purple-50 px-2 py-1 rounded-lg mt-2">
                   {phonics.sound}
                 </div>
               )}

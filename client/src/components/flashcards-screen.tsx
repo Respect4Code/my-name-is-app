@@ -281,10 +281,10 @@ export default function FlashcardsScreen({
           <Progress value={progressPercentage} className="h-3 bg-white/20" />
         </div>
 
-        {/* Keyboard Shortcuts Help */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-white/80 text-sm">
-          <div className="font-medium mb-2">Keyboard Shortcuts:</div>
-          <div className="grid grid-cols-2 gap-2 text-xs">
+        {/* Keyboard Shortcuts Help - Better contrast */}
+        <div className="bg-yellow-400 text-black rounded-xl p-4 text-sm shadow-lg border-2 border-yellow-500">
+          <div className="font-bold mb-2 text-center">⚠️ IMPORTANT INSTRUCTIONS:</div>
+          <div className="grid grid-cols-2 gap-2 text-xs font-medium">
             <div>← → Arrow keys: Navigate</div>
             <div>Space/Enter: Flip card</div>
             <div>R: Reset to start</div>
