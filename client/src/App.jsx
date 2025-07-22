@@ -179,14 +179,25 @@ function WelcomeScreen({ onNext, onGuide }) {
   return (
     <div className="flex items-center justify-center min-h-screen p-4">
       <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-2xl relative">
+        {/* PARENT GUIDE BUTTON - TOP RIGHT */}
         <button
           onClick={onGuide}
-          className="absolute top-2 right-2 p-4 text-white bg-purple-600 hover:bg-purple-700 rounded-full shadow-xl z-10 border-4 border-white"
+          className="absolute top-2 right-2 p-4 text-white bg-purple-600 hover:bg-purple-700 rounded-full shadow-xl z-50 border-4 border-white"
           title="Parent Guide - 5 minute setup"
-          style={{ fontSize: '24px' }}
+          style={{ fontSize: '24px', minWidth: '60px', minHeight: '60px' }}
         >
           <Info size={28} className="text-white" />
         </button>
+        
+        {/* BACKUP GUIDE BUTTON - VERY OBVIOUS */}
+        <div className="mb-4">
+          <button
+            onClick={onGuide}
+            className="px-6 py-3 bg-orange-500 text-white rounded-lg font-bold shadow-lg hover:bg-orange-600 text-lg"
+          >
+            📖 PARENT GUIDE (5 min setup)
+          </button>
+        </div>
         
         <h1 className="text-4xl font-bold text-gray-800 mb-2">My Name Is</h1>
         <p className="text-gray-600 mb-8">Teach your child their name with YOUR voice</p>
