@@ -234,6 +234,10 @@ function WelcomeScreen({ onNext, onGuide }) {
 function PhotoScreen({ name, onNext, onBack }) {
   const fileInputRef = useRef(null);
   const [photoPreview, setPhotoPreview] = useState('');
+  const [imagePosition, setImagePosition] = useState({ x: 0, y: 0 });
+  const [imageScale, setImageScale] = useState(1);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   
   const handlePhotoSelect = (e) => {
     const file = e.target.files[0];
@@ -241,9 +245,70 @@ function PhotoScreen({ name, onNext, onBack }) {
       const reader = new FileReader();
       reader.onload = (e) => {
         setPhotoPreview(e.target.result);
+        // Reset position and scale for new image
+        setImagePosition({ x: 0, y: 0 });
+        setImageScale(1);
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleMouseDown = (e) => {
+    if (!photoPreview) return;
+    setIsDragging(true);
+    setDragStart({
+      x: e.clientX - imagePosition.x,
+      y: e.clientY - imagePosition.y
+    });
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    setImagePosition({
+      x: e.clientX - dragStart.x,
+      y: e.clientY - dragStart.y
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleTouchStart = (e) => {
+    if (!photoPreview) return;
+    const touch = e.touches[0];
+    setIsDragging(true);
+    setDragStart({
+      x: touch.clientX - imagePosition.x,
+      y: touch.clientY - imagePosition.y
+    });
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    setImagePosition({
+      x: touch.clientX - dragStart.x,
+      y: touch.clientY - dragStart.y
+    });
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+  };
+
+  const resetPosition = () => {
+    setImagePosition({ x: 0, y: 0 });
+    setImageScale(1);
+  };
+
+  const zoomIn = () => {
+    setImageScale(prev => Math.min(prev + 0.2, 3));
+  };
+
+  const zoomOut = () => {
+    setImageScale(prev => Math.max(prev - 0.2, 0.5));
   };
   
   return (
@@ -262,24 +327,78 @@ function PhotoScreen({ name, onNext, onBack }) {
         {!photoPreview ? (
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="w-64 h-64 mx-auto bg-purple-100 rounded-2xl flex flex-col items-center justify-center hover:bg-purple-200 transition-colors mb-6"
+            className="w-80 h-80 mx-auto bg-purple-100 rounded-2xl flex flex-col items-center justify-center hover:bg-purple-200 transition-colors mb-6"
           >
             <Camera size={64} className="text-purple-500 mb-4" />
             <span className="text-purple-600 font-medium text-lg">Tap to Add Photo</span>
           </button>
         ) : (
-          <div className="relative w-64 h-64 mx-auto mb-6">
-            <img
-              src={photoPreview}
-              alt={name}
-              className="w-full h-full object-cover rounded-2xl"
-            />
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="absolute bottom-2 right-2 p-3 bg-white rounded-full shadow-lg hover:bg-gray-100"
+          <div className="relative w-80 h-80 mx-auto mb-6">
+            {/* Photo frame with cropping */}
+            <div 
+              className="w-full h-full rounded-2xl overflow-hidden bg-gray-100 relative cursor-move select-none"
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
             >
-              <RefreshCw size={20} className="text-gray-600" />
-            </button>
+              <img
+                src={photoPreview}
+                alt={name}
+                className="absolute"
+                style={{
+                  transform: `translate(${imagePosition.x}px, ${imagePosition.y}px) scale(${imageScale})`,
+                  transformOrigin: 'center',
+                  cursor: isDragging ? 'grabbing' : 'grab',
+                  userSelect: 'none',
+                  pointerEvents: 'none'
+                }}
+                draggable={false}
+              />
+            </div>
+
+            {/* Photo controls */}
+            <div className="absolute -bottom-2 left-0 right-0 flex justify-center gap-2">
+              <button
+                onClick={zoomOut}
+                className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 text-gray-600"
+                title="Zoom Out"
+              >
+                <span className="text-lg font-bold">−</span>
+              </button>
+              
+              <button
+                onClick={resetPosition}
+                className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 text-gray-600"
+                title="Reset Position"
+              >
+                <RefreshCw size={16} />
+              </button>
+              
+              <button
+                onClick={zoomIn}
+                className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 text-gray-600"
+                title="Zoom In"
+              >
+                <span className="text-lg font-bold">+</span>
+              </button>
+              
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="p-2 bg-purple-500 rounded-full shadow-lg hover:bg-purple-600 text-white"
+                title="Change Photo"
+              >
+                <Camera size={16} />
+              </button>
+            </div>
+
+            {/* Instruction overlay */}
+            <div className="absolute top-2 left-2 right-2 bg-black/70 text-white text-xs p-2 rounded-lg">
+              💡 Drag to position • Zoom with +/− buttons
+            </div>
           </div>
         )}
         
@@ -296,6 +415,11 @@ function PhotoScreen({ name, onNext, onBack }) {
             🔒 <strong>100% Private:</strong> This photo stays on YOUR device only. 
             Never uploaded. No internet needed. Works offline forever.
           </p>
+          {photoPreview && (
+            <p className="text-xs text-green-700 mt-2">
+              📏 Drag and zoom to frame {name}'s face perfectly
+            </p>
+          )}
         </div>
         
         <button
