@@ -700,19 +700,19 @@ function FlashcardScreen({ name, photo, recordings, current, setCurrent, onHome 
     }
   };
   
-  const next = React.useCallback(() => {
+  const next = () => {
     if (current < letters.length - 1) {
       setCurrent(current + 1);
       setTimeout(() => playSound(`letter-${current + 1}`), 300);
     }
-  }, [current, letters.length, setCurrent]);
+  };
   
-  const prev = React.useCallback(() => {
+  const prev = () => {
     if (current > 0) {
       setCurrent(current - 1);
       setTimeout(() => playSound(`letter-${current - 1}`), 300);
     }
-  }, [current, setCurrent]);
+  };
   
   // Auto-play current letter with mobile fix
   useEffect(() => {
@@ -728,20 +728,20 @@ function FlashcardScreen({ name, photo, recordings, current, setCurrent, onHome 
     const handleKeyDown = (e) => {
       // Block browser back/forward shortcuts
       if ((e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) ||
-          e.key === 'Backspace' && !e.target.matches('input, textarea')) {
+          (e.key === 'Backspace' && !e.target.matches('input, textarea'))) {
         e.preventDefault();
       }
       // Add arrow key navigation for flashcards
-      if (e.key === 'ArrowLeft' && current > 0) {
-        prev();
-      } else if (e.key === 'ArrowRight' && current < letters.length - 1) {
-        next();
+      if (e.key === 'ArrowLeft') {
+        document.querySelector('[data-action="prev"]')?.click();
+      } else if (e.key === 'ArrowRight') {
+        document.querySelector('[data-action="next"]')?.click();
       }
     };
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [current, letters.length, prev, next]);
+  }, []);
   
   return (
     <div className="min-h-screen p-4 flex flex-col">
@@ -814,14 +814,6 @@ function FlashcardScreen({ name, photo, recordings, current, setCurrent, onHome 
               <p className="text-red-800 text-sm font-medium text-center">
                 ⚠️ Audio playback issue. Please tap the button again or check your volume.
               </p>
-            </div>
-          )}
-          
-          {/* Audio debug info for parents */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="text-center mb-4 text-xs text-gray-500">
-              Audio status: {isPlaying ? `Playing ${isPlaying}` : 'Ready'} | 
-              Recordings loaded: {Object.keys(recordings).length}
             </div>
           )}
           
