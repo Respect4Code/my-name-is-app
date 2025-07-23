@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Camera, Mic, Play, Check, ChevronRight, ChevronLeft, 
@@ -172,32 +173,20 @@ export default function App() {
   );
 }
 
-// ====== WELCOME SCREEN ======
+// ====== WELCOME SCREEN (FIXED PARENT GUIDE BUTTON) ======
 function WelcomeScreen({ onNext, onGuide }) {
   const [name, setName] = useState('');
   
   return (
     <div className="flex items-center justify-center min-h-screen p-4">
       <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-2xl relative">
-        {/* PARENT GUIDE BUTTON - TOP RIGHT */}
+        {/* Fixed Parent Guide Button */}
         <button
           onClick={onGuide}
-          className="absolute top-2 right-2 p-4 text-white bg-purple-600 hover:bg-purple-700 rounded-full shadow-xl z-50 border-4 border-white"
-          title="Parent Guide - 5 minute setup"
-          style={{ fontSize: '24px', minWidth: '60px', minHeight: '60px' }}
+          className="absolute top-4 right-4 p-2 text-gray-500 hover:bg-gray-100 rounded-full"
         >
-          <Info size={28} className="text-white" />
+          <Info size={20} />
         </button>
-        
-        {/* BACKUP GUIDE BUTTON - VERY OBVIOUS */}
-        <div className="mb-4">
-          <button
-            onClick={onGuide}
-            className="px-6 py-3 bg-orange-500 text-white rounded-lg font-bold shadow-lg hover:bg-orange-600 text-lg"
-          >
-            📖 PARENT GUIDE (5 min setup)
-          </button>
-        </div>
         
         <h1 className="text-4xl font-bold text-gray-800 mb-2">My Name Is</h1>
         <p className="text-gray-600 mb-8">Teach your child their name with YOUR voice</p>
@@ -325,7 +314,7 @@ function PhotoScreen({ name, onNext, onBack }) {
   );
 }
 
-// ====== RECORDING SCREEN ======
+// ====== FIXED RECORDING SCREEN (WITH RE-RECORD ABILITY) ======
 function RecordingScreen({ name, recordings, setRecordings, onComplete, onBack }) {
   const [currentStage, setCurrentStage] = useState(0);
   const letters = name.split('');
@@ -403,6 +392,7 @@ function RecordingScreen({ name, recordings, setRecordings, onComplete, onBack }
             <li>2. Say the word/sound clearly</li>
             <li>3. Tap the SQUARE to STOP</li>
             <li>4. Green check = Saved!</li>
+            <li>5. Tap any recording to re-record it</li>
           </ol>
         </div>
         
@@ -430,6 +420,7 @@ function RecordingScreen({ name, recordings, setRecordings, onComplete, onBack }
               isComplete={!!recordings[stage.key]}
               onRecord={(blob) => handleRecordingComplete(blob, stage.key)}
               onClick={() => setCurrentStage(index)}
+              allowReRecord={true} // Allow re-recording even if complete
             />
           ))}
         </div>
@@ -450,8 +441,8 @@ function RecordingScreen({ name, recordings, setRecordings, onComplete, onBack }
   );
 }
 
-// ====== RECORDING STAGE COMPONENT ======
-function RecordingStage({ stage, isActive, isComplete, onRecord, onClick }) {
+// ====== FIXED RECORDING STAGE COMPONENT (WITH RE-RECORD) ======
+function RecordingStage({ stage, isActive, isComplete, onRecord, onClick, allowReRecord }) {
   const [isRecording, setIsRecording] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const mediaRecorderRef = useRef(null);
@@ -514,7 +505,8 @@ function RecordingStage({ stage, isActive, isComplete, onRecord, onClick }) {
           </div>
         </div>
         
-        {isActive && !isComplete && (
+        {/* Show record button when active OR when complete but re-recording is allowed */}
+        {(isActive || (isComplete && allowReRecord && isActive)) && (
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -530,7 +522,7 @@ function RecordingStage({ stage, isActive, isComplete, onRecord, onClick }) {
           </button>
         )}
         
-        {isComplete && (
+        {isComplete && !isActive && (
           <div className="flex items-center gap-2">
             {showSuccess && <span className="text-sm font-medium text-green-600">Saved!</span>}
             <div className="p-2 bg-green-500 text-white rounded-full">
@@ -539,6 +531,11 @@ function RecordingStage({ stage, isActive, isComplete, onRecord, onClick }) {
           </div>
         )}
       </div>
+      
+      {/* Show re-record hint for completed items */}
+      {isComplete && !isActive && (
+        <p className="text-xs text-gray-500 mt-2 text-center">Tap to re-record</p>
+      )}
     </div>
   );
 }
@@ -591,7 +588,7 @@ function MenuScreen({ name, onPlay, onRecord, onReset, onBack }) {
   );
 }
 
-// ====== FLASHCARD SCREEN ======
+// ====== FIXED FLASHCARD SCREEN (SIDE-BY-SIDE LAYOUT) ======
 function FlashcardScreen({ name, photo, recordings, current, setCurrent, onHome }) {
   const letters = name.split('');
   const audioRef = useRef(null);
@@ -631,37 +628,42 @@ function FlashcardScreen({ name, photo, recordings, current, setCurrent, onHome 
   
   return (
     <div className="min-h-screen p-4 flex flex-col">
-      <header className="flex justify-between items-center mb-6 max-w-4xl mx-auto w-full">
+      <header className="flex justify-between items-center mb-6 max-w-6xl mx-auto w-full">
         <button
           onClick={onHome}
-          className="p-3 bg-white/20 rounded-full hover:bg-white/30 transition-colors"
+          className="p-3 bg-white/90 text-gray-700 rounded-full hover:bg-white transition-colors shadow-lg"
         >
           <Home size={28} />
         </button>
         
-        <h2 className="text-2xl font-bold">Learning: {name}</h2>
+        <h2 className="text-2xl font-bold text-white bg-black/20 px-4 py-2 rounded-lg">
+          Learning: {name}
+        </h2>
         
         <div className="w-14" />
       </header>
       
       <div className="flex-1 flex items-center justify-center">
-        <div className="bg-white rounded-3xl p-8 shadow-2xl max-w-4xl w-full">
-          {/* Photo with HUGE letter overlay */}
-          <div className="relative mb-8 mx-auto" style={{ width: '320px', height: '320px' }}>
-            <img
-              src={photo}
-              alt={name}
-              className="w-full h-full rounded-3xl object-cover"
-            />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="bg-white/95 rounded-[40px] shadow-2xl px-16 py-12">
-                <span 
-                  className="font-black text-purple-600 leading-none select-none"
-                  style={{ fontSize: '200px' }}
-                >
-                  {letters[current]}
-                </span>
-              </div>
+        <div className="bg-white rounded-3xl p-8 shadow-2xl max-w-6xl w-full">
+          {/* FIXED: Side-by-side layout */}
+          <div className="flex flex-col lg:flex-row items-center justify-center gap-8 mb-8">
+            {/* Photo */}
+            <div className="w-80 h-80">
+              <img
+                src={photo}
+                alt={name}
+                className="w-full h-full rounded-3xl object-cover shadow-lg"
+              />
+            </div>
+            
+            {/* Letter */}
+            <div className="bg-purple-50 rounded-3xl shadow-xl px-20 py-16 border-4 border-purple-200">
+              <span 
+                className="font-black text-purple-600 leading-none select-none block"
+                style={{ fontSize: '200px' }}
+              >
+                {letters[current]}
+              </span>
             </div>
           </div>
           
@@ -681,8 +683,11 @@ function FlashcardScreen({ name, photo, recordings, current, setCurrent, onHome 
             </div>
           </div>
           
-          <div className="text-center text-gray-500 text-base mb-6">
-            👆 Tap buttons below to hear sounds
+          {/* FIXED: High contrast instruction box */}
+          <div className="bg-yellow-100 border-2 border-yellow-400 p-4 rounded-xl text-center mb-6 max-w-2xl mx-auto">
+            <p className="text-gray-800 font-bold text-lg">
+              👆 Tap buttons below to hear sounds
+            </p>
           </div>
           
           {/* All 4 playback options */}
@@ -738,15 +743,15 @@ function FlashcardScreen({ name, photo, recordings, current, setCurrent, onHome 
         </div>
       </div>
       
-      {/* Navigation */}
-      <footer className="flex justify-between items-center max-w-4xl mx-auto w-full mt-6">
+      {/* FIXED: High contrast navigation buttons */}
+      <footer className="flex justify-between items-center max-w-6xl mx-auto w-full mt-6">
         <button
           onClick={prev}
           disabled={current === 0}
-          className={`px-8 py-4 rounded-xl font-medium transition-all flex items-center gap-2 text-lg ${
+          className={`px-8 py-4 rounded-xl font-bold transition-all flex items-center gap-2 text-lg shadow-lg ${
             current > 0 
-              ? 'bg-white/20 text-white hover:bg-white/30 hover:scale-105' 
-              : 'bg-white/10 text-white/50 cursor-not-allowed'
+              ? 'bg-white text-gray-800 hover:bg-gray-100 hover:scale-105' 
+              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
           }`}
         >
           <ChevronLeft size={24} /> Previous
@@ -757,7 +762,7 @@ function FlashcardScreen({ name, photo, recordings, current, setCurrent, onHome 
             setCurrent(0);
             playSound('letter-0');
           }}
-          className="px-6 py-3 bg-white/20 text-white rounded-xl hover:bg-white/30 transition-all hover:scale-105"
+          className="px-6 py-3 bg-white text-gray-800 font-bold rounded-xl hover:bg-gray-100 transition-all hover:scale-105 shadow-lg"
         >
           Start Over
         </button>
@@ -765,10 +770,10 @@ function FlashcardScreen({ name, photo, recordings, current, setCurrent, onHome 
         <button
           onClick={next}
           disabled={current === letters.length - 1}
-          className={`px-8 py-4 rounded-xl font-medium transition-all flex items-center gap-2 text-lg ${
+          className={`px-8 py-4 rounded-xl font-bold transition-all flex items-center gap-2 text-lg shadow-lg ${
             current < letters.length - 1 
-              ? 'bg-white/20 text-white hover:bg-white/30 hover:scale-105' 
-              : 'bg-white/10 text-white/50 cursor-not-allowed'
+              ? 'bg-white text-gray-800 hover:bg-gray-100 hover:scale-105' 
+              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
           }`}
         >
           Next <ChevronRight size={24} />
@@ -777,3 +782,16 @@ function FlashcardScreen({ name, photo, recordings, current, setCurrent, onHome 
     </div>
   );
 }
+
+// Add animations
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: .8; transform: scale(1.05); }
+  }
+  .animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+`;
+document.head.appendChild(style);
