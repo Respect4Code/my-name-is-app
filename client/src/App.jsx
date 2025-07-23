@@ -130,6 +130,7 @@ export default function App() {
           name={childName} 
           onNext={(photo) => {
             setChildPhoto(photo);
+            localStorage.setItem('childPhoto', photo);
             setCurrentStep('record');
           }}
           onBack={() => setCurrentStep('welcome')}
@@ -178,7 +179,7 @@ function WelcomeScreen({ onNext, onGuide }) {
   const [name, setName] = useState('');
   
   return (
-    <div className="flex items-center justify-center min-h-screen p-4">
+    <div className="flex items-center justify-center min-h-screen p-4 relative">
       <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-2xl relative">
         {/* Fixed Parent Guide Button */}
         <button
@@ -240,7 +241,6 @@ function PhotoScreen({ name, onNext, onBack }) {
       const reader = new FileReader();
       reader.onload = (e) => {
         setPhotoPreview(e.target.result);
-        localStorage.setItem('childPhoto', e.target.result);
       };
       reader.readAsDataURL(file);
     }
@@ -631,7 +631,7 @@ function FlashcardScreen({ name, photo, recordings, current, setCurrent, onHome 
       <header className="flex justify-between items-center mb-6 max-w-6xl mx-auto w-full">
         <button
           onClick={onHome}
-          className="p-3 bg-white/90 text-gray-700 rounded-full hover:bg-white transition-colors shadow-lg"
+          className="p-3 bg-white text-gray-700 rounded-full hover:bg-gray-100 transition-colors shadow-lg"
         >
           <Home size={28} />
         </button>
