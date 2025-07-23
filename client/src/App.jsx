@@ -705,14 +705,14 @@ function FlashcardScreen({ name, photo, recordings, current, setCurrent, onHome 
       setCurrent(current + 1);
       setTimeout(() => playSound(`letter-${current + 1}`), 300);
     }
-  }, [current, letters.length, playSound]);
+  }, [current, letters.length, setCurrent]);
   
   const prev = React.useCallback(() => {
     if (current > 0) {
       setCurrent(current - 1);
       setTimeout(() => playSound(`letter-${current - 1}`), 300);
     }
-  }, [current, playSound]);
+  }, [current, setCurrent]);
   
   // Auto-play current letter with mobile fix
   useEffect(() => {
@@ -741,7 +741,7 @@ function FlashcardScreen({ name, photo, recordings, current, setCurrent, onHome 
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [current, letters.length]);
+  }, [current, letters.length, prev, next]);
   
   return (
     <div className="min-h-screen p-4 flex flex-col">
