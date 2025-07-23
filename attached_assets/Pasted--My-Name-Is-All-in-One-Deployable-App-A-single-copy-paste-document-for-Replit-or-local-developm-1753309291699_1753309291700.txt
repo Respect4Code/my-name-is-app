@@ -1,0 +1,237 @@
+📦 My Name Is – All-in-One Deployable App
+
+A single copy-paste document for Replit or local development. Includes HTML, React, Vite config, README, and LICENSE.
+✅ index.html
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Name Is</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-purple-900 text-white">
+    <div id="root"></div>
+  </body>
+</html>
+✅ package.json
+// package.json
+{
+  "name": "my-name-is",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "lucide-react": "^0.263.1"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "@vitejs/plugin-react": "^4.0.0"
+  }
+}
+✅ vite.config.js
+// vite.config.js
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+});
+✅ main.jsx
+// main.jsx
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App.jsx';
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+✅ App.jsx
+// App.jsx
+import React, { useState, useRef } from 'react';
+import { Mic, Volume2, ArrowLeft } from 'lucide-react';
+
+const getInitialState = () => ({
+  name: '',
+  photo: null,
+  stage: 'input',
+  recordings: {},
+});
+
+export default function App() {
+  const [state, setState] = useState(getInitialState);
+  const [currentLetterIndex, setCurrentLetterIndex] = useState(0);
+  const mediaRecorderRef = useRef(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const chunks = useRef([]);
+
+  const letters = [...new Set(state.name.toUpperCase().split(''))];
+  const letter = letters[currentLetterIndex];
+
+  const handleRecording = (key) => {
+    if (!isRecording) {
+      chunks.current = [];
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+        const recorder = new MediaRecorder(stream);
+        recorder.ondataavailable = e => chunks.current.push(e.data);
+        recorder.onstop = () => {
+          const blob = new Blob(chunks.current);
+          const url = URL.createObjectURL(blob);
+          setState(prev => ({
+            ...prev,
+            recordings: { ...prev.recordings, [key]: url }
+          }));
+        };
+        mediaRecorderRef.current = recorder;
+        recorder.start();
+        setIsRecording(true);
+      });
+    } else {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const play = (key) => {
+    const url = state.recordings[key];
+    if (url) {
+      const audio = new Audio(url);
+      audio.play();
+    }
+  };
+
+  const renderInput = () => (
+    <div className="p-4 text-center space-y-4">
+      <h1 className="text-3xl">What's your child's name?</h1>
+      <input
+        className="p-2 rounded text-black"
+        placeholder="Enter name"
+        value={state.name}
+        onChange={(e) => setState({ ...state, name: e.target.value })}
+      />
+      <button
+        className="block mx-auto px-4 py-2 bg-white text-purple-800 rounded"
+        onClick={() => setState({ ...state, stage: 'photo' })}
+      >Next</button>
+    </div>
+  );
+
+  const renderPhoto = () => (
+    <div className="p-4 text-center space-y-4">
+      <button onClick={() => setState({ ...state, stage: 'input' })}><ArrowLeft /> Back</button>
+      <h1 className="text-3xl">Add a photo</h1>
+      <input
+        type="file"
+        accept="image/*"
+        onChange={(e) => {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = () => setState({ ...state, photo: reader.result, stage: 'record' });
+            reader.readAsDataURL(file);
+          }
+        }}
+      />
+    </div>
+  );
+
+  const renderRecord = () => (
+    <div className="p-4 text-center space-y-4">
+      <button onClick={() => setState({ ...state, stage: 'photo' })}><ArrowLeft /> Back</button>
+      <h1 className="text-3xl">Record for {letter}</h1>
+      <div className="text-[120px]">{letter}</div>
+      {state.photo && (
+        <img src={state.photo} alt="child" className="w-48 h-48 mx-auto rounded-full object-cover" />
+      )}
+      <button
+        className={`px-4 py-2 rounded ${isRecording ? 'bg-red-500' : 'bg-green-500'}`}
+        onClick={() => handleRecording(`letter-${letter}`)}
+      >{isRecording ? 'Stop' : 'Record'} Letter</button>
+
+      <button onClick={() => play(`letter-${letter}`)}><Volume2 /> Play</button>
+
+      <button className="block mx-auto mt-4 bg-white text-purple-800 px-4 py-2 rounded"
+        onClick={() => {
+          if (currentLetterIndex < letters.length - 1) {
+            setCurrentLetterIndex((i) => i + 1);
+          } else {
+            setState({ ...state, stage: 'learn' });
+          }
+        }}>
+        Next
+      </button>
+    </div>
+  );
+
+  const renderLearn = () => (
+    <div className="p-4 text-center">
+      <h1 className="text-2xl mb-4">Let's Review!</h1>
+      {letters.map((ltr) => (
+        <div key={ltr} className="mb-8">
+          <div className="text-[120px] mb-4">{ltr}</div>
+          <img src={state.photo} className="w-64 h-64 mx-auto rounded-full object-cover mb-2" />
+          <div className="flex justify-center gap-4">
+            <button onClick={() => play(`letter-${ltr}`)} className="bg-purple-700 px-3 py-1 rounded">🔊 Letter</button>
+            <button onClick={() => play('sentence')} className="bg-purple-700 px-3 py-1 rounded">🛏 Bedtime</button>
+            <button onClick={() => play('rhyme')} className="bg-purple-700 px-3 py-1 rounded">🎶 Rhyme</button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  if (state.stage === 'input') return renderInput();
+  if (state.stage === 'photo') return renderPhoto();
+  if (state.stage === 'record') return renderRecord();
+  if (state.stage === 'learn') return renderLearn();
+
+  return null;
+}
+✅ LICENSE
+Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)
+
+You are free to:
+- Share — copy and redistribute the material in any medium or format
+- Adapt — remix, transform, and build upon the material
+
+Under the following terms:
+- Attribution — You must give appropriate credit.
+- NonCommercial — You may not use the material for commercial purposes.
+- ShareAlike — You must distribute your contributions under the same license.
+✅ README.md
+# 📚 My Name Is – Toddler-Friendly Name Learning Tool
+
+A React + Vite app to teach children their names using:
+
+- Big letters with sounds
+- Custom parent voice recordings
+- Child's photo overlay
+- Rhyme and sentence playback
+
+## 🧰 Setup (Replit or Local)
+
+```bash
+npm install
+npm run dev
+✅ Features
+Name → Photo → Record → Learn
+Real audio recording (no backend)
+Local photo + audio storage
+Clear, linear UI
+Auto-playback of letters
+Toddler-friendly font sizing
+🔐 Privacy First
+All data stays local
+Nothing is uploaded
+🪪 License
+CC BY-NC-SA 4.0 — use freely, no commercial reuse
+Built with ❤️ for early learners.
