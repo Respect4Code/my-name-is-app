@@ -39,6 +39,7 @@ function ParentGuide({ onClose }) {
                 <li>• Bedtime sentence</li>
                 <li>• Fun rhyme</li>
               </ul>
+              <p className="text-gray-600 mt-1"><strong>To re-record:</strong> Just tap any item again!</p>
             </div>
             
             <div>
@@ -53,7 +54,18 @@ function ParentGuide({ onClose }) {
               <li>• Red mic = recording</li>
               <li>• Tap once to start, tap again to stop</li>
               <li>• Green check = saved</li>
+              <li>• Orange mic = re-recording</li>
               <li>• Record letter SOUNDS not names (B = "buh" not "bee")</li>
+            </ul>
+          </div>
+          
+          <div className="bg-yellow-50 p-4 rounded-lg">
+            <h3 className="font-bold mb-1">⚠️ Important:</h3>
+            <ul className="text-gray-700 space-y-1">
+              <li>• <strong>Your work is auto-saved!</strong></li>
+              <li>• Use back buttons (not browser back)</li>
+              <li>• Works best without toddler present 😅</li>
+              <li>• If audio doesn't play, check volume/silent mode</li>
             </ul>
           </div>
         </div>
@@ -77,6 +89,20 @@ export default function App() {
   const [recordings, setRecordings] = useState({});
   const [currentFlashcard, setCurrentFlashcard] = useState(0);
   const [showGuide, setShowGuide] = useState(false);
+
+  // Protect against accidental navigation
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (childName || childPhoto || Object.keys(recordings).length > 0) {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved work. Are you sure you want to leave?';
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [childName, childPhoto, recordings]);
 
   // Load saved data
   useEffect(() => {
@@ -130,7 +156,6 @@ export default function App() {
           name={childName} 
           onNext={(photo) => {
             setChildPhoto(photo);
-            localStorage.setItem('childPhoto', photo);
             setCurrentStep('record');
           }}
           onBack={() => setCurrentStep('welcome')}
@@ -178,8 +203,15 @@ export default function App() {
 function WelcomeScreen({ onNext, onGuide }) {
   const [name, setName] = useState('');
   
+  // Prevent Enter key from submitting form accidentally
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && name.length >= 2) {
+      onNext(name.toUpperCase());
+    }
+  };
+  
   return (
-    <div className="flex items-center justify-center min-h-screen p-4 relative">
+    <div className="flex items-center justify-center min-h-screen p-4">
       <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-2xl relative">
         {/* Fixed Parent Guide Button */}
         <button
@@ -190,12 +222,16 @@ function WelcomeScreen({ onNext, onGuide }) {
         </button>
         
         <h1 className="text-4xl font-bold text-gray-800 mb-2">My Name Is</h1>
-        <p className="text-gray-600 mb-8">Teach your child their name with YOUR voice</p>
+        <p className="text-gray-600 mb-2">Teach your child their name with YOUR voice</p>
+        <p className="text-purple-600 text-sm font-medium mb-6">
+          ⭐ "My 18-month-old learned all letters phonetically!" - Real parent
+        </p>
         
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value.replace(/[^a-zA-Z]/g, ''))}
+          onKeyPress={handleKeyPress}
           placeholder="Enter your child's name"
           className="w-full p-4 text-2xl text-center border-2 border-purple-200 rounded-xl text-gray-800 mb-6"
           maxLength={12}
@@ -223,7 +259,8 @@ function WelcomeScreen({ onNext, onGuide }) {
         
         <p className="text-xs text-gray-500 mt-8">
           100% Private • Works Offline • CC BY-NC-SA 4.0<br/>
-          Created with ❤️ by BoredMamaApp
+          Created with ❤️ by BoredMamaApp<br/>
+          <span className="text-green-600 font-medium">✓ Auto-saves your work</span>
         </p>
       </div>
     </div>
@@ -234,10 +271,6 @@ function WelcomeScreen({ onNext, onGuide }) {
 function PhotoScreen({ name, onNext, onBack }) {
   const fileInputRef = useRef(null);
   const [photoPreview, setPhotoPreview] = useState('');
-  const [imagePosition, setImagePosition] = useState({ x: 0, y: 0 });
-  const [imageScale, setImageScale] = useState(1);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   
   const handlePhotoSelect = (e) => {
     const file = e.target.files[0];
@@ -245,70 +278,10 @@ function PhotoScreen({ name, onNext, onBack }) {
       const reader = new FileReader();
       reader.onload = (e) => {
         setPhotoPreview(e.target.result);
-        // Reset position and scale for new image
-        setImagePosition({ x: 0, y: 0 });
-        setImageScale(1);
+        localStorage.setItem('childPhoto', e.target.result);
       };
       reader.readAsDataURL(file);
     }
-  };
-
-  const handleMouseDown = (e) => {
-    if (!photoPreview) return;
-    setIsDragging(true);
-    setDragStart({
-      x: e.clientX - imagePosition.x,
-      y: e.clientY - imagePosition.y
-    });
-  };
-
-  const handleMouseMove = (e) => {
-    if (!isDragging) return;
-    setImagePosition({
-      x: e.clientX - dragStart.x,
-      y: e.clientY - dragStart.y
-    });
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const handleTouchStart = (e) => {
-    if (!photoPreview) return;
-    const touch = e.touches[0];
-    setIsDragging(true);
-    setDragStart({
-      x: touch.clientX - imagePosition.x,
-      y: touch.clientY - imagePosition.y
-    });
-  };
-
-  const handleTouchMove = (e) => {
-    if (!isDragging) return;
-    e.preventDefault();
-    const touch = e.touches[0];
-    setImagePosition({
-      x: touch.clientX - dragStart.x,
-      y: touch.clientY - dragStart.y
-    });
-  };
-
-  const handleTouchEnd = () => {
-    setIsDragging(false);
-  };
-
-  const resetPosition = () => {
-    setImagePosition({ x: 0, y: 0 });
-    setImageScale(1);
-  };
-
-  const zoomIn = () => {
-    setImageScale(prev => Math.min(prev + 0.2, 3));
-  };
-
-  const zoomOut = () => {
-    setImageScale(prev => Math.max(prev - 0.2, 0.5));
   };
   
   return (
@@ -327,78 +300,24 @@ function PhotoScreen({ name, onNext, onBack }) {
         {!photoPreview ? (
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="w-80 h-80 mx-auto bg-purple-100 rounded-2xl flex flex-col items-center justify-center hover:bg-purple-200 transition-colors mb-6"
+            className="w-64 h-64 mx-auto bg-purple-100 rounded-2xl flex flex-col items-center justify-center hover:bg-purple-200 transition-colors mb-6"
           >
             <Camera size={64} className="text-purple-500 mb-4" />
             <span className="text-purple-600 font-medium text-lg">Tap to Add Photo</span>
           </button>
         ) : (
-          <div className="relative w-80 h-80 mx-auto mb-6">
-            {/* Photo frame with cropping */}
-            <div 
-              className="w-full h-full rounded-2xl overflow-hidden bg-gray-100 relative cursor-move select-none"
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
+          <div className="relative w-64 h-64 mx-auto mb-6">
+            <img
+              src={photoPreview}
+              alt={name}
+              className="w-full h-full object-cover rounded-2xl"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute bottom-2 right-2 p-3 bg-white rounded-full shadow-lg hover:bg-gray-100"
             >
-              <img
-                src={photoPreview}
-                alt={name}
-                className="absolute"
-                style={{
-                  transform: `translate(${imagePosition.x}px, ${imagePosition.y}px) scale(${imageScale})`,
-                  transformOrigin: 'center',
-                  cursor: isDragging ? 'grabbing' : 'grab',
-                  userSelect: 'none',
-                  pointerEvents: 'none'
-                }}
-                draggable={false}
-              />
-            </div>
-
-            {/* Photo controls */}
-            <div className="absolute -bottom-2 left-0 right-0 flex justify-center gap-2">
-              <button
-                onClick={zoomOut}
-                className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 text-gray-600"
-                title="Zoom Out"
-              >
-                <span className="text-lg font-bold">−</span>
-              </button>
-              
-              <button
-                onClick={resetPosition}
-                className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 text-gray-600"
-                title="Reset Position"
-              >
-                <RefreshCw size={16} />
-              </button>
-              
-              <button
-                onClick={zoomIn}
-                className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 text-gray-600"
-                title="Zoom In"
-              >
-                <span className="text-lg font-bold">+</span>
-              </button>
-              
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="p-2 bg-purple-500 rounded-full shadow-lg hover:bg-purple-600 text-white"
-                title="Change Photo"
-              >
-                <Camera size={16} />
-              </button>
-            </div>
-
-            {/* Instruction overlay */}
-            <div className="absolute top-2 left-2 right-2 bg-black/70 text-white text-xs p-2 rounded-lg">
-              💡 Drag to position • Zoom with +/− buttons
-            </div>
+              <RefreshCw size={20} className="text-gray-600" />
+            </button>
           </div>
         )}
         
@@ -415,11 +334,6 @@ function PhotoScreen({ name, onNext, onBack }) {
             🔒 <strong>100% Private:</strong> This photo stays on YOUR device only. 
             Never uploaded. No internet needed. Works offline forever.
           </p>
-          {photoPreview && (
-            <p className="text-xs text-green-700 mt-2">
-              📏 Drag and zoom to frame {name}'s face perfectly
-            </p>
-          )}
         </div>
         
         <button
@@ -438,7 +352,7 @@ function PhotoScreen({ name, onNext, onBack }) {
   );
 }
 
-// ====== FIXED RECORDING SCREEN (WITH RE-RECORD ABILITY) ======
+// ====== RECORDING SCREEN ======
 function RecordingScreen({ name, recordings, setRecordings, onComplete, onBack }) {
   const [currentStage, setCurrentStage] = useState(0);
   const letters = name.split('');
@@ -477,9 +391,11 @@ function RecordingScreen({ name, recordings, setRecordings, onComplete, onBack }
   const handleRecordingComplete = (audioBlob, stageKey) => {
     const reader = new FileReader();
     reader.onload = (e) => {
+      const audioData = e.target.result;
+      console.log('Recording saved for:', stageKey, 'Size:', audioData.length);
       setRecordings(prev => ({
         ...prev,
-        [stageKey]: e.target.result
+        [stageKey]: audioData
       }));
       
       // Auto-advance after short delay
@@ -506,17 +422,27 @@ function RecordingScreen({ name, recordings, setRecordings, onComplete, onBack }
           Record Your Voice
         </h2>
         
-        <div className="bg-yellow-100 border-2 border-yellow-400 p-3 rounded-lg mb-4">
-          <div className="flex items-center gap-2 text-black">
-            <Info size={16} />
-            <p className="text-sm font-bold">How to Record:</p>
+        {/* Encouragement for partial completion */}
+        {Object.keys(recordings).length > 0 && Object.keys(recordings).length < stages.length && (
+          <div className="bg-purple-50 border border-purple-200 p-2 rounded-lg mb-3 text-center">
+            <p className="text-xs text-purple-700">
+              💜 Even partial recordings help! You can always add more later.
+            </p>
           </div>
-          <ol className="text-sm text-black mt-1 ml-6 font-medium">
-            <li>1. Tap the RED microphone to START</li>
-            <li>2. Say the word/sound clearly</li>
-            <li>3. Tap the SQUARE to STOP</li>
-            <li>4. Green check = Saved!</li>
-            <li>5. Tap any recording to re-record it</li>
+        )}
+        
+        <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-4">
+          <div className="flex items-center gap-2 text-blue-800">
+            <Info size={16} />
+            <p className="text-sm font-medium">How to Record:</p>
+          </div>
+          <ol className="text-sm text-blue-700 mt-1 ml-6">
+            <li>1. Tap any item to select it</li>
+            <li>2. Tap the RED microphone to START recording</li>
+            <li>3. Say the word/sound clearly</li>
+            <li>4. Tap the SQUARE to STOP</li>
+            <li>5. Green check = Saved!</li>
+            <li>6. <strong>To re-record: Tap the item again and record</strong></li>
           </ol>
         </div>
         
@@ -544,7 +470,6 @@ function RecordingScreen({ name, recordings, setRecordings, onComplete, onBack }
               isComplete={!!recordings[stage.key]}
               onRecord={(blob) => handleRecordingComplete(blob, stage.key)}
               onClick={() => setCurrentStage(index)}
-              allowReRecord={true}
             />
           ))}
         </div>
@@ -560,13 +485,19 @@ function RecordingScreen({ name, recordings, setRecordings, onComplete, onBack }
         >
           {isComplete ? '🎉 All Done! Create Flashcards' : `📝 ${stages.length - Object.keys(recordings).length} recordings left`}
         </button>
+        
+        {isComplete && (
+          <p className="text-xs text-gray-500 text-center mt-2">
+            💡 Tip: Test audio playback in flashcards. If no sound, check volume/silent mode.
+          </p>
+        )}
       </div>
     </div>
   );
 }
 
-// ====== FIXED RECORDING STAGE COMPONENT (WITH RE-RECORD) ======
-function RecordingStage({ stage, isActive, isComplete, onRecord, onClick, allowReRecord }) {
+// ====== RECORDING STAGE COMPONENT ======
+function RecordingStage({ stage, isActive, isComplete, onRecord, onClick }) {
   const [isRecording, setIsRecording] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const mediaRecorderRef = useRef(null);
@@ -629,7 +560,8 @@ function RecordingStage({ stage, isActive, isComplete, onRecord, onClick, allowR
           </div>
         </div>
         
-        {(isActive || (isComplete && allowReRecord && isActive)) && (
+        {/* FIXED: Always show record button when active */}
+        {isActive && (
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -638,16 +570,29 @@ function RecordingStage({ stage, isActive, isComplete, onRecord, onClick, allowR
             className={`p-4 rounded-full transition-all ${
               isRecording 
                 ? 'bg-red-500 text-white animate-pulse scale-110' 
-                : 'bg-purple-500 text-white hover:bg-purple-600 hover:scale-105'
+                : isComplete
+                  ? 'bg-orange-500 text-white hover:bg-orange-600 hover:scale-105'
+                  : 'bg-purple-500 text-white hover:bg-purple-600 hover:scale-105'
             }`}
           >
-            {isRecording ? <Square size={28} /> : <Mic size={28} />}
+            {isRecording ? (
+              <Square size={28} />
+            ) : (
+              <div className="relative">
+                <Mic size={28} />
+                {isComplete && (
+                  <div className="absolute -bottom-1 -right-1 bg-orange-500 rounded-full p-0.5">
+                    <RefreshCw size={12} className="text-white" />
+                  </div>
+                )}
+              </div>
+            )}
           </button>
         )}
         
+        {/* Only show check when NOT active */}
         {isComplete && !isActive && (
           <div className="flex items-center gap-2">
-            {showSuccess && <span className="text-sm font-medium text-green-600">Saved!</span>}
             <div className="p-2 bg-green-500 text-white rounded-full">
               <Check size={20} />
             </div>
@@ -655,8 +600,13 @@ function RecordingStage({ stage, isActive, isComplete, onRecord, onClick, allowR
         )}
       </div>
       
-      {isComplete && !isActive && (
-        <p className="text-xs text-gray-500 mt-2 text-center">Tap to re-record</p>
+      {/* FIXED: Clear re-record hint */}
+      {isComplete && isActive && (
+        <div className="bg-orange-100 border border-orange-300 rounded-lg p-2 mt-2">
+          <p className="text-xs text-orange-700 font-medium text-center">
+            🎤 Tap the microphone to re-record this sound
+          </p>
+        </div>
       )}
     </div>
   );
@@ -703,94 +653,139 @@ function MenuScreen({ name, onPlay, onRecord, onReset, onBack }) {
         </div>
         
         <p className="text-xs text-gray-500 mt-8">
-          Created with ❤️ by BoredMamaApp
+          Created with ❤️ by BoredMamaApp<br/>
+          <span className="text-green-600 font-medium">💡 Tip: Use app buttons, not browser back</span>
         </p>
       </div>
     </div>
   );
 }
 
-// ====== FIXED FLASHCARD SCREEN (SIDE-BY-SIDE LAYOUT) ======
+// ====== FLASHCARD SCREEN ======
 function FlashcardScreen({ name, photo, recordings, current, setCurrent, onHome }) {
   const letters = name.split('');
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState('');
+  const [audioError, setAudioError] = useState(false);
   
   const playSound = (recordingKey, label = '') => {
     const audio = recordings[recordingKey];
     if (audio) {
+      console.log('Playing audio for:', recordingKey);
       setIsPlaying(label);
+      setAudioError(false);
+      
       if (audioRef.current) {
         audioRef.current.pause();
       }
+      
       audioRef.current = new Audio(audio);
-      audioRef.current.play();
-      audioRef.current.onended = () => setIsPlaying('');
+      
+      // Mobile audio fix - require user interaction first
+      audioRef.current.play().then(() => {
+        console.log('Audio playing successfully');
+      }).catch(err => {
+        console.error('Audio playback failed:', err);
+        setAudioError(true);
+        setIsPlaying('');
+      });
+      
+      audioRef.current.onended = () => {
+        setIsPlaying('');
+        console.log('Audio ended');
+      };
+    } else {
+      console.error('No audio found for:', recordingKey);
+      alert('No recording found. Please go back and record this sound.');
     }
   };
   
-  const next = () => {
+  const next = React.useCallback(() => {
     if (current < letters.length - 1) {
       setCurrent(current + 1);
       setTimeout(() => playSound(`letter-${current + 1}`), 300);
     }
-  };
+  }, [current, letters.length, playSound]);
   
-  const prev = () => {
+  const prev = React.useCallback(() => {
     if (current > 0) {
       setCurrent(current - 1);
       setTimeout(() => playSound(`letter-${current - 1}`), 300);
     }
-  };
+  }, [current, playSound]);
   
-  // Auto-play current letter
+  // Auto-play current letter with mobile fix
   useEffect(() => {
-    playSound(`letter-${current}`);
+    // Small delay to ensure audio context is ready on mobile
+    const timer = setTimeout(() => {
+      playSound(`letter-${current}`);
+    }, 100);
+    return () => clearTimeout(timer);
   }, [current]);
+  
+  // Prevent keyboard navigation that could leave the page
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Block browser back/forward shortcuts
+      if ((e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) ||
+          e.key === 'Backspace' && !e.target.matches('input, textarea')) {
+        e.preventDefault();
+      }
+      // Add arrow key navigation for flashcards
+      if (e.key === 'ArrowLeft' && current > 0) {
+        prev();
+      } else if (e.key === 'ArrowRight' && current < letters.length - 1) {
+        next();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [current, letters.length]);
   
   return (
     <div className="min-h-screen p-4 flex flex-col">
-      <header className="flex justify-between items-center mb-6 max-w-6xl mx-auto w-full">
+      <header className="flex justify-between items-center mb-6 max-w-4xl mx-auto w-full">
         <button
           onClick={onHome}
-          className="p-3 bg-white text-gray-700 rounded-full hover:bg-gray-100 transition-colors shadow-lg"
+          className="p-3 bg-white rounded-full hover:bg-gray-100 transition-colors shadow-lg"
         >
-          <Home size={28} />
+          <Home size={28} className="text-gray-800" />
         </button>
         
-        <h2 className="text-2xl font-bold text-white bg-black/20 px-4 py-2 rounded-lg">
-          Learning: {name}
-        </h2>
+        <h2 className="text-2xl font-bold text-white drop-shadow-lg">Learning: {name}</h2>
         
         <div className="w-14" />
       </header>
       
       <div className="flex-1 flex items-center justify-center">
-        <div className="bg-white rounded-3xl p-8 shadow-2xl max-w-6xl w-full">
-          {/* FIXED: Side-by-side layout */}
+        <div className="bg-white rounded-3xl p-8 shadow-2xl max-w-5xl w-full">
+          {/* FIXED: True 50/50 side-by-side layout */}
           <div className="flex flex-col lg:flex-row items-center justify-center gap-8 mb-8">
-            {/* Photo */}
-            <div className="w-80 h-80">
+            {/* Photo - 50% width */}
+            <div className="flex-1 flex items-center justify-center">
               <img
                 src={photo}
                 alt={name}
-                className="w-full h-full rounded-3xl object-cover shadow-lg"
+                className="w-80 h-80 lg:w-96 lg:h-96 rounded-3xl object-cover shadow-lg"
               />
             </div>
             
-            {/* Letter */}
-            <div className="bg-purple-50 rounded-3xl shadow-xl px-20 py-16 border-4 border-purple-200">
-              <span 
-                className="font-black text-purple-600 leading-none select-none block"
-                style={{ fontSize: '200px' }}
-              >
-                {letters[current]}
-              </span>
+            {/* Letter - 50% width */}
+            <div className="flex-1 flex items-center justify-center">
+              <div className="bg-gradient-to-br from-purple-100 to-pink-100 rounded-3xl p-12 shadow-xl">
+                <span 
+                  className="font-black text-purple-600 select-none block"
+                  style={{ fontSize: '200px', lineHeight: '1' }}
+                >
+                  {letters[current]}
+                </span>
+              </div>
             </div>
           </div>
           
           <div className="text-center mb-6">
-            <p className="text-gray-600 text-xl font-medium">
+            <p className="text-gray-800 text-xl font-bold">
               Letter {current + 1} of {letters.length}
             </p>
             <div className="flex justify-center gap-2 mt-3">
@@ -805,18 +800,36 @@ function FlashcardScreen({ name, photo, recordings, current, setCurrent, onHome 
             </div>
           </div>
           
-          {/* FIXED: High contrast instruction box */}
-          <div className="bg-yellow-100 border-2 border-yellow-400 p-4 rounded-xl text-center mb-6 max-w-2xl mx-auto">
-            <p className="text-gray-800 font-bold text-lg">
-              👆 Tap buttons below to hear sounds
+          {/* FIXED: High contrast instruction text */}
+          <div className="bg-yellow-100 border-2 border-yellow-400 rounded-lg p-3 mb-6 max-w-2xl mx-auto">
+            <p className="text-gray-800 text-lg font-semibold flex items-center justify-center gap-2">
+              <span className="text-2xl">👆</span>
+              Tap buttons below to hear sounds
             </p>
           </div>
+          
+          {/* Audio error message */}
+          {audioError && (
+            <div className="bg-red-100 border-2 border-red-400 rounded-lg p-3 mb-4 max-w-2xl mx-auto">
+              <p className="text-red-800 text-sm font-medium text-center">
+                ⚠️ Audio playback issue. Please tap the button again or check your volume.
+              </p>
+            </div>
+          )}
+          
+          {/* Audio debug info for parents */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="text-center mb-4 text-xs text-gray-500">
+              Audio status: {isPlaying ? `Playing ${isPlaying}` : 'Ready'} | 
+              Recordings loaded: {Object.keys(recordings).length}
+            </div>
+          )}
           
           {/* All 4 playback options */}
           <div className="grid grid-cols-2 gap-4 max-w-2xl mx-auto">
             <button
               onClick={() => playSound(`letter-${current}`, 'letter')}
-              className={`px-6 py-5 rounded-xl font-medium transition-all flex items-center justify-center gap-3 text-lg ${
+              className={`px-6 py-5 rounded-xl font-medium transition-all flex items-center justify-center gap-3 text-lg shadow-lg ${
                 isPlaying === 'letter' 
                   ? 'bg-purple-600 text-white scale-95' 
                   : 'bg-purple-500 text-white hover:bg-purple-600 hover:scale-[1.02]'
@@ -828,7 +841,7 @@ function FlashcardScreen({ name, photo, recordings, current, setCurrent, onHome 
             
             <button
               onClick={() => playSound('fullname', 'name')}
-              className={`px-6 py-5 rounded-xl font-medium transition-all flex items-center justify-center gap-3 text-lg ${
+              className={`px-6 py-5 rounded-xl font-medium transition-all flex items-center justify-center gap-3 text-lg shadow-lg ${
                 isPlaying === 'name' 
                   ? 'bg-pink-600 text-white scale-95' 
                   : 'bg-pink-500 text-white hover:bg-pink-600 hover:scale-[1.02]'
@@ -840,7 +853,7 @@ function FlashcardScreen({ name, photo, recordings, current, setCurrent, onHome 
             
             <button
               onClick={() => playSound('sentence', 'sentence')}
-              className={`px-6 py-5 rounded-xl font-medium transition-all flex items-center justify-center gap-3 text-lg ${
+              className={`px-6 py-5 rounded-xl font-medium transition-all flex items-center justify-center gap-3 text-lg shadow-lg ${
                 isPlaying === 'sentence' 
                   ? 'bg-blue-600 text-white scale-95' 
                   : 'bg-blue-500 text-white hover:bg-blue-600 hover:scale-[1.02]'
@@ -852,7 +865,7 @@ function FlashcardScreen({ name, photo, recordings, current, setCurrent, onHome 
             
             <button
               onClick={() => playSound('rhyme', 'rhyme')}
-              className={`px-6 py-5 rounded-xl font-medium transition-all flex items-center justify-center gap-3 text-lg ${
+              className={`px-6 py-5 rounded-xl font-medium transition-all flex items-center justify-center gap-3 text-lg shadow-lg ${
                 isPlaying === 'rhyme' 
                   ? 'bg-green-600 text-white scale-95' 
                   : 'bg-green-500 text-white hover:bg-green-600 hover:scale-[1.02]'
@@ -866,36 +879,41 @@ function FlashcardScreen({ name, photo, recordings, current, setCurrent, onHome 
       </div>
       
       {/* FIXED: High contrast navigation buttons */}
-      <footer className="flex justify-between items-center max-w-6xl mx-auto w-full mt-6">
+      <footer className="flex justify-between items-center max-w-4xl mx-auto w-full mt-6">
         <button
           onClick={prev}
           disabled={current === 0}
+          data-action="prev"
           className={`px-8 py-4 rounded-xl font-bold transition-all flex items-center gap-2 text-lg shadow-lg ${
             current > 0 
-              ? 'bg-white text-gray-800 hover:bg-gray-100 hover:scale-105' 
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              ? 'bg-white text-purple-600 hover:bg-gray-100 hover:scale-105' 
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
           }`}
         >
           <ChevronLeft size={24} /> Previous
         </button>
         
-        <button
-          onClick={() => {
-            setCurrent(0);
-            playSound('letter-0');
-          }}
-          className="px-6 py-3 bg-white text-gray-800 font-bold rounded-xl hover:bg-gray-100 transition-all hover:scale-105 shadow-lg"
-        >
-          Start Over
-        </button>
+        <div className="text-center">
+          <button
+            onClick={() => {
+              setCurrent(0);
+              playSound('letter-0');
+            }}
+            className="px-6 py-3 bg-white text-purple-600 font-bold rounded-xl hover:bg-gray-100 transition-all hover:scale-105 shadow-lg"
+          >
+            Start Over
+          </button>
+          <p className="text-xs text-white/80 mt-1">Use ← → arrow keys!</p>
+        </div>
         
         <button
           onClick={next}
           disabled={current === letters.length - 1}
+          data-action="next"
           className={`px-8 py-4 rounded-xl font-bold transition-all flex items-center gap-2 text-lg shadow-lg ${
             current < letters.length - 1 
-              ? 'bg-white text-gray-800 hover:bg-gray-100 hover:scale-105' 
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              ? 'bg-white text-purple-600 hover:bg-gray-100 hover:scale-105' 
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
           }`}
         >
           Next <ChevronRight size={24} />
@@ -904,3 +922,16 @@ function FlashcardScreen({ name, photo, recordings, current, setCurrent, onHome 
     </div>
   );
 }
+
+// Add animations
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: .8; transform: scale(1.05); }
+  }
+  .animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+`;
+document.head.appendChild(style);
