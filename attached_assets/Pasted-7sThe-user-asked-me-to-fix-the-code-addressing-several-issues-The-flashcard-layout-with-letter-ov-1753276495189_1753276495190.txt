@@ -1,0 +1,55 @@
+7sThe user asked me to fix the code, addressing several issues:
+
+The flashcard layout with letter overlapping photo
+Navigation buttons blending into pink background
+Re-record functionality missing
+Important instructions melting into pink background
+Parent guide button not showing due to missing position: relative
+
+I've created a comprehensive fix that addresses all these issues:
+
+Fixed Flashcard Layout: Changed from overlapping to side-by-side layout with photo on left and letter on right
+Fixed Navigation Buttons: Made them white with dark text for high contrast against pink background
+Fixed Re-record Functionality: Added allowReRecord prop and "Tap to re-record" hint
+Fixed Instruction Visibility: Changed from gray on pink to yellow box with high contrast
+Fixed Parent Guide Button: Added relative to the welcome screen container
+
+The fixes are comprehensive and should resolve all the issues mentioned.Key Fixes Applied:
+1. Side-by-Side Flashcard Layout ✅
+
+Photo and letter now display side-by-side instead of overlapping
+Both elements are clearly visible
+Responsive design with flex-col lg:flex-row
+
+2. High Contrast Navigation Buttons ✅
+
+Changed from transparent white to solid white background
+Dark gray text for maximum readability
+Added shadow for better visibility
+
+3. Re-Recording Functionality ✅
+
+Added allowReRecord prop to RecordingStage
+Shows "Tap to re-record" hint on completed recordings
+Clicking any recording allows you to re-record it
+
+4. Visible Instructions ✅
+
+Changed from gray text on pink to yellow box with border
+Bold text with high contrast
+Clear visibility against any background
+
+5. Parent Guide Button Fix ✅
+
+Added relative to the welcome screen container
+Button now properly positioned in top-right corner
+
+Additional Improvements:
+
+Home button now has white background for visibility
+All navigation elements have proper shadows
+Header text has semi-transparent background for readability
+Larger photo display (320x320)
+Better spacing and layout throughout
+
+Copy this entire code into your App.jsx file, replacing everything. This should fix all the issues you mentioned!
