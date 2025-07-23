@@ -382,12 +382,12 @@ function RecordingScreen({ name, recordings, setRecordings, onComplete, onBack }
           Record Your Voice
         </h2>
         
-        <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-4">
-          <div className="flex items-center gap-2 text-blue-800">
+        <div className="bg-yellow-100 border-2 border-yellow-400 p-3 rounded-lg mb-4">
+          <div className="flex items-center gap-2 text-black">
             <Info size={16} />
-            <p className="text-sm font-medium">How to Record:</p>
+            <p className="text-sm font-bold">How to Record:</p>
           </div>
-          <ol className="text-sm text-blue-700 mt-1 ml-6">
+          <ol className="text-sm text-black mt-1 ml-6 font-medium">
             <li>1. Tap the RED microphone to START</li>
             <li>2. Say the word/sound clearly</li>
             <li>3. Tap the SQUARE to STOP</li>
@@ -420,7 +420,7 @@ function RecordingScreen({ name, recordings, setRecordings, onComplete, onBack }
               isComplete={!!recordings[stage.key]}
               onRecord={(blob) => handleRecordingComplete(blob, stage.key)}
               onClick={() => setCurrentStage(index)}
-              allowReRecord={true} // Allow re-recording even if complete
+              allowReRecord={true}
             />
           ))}
         </div>
@@ -505,7 +505,6 @@ function RecordingStage({ stage, isActive, isComplete, onRecord, onClick, allowR
           </div>
         </div>
         
-        {/* Show record button when active OR when complete but re-recording is allowed */}
         {(isActive || (isComplete && allowReRecord && isActive)) && (
           <button
             onClick={(e) => {
@@ -532,7 +531,6 @@ function RecordingStage({ stage, isActive, isComplete, onRecord, onClick, allowR
         )}
       </div>
       
-      {/* Show re-record hint for completed items */}
       {isComplete && !isActive && (
         <p className="text-xs text-gray-500 mt-2 text-center">Tap to re-record</p>
       )}
@@ -782,16 +780,3 @@ function FlashcardScreen({ name, photo, recordings, current, setCurrent, onHome 
     </div>
   );
 }
-
-// Add animations
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: .8; transform: scale(1.05); }
-  }
-  .animate-pulse {
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-`;
-document.head.appendChild(style);
