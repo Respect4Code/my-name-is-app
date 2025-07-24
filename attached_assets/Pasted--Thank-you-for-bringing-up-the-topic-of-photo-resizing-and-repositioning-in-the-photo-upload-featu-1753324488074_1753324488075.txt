@@ -1,0 +1,1304 @@
+
+Thank you for bringing up the topic of photo resizing and repositioning in the photo upload feature of your “My Name Is” phonics app. The current PhotoScreen component in the consolidated src/App.tsx (provided previously) handles photo uploads but does not include explicit functionality for resizing or repositioning the uploaded photo. It enforces a 2MB size limit, converts the uploaded file to a base64 Data URL using FileReader, and displays the image in a fixed 48x48 (192x192 pixels) container with object-cover for cropping. However, it lacks features for users to resize (e.g., scale down) or reposition (e.g., pan or crop) the image before saving, which could enhance the user experience, especially for parents uploading photos that don’t fit perfectly in the square frame.Below, I’ll evaluate whether adding photo resizing or repositioning is covered in the current code, propose how to implement these features in your Replit setup (React, TypeScript, Vite, Express, Tailwind CSS), and provide updated code for PhotoScreen to include these capabilities. I’ll ensure compatibility with your existing app (console: “[express] serving on port 5000”, “[vite] connected”, “TypeScript compilation is working”) and align with the toddler-friendly, parent-focused UX. I’ll also confirm the updates to ParentGuide, WelcomeScreen, and RecordingScreen (56-word text-only origin story, teaser, and “{name}, do you want to go for a walk?” sentence) remain intact, and provide clear instructions for Replit to avoid confusion.Is Photo Resizing or Repositioning Covered?The current PhotoScreen component in src/App.tsx (from the consolidated code) handles photo uploads as follows:Upload: Accepts image files (<input type="file" accept="image/*">) and checks if the file size is under 2MB.
+Processing: Uses FileReader to convert the image to a base64 Data URL, stored in the photo state.
+Display: Shows the image in a 192x192 pixel container (w-48 h-48, Tailwind) with object-cover to crop the image to fit, centered by default.
+Removal: Allows removing the photo with an “X” button.
+Limitations:No Resizing: The image is not scaled down (e.g., to reduce file size or resolution) before saving. Large images (e.g., 4K photos) are stored as-is in localStorage, potentially increasing storage usage (though mitigated by the 2MB limit).
+No Repositioning: The object-cover style crops the image automatically, but users cannot adjust the crop position (e.g., pan to focus on a face) or choose a specific region.
+Impact: For parents, this means photos may be cropped awkwardly (e.g., cutting off part of a child’s face) or take up more storage than necessary, especially on mobile devices where high-resolution photos are common.
+Assessment:Resizing: Not covered. Adding resizing would reduce storage usage (base64 Data URLs are ~33% larger than raw files) and ensure consistent display quality, especially for toddlers viewing flashcards.
+Repositioning: Not covered. Allowing users to pan or crop the image would improve the visual output, ensuring the child’s face is centered in the flashcard.
+Feasibility: Both features are achievable in your setup using browser APIs (e.g., canvas for resizing, interactive cropping for repositioning) without additional dependencies, keeping the app lightweight and offline-capable.
+
+Recommendation: Enhance PhotoScreen to include:Resizing: Automatically resize the uploaded image to a maximum dimension (e.g., 300x300 pixels) using a canvas to reduce storage and optimize display.
+Repositioning: Allow users to adjust the image position within the 192x192 container using a simple drag-to-pan interface or crop tool, ensuring the desired area (e.g., face) is visible.
+These features improve UX for parents, align with the app’s focus on personalization, and maintain compatibility with your Replit setup.
+
+Implementing Photo Resizing and RepositioningTo add resizing and repositioning, we’ll update PhotoScreen to:Resize: Use a canvas to scale the image to a maximum of 300x300 pixels (preserving aspect ratio) before converting to base64, reducing storage usage and ensuring fast loading in FlashcardScreen.
+Reposition: Add a simple drag-to-pan interface using mouse/touch events to adjust the image’s position within the 192x192 container, with a “Confirm Crop” button to save the adjusted image.
+Maintain Simplicity: Keep the UI intuitive for parents (e.g., drag to reposition, single button to confirm) and toddler-friendly (consistent 192x192 display in flashcards).
+Dependencies: Use native browser APIs (canvas, Image, mouse/touch events) to avoid adding libraries, preserving your lightweight setup.
+
+The updated PhotoScreen will:Load the uploaded image into a canvas for resizing.
+Display the image in a draggable container for repositioning.
+Save the cropped and resized image as a base64 Data URL.
+Preserve existing functionality (2MB limit, remove button, navigation).
+
+Updated PhotoScreen ComponentBelow is the updated PhotoScreen component with resizing and repositioning, to be integrated into src/App.tsx. The other components (App, ParentGuide, WelcomeScreen, RecordingScreen, FlashcardScreen, RecordingStage) remain unchanged from the consolidated code, ensuring the origin story, teaser, and walking sentence updates are intact.tsx
+
+// PhotoScreen Component (Updated with Resizing and Repositioning)
+const PhotoScreen: React.FC<PhotoScreenProps> = memo(({ name, photo, setPhoto, onNext, onBack }) => {
+  const [tempImage, setTempImage] = useState<string | null>(null); // Temporary image for preview
+  const [position, setPosition] = useState({ x: 0, y: 0 }); // Image position for panning
+  const [isDragging, setIsDragging] = useState(false); // Track dragging state
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 }); // Drag start position
+  const imageRef = useRef<HTMLImageElement | null>(null); // Ref for image element
+  const containerRef = useRef<HTMLDivElement | null>(null); // Ref for container
+
+  // Handle photo upload and resizing
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Photo must be under 2MB');
+        return;
+      }
+
+      // Resize image to max 300x300 pixels
+      const img = new Image();
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          img.src = event.target.result as string;
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const maxSize = 300; // Max width/height
+            let width = img.width;
+            let height = img.height;
+
+            // Preserve aspect ratio
+            if (width > height) {
+              if (width > maxSize) {
+                height = Math.round((height * maxSize) / width);
+                width = maxSize;
+              }
+            } else {
+              if (height > maxSize) {
+                width = Math.round((width * maxSize) / height);
+                height = maxSize;
+              }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx?.drawImage(img, 0, 0, width, height);
+            const resizedDataUrl = canvas.toDataURL('image/jpeg', 0.8); // 80% quality JPEG
+            setTempImage(resizedDataUrl);
+            setPosition({ x: 0, y: 0 }); // Reset position
+          };
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Handle drag start (mouse or touch)
+  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    setDragStart({ x: clientX, y: clientY });
+  };
+
+  // Handle drag move (mouse or touch)
+  const handleDragMove = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!isDragging || !imageRef.current || !containerRef.current) return;
+
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    const deltaX = clientX - dragStart.x;
+    const deltaY = clientY - dragStart.y;
+
+    // Update position with bounds
+    const container = containerRef.current.getBoundingClientRect();
+    const img = imageRef.current.getBoundingClientRect();
+    const maxX = Math.max(0, (img.width - container.width) / 2);
+    const maxY = Math.max(0, (img.height - container.height) / 2);
+    const newX = Math.max(-maxX, Math.min(maxX, position.x + deltaX));
+    const newY = Math.max(-maxY, Math.min(maxY, position.y + deltaY));
+
+    setPosition({ x: newX, y: newY });
+    setDragStart({ x: clientX, y: clientY });
+  };
+
+  // Handle drag end
+  const handleDragEnd = () => {
+    setIsDragging(false);
+  };
+
+  // Confirm crop and save
+  const handleConfirmCrop = () => {
+    if (!tempImage || !imageRef.current || !containerRef.current) return;
+
+    const img = imageRef.current;
+    const container = containerRef.current.getBoundingClientRect();
+    const canvas = document.createElement('canvas');
+    canvas.width = 192; // Match container size
+    canvas.height = 192;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Calculate source coordinates for cropping
+    const scale = img.naturalWidth / img.width;
+    const sourceWidth = container.width * scale;
+    const sourceHeight = container.height * scale;
+    const sourceX = (img.naturalWidth - sourceWidth) / 2 - position.x * scale;
+    const sourceY = (img.naturalHeight - sourceHeight) / 2 - position.y * scale;
+
+    ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, 192, 192);
+    const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+    setPhoto(croppedDataUrl);
+    setTempImage(null); // Clear preview
+    setPosition({ x: 0, y: 0 }); // Reset position
+  };
+
+  return (
+    <div className="min-h-screen p-4 flex items-center justify-center">
+      <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl relative">
+        <button
+          onClick={onBack}
+          className="absolute top-4 left-4 p-2 text-gray-600 hover:bg-gray-100 rounded-full"
+          aria-label="Go back to name entry"
+        >
+          <ArrowLeft size={20} aria-hidden="true" />
+        </button>
+        
+        <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+          Add a Photo for {name}
+        </h2>
+        
+        <p className="text-sm text-gray-600 mb-4 text-center">
+          Upload a photo of {name} (under 2MB). Drag to reposition, then confirm. It stays on your device - 100% private.
+        </p>
+        
+        <div
+          ref={containerRef}
+          className="relative w-48 h-48 mx-auto mb-6 border-2 border-purple-200 rounded-xl overflow-hidden"
+        >
+          {tempImage ? (
+            <>
+              <img
+                ref={imageRef}
+                src={tempImage}
+                alt="Photo preview"
+                className="w-auto h-auto max-w-none"
+                style={{
+                  transform: `translate(${position.x}px, ${position.y}px)`,
+                  cursor: isDragging ? 'grabbing' : 'grab',
+                }}
+                onMouseDown={handleDragStart}
+                onMouseMove={handleDragMove}
+                onMouseUp={handleDragEnd}
+                onMouseLeave={handleDragEnd}
+                onTouchStart={handleDragStart}
+                onTouchMove={handleDragMove}
+                onTouchEnd={handleDragEnd}
+              />
+              <button
+                onClick={handleConfirmCrop}
+                className="absolute bottom-2 right-2 p-2 bg-green-500 text-white rounded-full hover:bg-green-600"
+                aria-label="Confirm cropped photo"
+              >
+                <CheckCircle size={20} aria-hidden="true" />
+              </button>
+              <button
+                onClick={() => {
+                  setTempImage(null);
+                  setPosition({ x: 0, y: 0 });
+                }}
+                className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                aria-label="Cancel photo preview"
+              >
+                <X size={16} aria-hidden="true" />
+              </button>
+            </>
+          ) : photo ? (
+            <>
+              <img src={photo} alt={`${name}'s photo`} className="w-full h-full object-cover" />
+              <button
+                onClick={() => setPhoto(null)}
+                className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                aria-label="Remove photo"
+              >
+                <X size={16} aria-hidden="true" />
+              </button>
+            </>
+          ) : (
+            <div className="flex items-center justify-center w-full h-full bg-gray-100">
+              <Camera size={40} className="text-gray-400" aria-hidden="true" />
+            </div>
+          )}
+        </div>
+        
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handlePhotoChange}
+          className="block w-full text-sm text-gray-500 mb-6"
+          aria-label="Upload child's photo"
+        />
+        
+        <button
+          onClick={onNext}
+          disabled={!photo}
+          className={`w-full py-4 rounded-xl font-bold text-xl transition-all ${
+            photo ? 'bg-purple-500 text-white hover:bg-purple-600' : 'bg-gray-300 text-gray-500'
+          }`}
+          aria-label="Proceed to record voice"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  );
+});
+
+Changes:Resizing:Added handlePhotoChange to resize images to a maximum of 300x300 pixels using a canvas, preserving aspect ratio.
+Outputs JPEG at 80% quality (canvas.toDataURL('image/jpeg', 0.8)) to reduce storage usage (base64 Data URLs are ~33% larger than raw files).
+Stores the resized image in tempImage for preview.
+Repositioning:Added drag-to-pan functionality using mouse (onMouseDown, onMouseMove, onMouseUp) and touch (onTouchStart, onTouchMove, onTouchEnd) events.
+Tracks position (x, y) with bounds to prevent dragging beyond the image edges.
+Added a “Confirm Crop” button (CheckCircle icon) to crop the image to 192x192 pixels (matching the container) using a canvas.
+Added a “Cancel” button (X icon) to discard the preview.
+UI:Updated instructions: “Upload a photo of {name} (under 2MB). Drag to reposition, then confirm.”
+Image preview is draggable (cursor: grab/grabbing), with a green “Confirm Crop” button and red “Cancel” button.
+Accessibility:Maintained ARIA labels for buttons and input.
+Drag functionality is mouse/touch-based; keyboard users can upload without repositioning (default centering is object-cover).
+Storage: Resized and cropped images are smaller, reducing localStorage usage (e.g., a 1MB photo may reduce to ~100KB after resizing to 300x300 and cropping to 192x192).
+
+Integration with Consolidated App.tsxTo incorporate the updated PhotoScreen into the consolidated src/App.tsx, replace the existing PhotoScreen component with the one above. Below is the full src/App.tsx with the updated PhotoScreen, ensuring all other components (App, ParentGuide, WelcomeScreen, RecordingScreen, FlashcardScreen, RecordingStage) remain unchanged, preserving the origin story, teaser, and walking sentence updates.tsx
+
+import React, { memo, useState, useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom/client';
+import {
+  Info, ChevronRight, ArrowLeft, Volume2, BookOpen, Moon, Music, Loader2, ArrowRight, ArrowLeft as ArrowLeftIcon,
+  CheckCircle, Mic, Square, X, Camera, ChevronLeft
+} from 'lucide-react';
+import { openDB } from 'idb';
+
+// TypeScript interfaces
+interface Stage {
+  id: string;
+  label: string;
+  key: string;
+  instruction: string;
+  icon: React.ReactNode;
+}
+
+interface ParentGuideProps {
+  onClose: () => void;
+}
+
+interface WelcomeScreenProps {
+  onNext: (name: string) => void;
+  onGuide: () => void;
+}
+
+interface PhotoScreenProps {
+  name: string;
+  photo: string | null;
+  setPhoto: React.Dispatch<React.SetStateAction<string | null>>;
+  onNext: () => void;
+  onBack: () => void;
+}
+
+interface RecordingScreenProps {
+  name: string;
+  recordings: Record<string, string>;
+  setRecordings: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  onComplete: () => void;
+  onBack: () => void;
+}
+
+interface FlashcardScreenProps {
+  name: string;
+  photo: string | null;
+  recordings: Record<string, string>;
+  onReset: () => void;
+}
+
+interface RecordingStageProps {
+  stage: Stage;
+  isActive: boolean;
+  isComplete: boolean;
+  onRecord: (audioData: string) => void;
+  onClick: () => void;
+}
+
+// ParentGuide Component
+const ParentGuide: React.FC<ParentGuideProps> = memo(({ onClose }) => {
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" role="dialog" aria-labelledby="parent-guide-title">
+      <div className="bg-white rounded-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <h2 id="parent-guide-title" className="text-2xl font-bold mb-4">Quick Parent Guide</h2>
+        
+        <div className="space-y-4 text-sm">
+          <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+            <h3 className="font-bold mb-2">Why I Made This App</h3>
+            <p className="text-gray-600">
+              As a parent, I wanted my toddler to learn their name with our voices, not generic videos. Inspired by phonemes, I created this app to let parents record their voice and upload photos, helping toddlers connect letters to sounds in a fun, personal way! And there is nothing more personal than parents’ voices, after all they have been hearing them since they were in the womb.
+            </p>
+          </div>
+
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <h3 className="font-bold mb-2">⏱️ Total Setup Time: 5 minutes</h3>
+            <p>We respect your time. Here's exactly what to do:</p>
+          </div>
+          
+          <div className="space-y-3">
+            <div>
+              <h4 className="font-bold">1️⃣ Enter Name (10 seconds)</h4>
+              <p className="text-gray-600">Type your child's name (up to 20 letters).</p>
+            </div>
+            
+            <div>
+              <h4 className="font-bold">2️⃣ Add Photo (20 seconds)</h4>
+              <p className="text-gray-600">Take or choose a photo (under 2MB). Drag to reposition, then confirm. It stays on your device - 100% private.</p>
+            </div>
+            
+            <div>
+              <h4 className="font-bold">3️⃣ Record Sounds (3-4 minutes)</h4>
+              <p className="text-gray-600">Record 4 types of sounds:</p>
+              <ul className="ml-4 mt-1 text-gray-600 list-disc">
+                <li>Their full name</li>
+                <li>Each letter SOUND (not name!)</li>
+                <li>Walking sentence</li>
+                <li>Fun rhyme</li>
+              </ul>
+              <p className="text-gray-600 mt-1"><strong>To re-record:</strong> Just tap any item again!</p>
+            </div>
+            
+            <div>
+              <h4 className="font-bold">4️⃣ Done! Give to child</h4>
+              <p className="text-gray-600">They tap the big letters and hear YOUR voice.</p>
+            </div>
+          </div>
+          
+          <div className="bg-green-50 p-4 rounded-lg">
+            <h3 className="font-bold mb-1">💡 Recording Tips:</h3>
+            <ul className="text-gray-700 space-y-1 list-disc ml-4">
+              <li>Red mic = recording</li>
+              <li>Tap once to start, tap again to stop</li>
+              <li>Green check = saved</li>
+              <li>Orange mic = re-recording</li>
+              <li>Record letter SOUNDS not names (B = "buh" not "bee")</li>
+            </ul>
+          </div>
+          
+          <div className="bg-yellow-50 p-4 rounded-lg">
+            <h3 className="font-bold mb-1">⚠️ Important:</h3>
+            <ul className="text-gray-700 space-y-1 list-disc ml-4">
+              <li><strong>Your work is auto-saved!</strong></li>
+              <li>Use app buttons (not browser back)</li>
+              <li>Works best without toddler present 😅</li>
+              <li>If audio doesn't play, check volume/silent mode</li>
+              <li>First audio requires a tap (mobile safety)</li>
+            </ul>
+          </div>
+        </div>
+        
+        <button
+          onClick={onClose}
+          className="w-full mt-6 py-3 bg-purple-500 text-white rounded-xl font-bold hover:bg-purple-600"
+          aria-label="Close parent guide and start setup"
+        >
+          Got it! Let's start
+        </button>
+      </div>
+    </div>
+  );
+});
+
+// WelcomeScreen Component
+const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) => {
+  const [name, setName] = useState('');
+  
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && name.length >= 2) {
+      onNext(name.toUpperCase());
+    }
+  };
+  
+  return (
+    <div className="flex items-center justify-center min-h-screen p-4">
+      <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-2xl relative">
+        <button
+          onClick={onGuide}
+          className="absolute top-4 right-4 p-2 text-gray-500 hover:bg-gray-100 rounded-full"
+          aria-label="Open parent guide"
+        >
+          <Info size={20} aria-hidden="true" />
+        </button>
+        
+        <h1 className="text-4xl font-bold text-gray-800 mb-2">My Name Is</h1>
+        <p className="text-gray-600 mb-2">Teach your child their name with YOUR voice</p>
+        <p className="text-purple-600 text-sm font-medium mb-6">
+          ⭐ "My 18-month-old learned all letters phonetically!" - Real parent
+        </p>
+        
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value.replace(/[^a-zA-Z]/g, ''))}
+          onKeyPress={handleKeyPress}
+          placeholder="Enter your child's name"
+          className="w-full p-4 text-2xl text-center border-2 border-purple-200 rounded-xl text-gray-800 mb-6"
+          maxLength={20}
+          autoFocus
+          aria-label="Child's name"
+        />
+        
+        {name.length >= 15 && (
+          <p className="text-xs text-orange-600 -mt-4 mb-4 text-center">
+            {20 - name.length} characters left
+          </p>
+        )}
+        
+        <button
+          onClick={() => name.length >= 2 && onNext(name.toUpperCase())}
+          disabled={name.length < 2}
+          className={`w-full py-4 rounded-xl font-bold text-xl transition-all flex items-center justify-center gap-2 ${
+            name.length >= 2
+              ? 'bg-purple-500 text-white hover:bg-purple-600'
+              : 'bg-gray-300 text-gray-500'
+          }`}
+          aria-label="Proceed to photo upload"
+        >
+          Next <ChevronRight />
+        </button>
+        
+        <button
+          onClick={onGuide}
+          className="mt-4 text-purple-600 underline text-sm"
+          aria-label="View parent guide"
+        >
+          Need help? Read 5-minute guide
+        </button>
+        
+        <p className="text-xs text-gray-500 mt-8">
+          100% Private • Works Offline • CC BY-NC-SA 4.0<br/>
+          Created with ❤️ by BoredMamaApp<br/>
+          <span className="text-purple-600 font-medium">
+            Use YOUR voice for personal phonics—read our story!
+          </span>
+        </p>
+      </div>
+    </div>
+  );
+});
+
+// PhotoScreen Component (Updated with Resizing and Repositioning)
+const PhotoScreen: React.FC<PhotoScreenProps> = memo(({ name, photo, setPhoto, onNext, onBack }) => {
+  const [tempImage, setTempImage] = useState<string | null>(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const imageRef = useRef<HTMLImageElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Photo must be under 2MB');
+        return;
+      }
+      const img = new Image();
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          img.src = event.target.result as string;
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const maxSize = 300;
+            let width = img.width;
+            let height = img.height;
+            if (width > height) {
+              if (width > maxSize) {
+                height = Math.round((height * maxSize) / width);
+                width = maxSize;
+              }
+            } else {
+              if (height > maxSize) {
+                width = Math.round((width * maxSize) / height);
+                height = maxSize;
+              }
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx?.drawImage(img, 0, 0, width, height);
+            const resizedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+            setTempImage(resizedDataUrl);
+            setPosition({ x: 0, y: 0 });
+          };
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    setDragStart({ x: clientX, y: clientY });
+  };
+
+  const handleDragMove = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!isDragging || !imageRef.current || !containerRef.current) return;
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    const deltaX = clientX - dragStart.x;
+    const deltaY = clientY - dragStart.y;
+    const container = containerRef.current.getBoundingClientRect();
+    const img = imageRef.current.getBoundingClientRect();
+    const maxX = Math.max(0, (img.width - container.width) / 2);
+    const maxY = Math.max(0, (img.height - container.height) / 2);
+    const newX = Math.max(-maxX, Math.min(maxX, position.x + deltaX));
+    const newY = Math.max(-maxY, Math.min(maxY, position.y + deltaY));
+    setPosition({ x: newX, y: newY });
+    setDragStart({ x: clientX, y: clientY });
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+  };
+
+  const handleConfirmCrop = () => {
+    if (!tempImage || !imageRef.current || !containerRef.current) return;
+    const img = imageRef.current;
+    const container = containerRef.current.getBoundingClientRect();
+    const canvas = document.createElement('canvas');
+    canvas.width = 192;
+    canvas.height = 192;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const scale = img.naturalWidth / img.width;
+    const sourceWidth = container.width * scale;
+    const sourceHeight = container.height * scale;
+    const sourceX = (img.naturalWidth - sourceWidth) / 2 - position.x * scale;
+    const sourceY = (img.naturalHeight - sourceHeight) / 2 - position.y * scale;
+    ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, 192, 192);
+    const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+    setPhoto(croppedDataUrl);
+    setTempImage(null);
+    setPosition({ x: 0, y: 0 });
+  };
+
+  return (
+    <div className="min-h-screen p-4 flex items-center justify-center">
+      <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl relative">
+        <button
+          onClick={onBack}
+          className="absolute top-4 left-4 p-2 text-gray-600 hover:bg-gray-100 rounded-full"
+          aria-label="Go back to name entry"
+        >
+          <ArrowLeft size={20} aria-hidden="true" />
+        </button>
+        
+        <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+          Add a Photo for {name}
+        </h2>
+        
+        <p className="text-sm text-gray-600 mb-4 text-center">
+          Upload a photo of {name} (under 2MB). Drag to reposition, then confirm. It stays on your device - 100% private.
+        </p>
+        
+        <div
+          ref={containerRef}
+          className="relative w-48 h-48 mx-auto mb-6 border-2 border-purple-200 rounded-xl overflow-hidden"
+        >
+          {tempImage ? (
+            <>
+              <img
+                ref={imageRef}
+                src={tempImage}
+                alt="Photo preview"
+                className="w-auto h-auto max-w-none"
+                style={{
+                  transform: `translate(${position.x}px, ${position.y}px)`,
+                  cursor: isDragging ? 'grabbing' : 'grab',
+                }}
+                onMouseDown={handleDragStart}
+                onMouseMove={handleDragMove}
+                onMouseUp={handleDragEnd}
+                onMouseLeave={handleDragEnd}
+                onTouchStart={handleDragStart}
+                onTouchMove={handleDragMove}
+                onTouchEnd={handleDragEnd}
+              />
+              <button
+                onClick={handleConfirmCrop}
+                className="absolute bottom-2 right-2 p-2 bg-green-500 text-white rounded-full hover:bg-green-600"
+                aria-label="Confirm cropped photo"
+              >
+                <CheckCircle size={20} aria-hidden="true" />
+              </button>
+              <button
+                onClick={() => {
+                  setTempImage(null);
+                  setPosition({ x: 0, y: 0 });
+                }}
+                className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                aria-label="Cancel photo preview"
+              >
+                <X size={16} aria-hidden="true" />
+              </button>
+            </>
+          ) : photo ? (
+            <>
+              <img src={photo} alt={`${name}'s photo`} className="w-full h-full object-cover" />
+              <button
+                onClick={() => setPhoto(null)}
+                className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                aria-label="Remove photo"
+              >
+                <X size={16} aria-hidden="true" />
+              </button>
+            </>
+          ) : (
+            <div className="flex items-center justify-center w-full h-full bg-gray-100">
+              <Camera size={40} className="text-gray-400" aria-hidden="true" />
+            </div>
+          )}
+        </div>
+        
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handlePhotoChange}
+          className="block w-full text-sm text-gray-500 mb-6"
+          aria-label="Upload child's photo"
+        />
+        
+        <button
+          onClick={onNext}
+          disabled={!photo}
+          className={`w-full py-4 rounded-xl font-bold text-xl transition-all ${
+            photo ? 'bg-purple-500 text-white hover:bg-purple-600' : 'bg-gray-300 text-gray-500'
+          }`}
+          aria-label="Proceed to record voice"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  );
+});
+
+// RecordingStage Component
+const RecordingStage: React.FC<RecordingStageProps> = memo(({ stage, isActive, isComplete, onRecord, onClick }) => {
+  const [isRecording, setIsRecording] = useState(false);
+  const [isStopping, setIsStopping] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+
+  useEffect(() => {
+    return () => {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+    };
+  }, []);
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const possibleTypes = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/mp4',
+        'audio/mpeg',
+        'audio/ogg;codecs=opus',
+      ];
+      const mimeType = possibleTypes.find(type => MediaRecorder.isTypeSupported(type)) || 'audio/webm';
+      console.log('Using audio format:', mimeType);
+      mediaRecorderRef.current = new MediaRecorder(stream, { mimeType });
+      audioChunksRef.current = [];
+
+      mediaRecorderRef.current.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          audioChunksRef.current.push(e.data);
+        }
+      };
+
+      mediaRecorderRef.current.onstop = () => {
+        stream.getTracks().forEach(track => track.stop());
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+        const reader = new FileReader();
+        reader.onload = () => {
+          onRecord(reader.result as string);
+          setIsRecording(false);
+          setIsStopping(false);
+        };
+        reader.readAsDataURL(audioBlob);
+      };
+
+      mediaRecorderRef.current.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error('Recording failed:', err);
+      alert('Please allow microphone access to record your voice');
+      setIsRecording(false);
+      setIsStopping(false);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      setIsStopping(true);
+      mediaRecorderRef.current.stop();
+    }
+  };
+
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
+
+  return (
+    <div
+      onClick={onClick}
+      className={`p-3 rounded-xl cursor-pointer transition-all flex items-center justify-between ${
+        isActive ? 'bg-blue-100 border-2 border-blue-300' : 'bg-gray-100 hover:bg-gray-200'
+      }`}
+      role="button"
+      tabIndex={0}
+      aria-label={`Record ${stage.label}`}
+      onKeyPress={(e) => e.key === 'Enter' && onClick()}
+    >
+      <div className="flex items-center gap-2">
+        {stage.icon}
+        <span className="text-sm font-medium">{stage.label}</span>
+      </div>
+      {isComplete ? (
+        <CheckCircle size={20} className="text-green-500" aria-hidden="true" />
+      ) : isActive && isRecording ? (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleRecording();
+          }}
+          className={`p-2 rounded-full ${isStopping ? 'bg-gray-400' : 'bg-red-500 hover:bg-red-600'} text-white`}
+          aria-label={isStopping ? 'Stopping recording' : 'Stop recording'}
+          disabled={isStopping}
+        >
+          {isStopping ? <Loader2 size={20} className="animate-spin" aria-hidden="true" /> : <Square size={20} aria-hidden="true" />}
+        </button>
+      ) : isActive ? (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleRecording();
+          }}
+          className="p-2 bg-orange-500 rounded-full hover:bg-orange-600 text-white"
+          aria-label="Start recording"
+        >
+          <Mic size={20} aria-hidden="true" />
+        </button>
+      ) : null}
+    </div>
+  );
+});
+
+// RecordingScreen Component
+const RecordingScreen: React.FC<RecordingScreenProps> = memo(({ name, recordings, setRecordings, onComplete, onBack }) => {
+  const [currentStage, setCurrentStage] = useState(0);
+  const letters = name.split('');
+  
+  const stages: Stage[] = [
+    { 
+      id: 'fullname', 
+      label: `Full Name: "${name}"`, 
+      key: 'fullname',
+      instruction: `Say their name clearly: "${name}"`,
+      icon: <Volume2 size={20} />
+    },
+    ...letters.map((letter, i) => ({
+      id: `letter-${i}`,
+      label: `Letter ${i + 1}: "${letter}"`,
+      key: `letter-${i}`,
+      instruction: `Say the SOUND of "${letter}" (not the letter name)\nExample: B = "buh" not "bee"`,
+      icon: <BookOpen size={20} />
+    })),
+    { 
+      id: 'sentence', 
+      label: 'Walking Sentence', 
+      key: 'sentence',
+      instruction: `Say: "${name}, do you want to go for a walk?"`,
+      icon: <Moon size={20} /> // Can change to Footprints if desired
+    },
+    { 
+      id: 'rhyme', 
+      label: `Fun Rhyme`, 
+      key: 'rhyme',
+      instruction: `Make a fun rhyme with "${name}"\nExample: "${name} is sweet, from head to feet!"`,
+      icon: <Music size={20} />
+    }
+  ];
+  
+  const isComplete = stages.every(stage => recordings[stage.key]);
+  
+  return (
+    <div className="min-h-screen p-4 flex items-center justify-center">
+      <div className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl relative">
+        <button
+          onClick={onBack}
+          className="absolute top-4 left-4 p-2 text-gray-600 hover:bg-gray-100 rounded-full"
+          aria-label="Go back to photo selection"
+        >
+          <ArrowLeft size={20} aria-hidden="true" />
+        </button>
+        
+        <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+          Record Your Voice
+        </h2>
+        
+        {Object.keys(recordings).length > 0 && Object.keys(recordings).length < stages.length && (
+          <div className="bg-purple-50 border border-purple-200 p-2 rounded-lg mb-3 text-center">
+            <p className="text-xs text-purple-700">
+              💜 Even partial recordings help! You can always add more later.
+            </p>
+          </div>
+        )}
+        
+        <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-4">
+          <div className="flex items-center gap-2 text-blue-800">
+            <Info size={16} aria-hidden="true" />
+            <p className="text-sm font-medium">How to Record:</p>
+          </div>
+          <ol className="text-sm text-blue-700 mt-1 ml-6 list-decimal">
+            <li>Tap any item to select it</li>
+            <li>Tap the RED microphone to START recording</li>
+            <li>Say the word/sound clearly</li>
+            <li>Tap the SQUARE to STOP</li>
+            <li>Green check = Saved!</li>
+            <li><strong>To re-record: Tap the item again and record</strong></li>
+          </ol>
+        </div>
+        
+        <div className="mb-4">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm text-gray-600 font-medium">Your Progress</span>
+            <span className="text-sm text-gray-600 font-medium">
+              {Object.keys(recordings).length} of {stages.length} done
+            </span>
+          </div>
+          <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500"
+              style={{ width: `${(Object.keys(recordings).length / stages.length) * 100}%` }}
+            />
+          </div>
+          {Object.keys(recordings).length > 0 && (
+            <p className="text-xs text-gray-500 mt-1 text-center">
+              Storage used: ~{((JSON.stringify(recordings).length / 1024 / 1024) * 2).toFixed(1)}MB
+            </p>
+          )}
+        </div>
+        
+        <div className="space-y-2 mb-6 max-h-80 overflow-y-auto">
+          {stages.map((stage, index) => (
+            <RecordingStage
+              key={stage.id}
+              stage={stage}
+              isActive={index === currentStage}
+              isComplete={!!recordings[stage.key]}
+              onRecord={(audioData: string) => {
+                setRecordings(prev => ({
+                  ...prev,
+                  [stage.key]: audioData
+                }));
+                if (index < stages.length - 1) {
+                  setTimeout(() => setCurrentStage(index + 1), 1000);
+                }
+              }}
+              onClick={() => setCurrentStage(index)}
+            />
+          ))}
+        </div>
+        
+        <button
+          onClick={onComplete}
+          disabled={!isComplete}
+          className={`w-full py-4 rounded-xl font-bold text-xl transition-all ${
+            isComplete
+              ? 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700'
+              : 'bg-gray-300 text-gray-500'
+          }`}
+          aria-label={isComplete ? "Create flashcards" : "Complete all recordings to proceed"}
+        >
+          {isComplete ? '🎉 All Done! Create Flashcards' : `📝 ${stages.length - Object.keys(recordings).length} recordings left`}
+        </button>
+        
+        {isComplete && (
+          <p className="text-xs text-gray-500 text-center mt-2">
+            💡 Tip: Test audio playback in flashcards. If no sound, check volume/silent mode.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+});
+
+// FlashcardScreen Component
+const FlashcardScreen: React.FC<FlashcardScreenProps> = memo(({ name, photo, recordings, onReset }) => {
+  const [currentLetterIndex, setCurrentLetterIndex] = useState(0);
+  const [hasPlayed, setHasPlayed] = useState(false);
+  const letters = name.split('');
+  
+  const playAudio = (key: string) => {
+    if (!hasPlayed) {
+      setHasPlayed(true);
+      return;
+    }
+    const audio = new Audio(recordings[key]);
+    audio.play().catch(err => {
+      console.error('Audio playback failed:', err);
+      alert('Unable to play audio. Check your device volume or silent mode.');
+    });
+  };
+  
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowRight' && currentLetterIndex < letters.length - 1) {
+      setCurrentLetterIndex(currentLetterIndex + 1);
+    } else if (e.key === 'ArrowLeft' && currentLetterIndex > 0) {
+      setCurrentLetterIndex(currentLetterIndex - 1);
+    } else if (e.key === 'Enter') {
+      playAudio(`letter-${currentLetterIndex}`);
+    }
+  };
+  
+  return (
+    <div
+      className="min-h-screen p-4 flex items-center justify-center"
+      tabIndex={0}
+      onKeyDown={handleKeyPress}
+      aria-label="Flashcard navigation"
+    >
+      <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl">
+        <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
+          {name}'s Flashcards
+        </h2>
+        
+        {photo && (
+          <div className="w-32 h-32 mx-auto mb-4 rounded-xl overflow-hidden border-2 border-purple-200">
+            <img src={photo} alt={`${name}'s photo`} className="w-full h-full object-cover" />
+          </div>
+        )}
+        
+        <div className="text-center mb-6">
+          <span
+            className="text-8xl font-bold text-purple-600 animate-pulse"
+            aria-label={`Current letter: ${letters[currentLetterIndex]}`}
+          >
+            {letters[currentLetterIndex]}
+          </span>
+        </div>
+        
+        <div className="flex justify-center gap-4 mb-6">
+          <button
+            onClick={() => playAudio('fullname')}
+            className="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 flex items-center gap-2"
+            aria-label="Play full name"
+          >
+            <Volume2 size={20} aria-hidden="true" /> Name
+          </button>
+          
+          <button
+            onClick={() => playAudio(`letter-${currentLetterIndex}`)}
+            disabled={!hasPlayed}
+            className={`px-4 py-2 rounded-xl flex items-center gap-2 ${
+              hasPlayed
+                ? 'bg-purple-500 text-white hover:bg-purple-600'
+                : 'bg-gray-300 text-gray-500'
+            }`}
+            aria-label={hasPlayed ? 'Play letter sound' : 'Tap to enable audio playback'}
+          >
+            <Loader2
+              size={20}
+              className={hasPlayed ? 'hidden' : 'animate-spin'}
+              aria-hidden="true"
+            />
+            <span>Play Letter Sound</span>
+          </button>
+        </div>
+        
+        <div className="flex justify-center gap-4 mb-6">
+          <button
+            onClick={() => playAudio('sentence')}
+            className="px-4 py-2 bg-green-500 text-white rounded-xl hover:bg-green-600 flex items-center gap-2"
+            aria-label="Play walking sentence"
+          >
+            <Moon size={20} aria-hidden="true" /> Sentence
+          </button>
+          
+          <button
+            onClick={() => playAudio('rhyme')}
+            className="px-4 py-2 bg-pink-500 text-white rounded-xl hover:bg-pink-600 flex items-center gap-2"
+            aria-label="Play fun rhyme"
+          >
+            <Music size={20} aria-hidden="true" /> Rhyme
+          </button>
+        </div>
+        
+        <div className="flex justify-between mb-6">
+          <button
+            onClick={() => setCurrentLetterIndex(currentLetterIndex - 1)}
+            disabled={currentLetterIndex === 0}
+            className={`p-3 rounded-xl ${
+              currentLetterIndex === 0
+                ? 'bg-gray-300 text-gray-500'
+                : 'bg-purple-500 text-white hover:bg-purple-600'
+            }`}
+            aria-label="Previous letter"
+          >
+            <ChevronLeft size={24} aria-hidden="true" />
+          </button>
+          
+          <button
+            onClick={() => setCurrentLetterIndex(currentLetterIndex + 1)}
+            disabled={currentLetterIndex === letters.length - 1}
+            className={`p-3 rounded-xl ${
+              currentLetterIndex === letters.length - 1
+                ? 'bg-gray-300 text-gray-500'
+                : 'bg-purple-500 text-white hover:bg-purple-600'
+            }`}
+            aria-label="Next letter"
+          >
+            <ArrowRight size={24} aria-hidden="true" />
+          </button>
+        </div>
+        
+        <button
+          onClick={onReset}
+          className="w-full py-3 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600"
+          aria-label="Start over and clear all data"
+        >
+          Start Over
+        </button>
+      </div>
+    </div>
+  );
+});
+
+// App Component
+const App: React.FC = () => {
+  const [step, setStep] = useState<'welcome' | 'photo' | 'recording' | 'flashcards'>('welcome');
+  const [name, setName] = useState<string | null>(null);
+  const [photo, setPhoto] = useState<string | null>(null);
+  const [recordings, setRecordings] = useState<Record<string, string>>({});
+  const [showGuide, setShowGuide] = useState(false);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const db = await openDB('MyNameIsDB', 1, {
+          upgrade(db) {
+            db.createObjectStore('recordings');
+          },
+        });
+        const savedRecordings = await db.getAll('recordings');
+        const loadedRecordings: Record<string, string> = {};
+        for (const { key, value } of savedRecordings) {
+          loadedRecordings[key] = value;
+        }
+        setRecordings(loadedRecordings);
+        
+        const savedName = localStorage.getItem('childName');
+        const savedPhoto = localStorage.getItem('childPhoto');
+        if (savedName && savedPhoto && Object.keys(loadedRecordings).length > 0) {
+          setName(savedName);
+          setPhoto(savedPhoto);
+          setStep('flashcards');
+        }
+      } catch (err) {
+        console.error('Failed to load data:', err);
+        alert('Unable to load saved data. Please try again.');
+      }
+    };
+    loadData();
+  }, []);
+
+  useEffect(() => {
+    if (name) localStorage.setItem('childName', name);
+    if (photo) localStorage.setItem('childPhoto', photo);
+  }, [name, photo]);
+
+  useEffect(() => {
+    const saveRecordings = async () => {
+      try {
+        const db = await openDB('MyNameIsDB', 1);
+        const tx = db.transaction('recordings', 'readwrite');
+        const store = tx.objectStore('recordings');
+        for (const [key, value] of Object.entries(recordings)) {
+          await store.put({ key, value });
+        }
+        await tx.done;
+      } catch (err) {
+        console.error('Failed to save recordings:', err);
+        alert('Unable to save recordings. Please try again.');
+      }
+    };
+    if (Object.keys(recordings).length > 0) {
+      saveRecordings();
+    }
+  }, [recordings]);
+
+  const handleReset = () => {
+    localStorage.removeItem('childName');
+    localStorage.removeItem('childPhoto');
+    setName(null);
+    setPhoto(null);
+    setRecordings({});
+    setStep('welcome');
+    openDB('MyNameIsDB', 1).then(db => {
+      db.clear('recordings');
+    });
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-purple-100 to-pink-100">
+      {showGuide && <ParentGuide onClose={() => setShowGuide(false)} />}
+      
+      {step === 'welcome' && (
+        <WelcomeScreen
+          onNext={(newName) => {
+            setName(newName);
+            setStep('photo');
+          }}
+          onGuide={() => setShowGuide(true)}
+        />
+      )}
+      
+      {step === 'photo' && name && (
+        <PhotoScreen
+          name={name}
+          photo={photo}
+          setPhoto={setPhoto}
+          onNext={() => setStep('recording')}
+          onBack={() => setStep('welcome')}
+        />
+      )}
+      
+      {step === 'recording' && name && (
+        <RecordingScreen
+          name={name}
+          recordings={recordings}
+          setRecordings={setRecordings}
+          onComplete={() => setStep('flashcards')}
+          onBack={() => setStep('photo')}
+        />
+      )}
+      
+      {step === 'flashcards' && name && (
+        <FlashcardScreen
+          name={name}
+          photo={photo}
+          recordings={recordings}
+          onReset={handleReset}
+        />
+      )}
+    </div>
+  );
+};
+
+// Render the App
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+export default App;
+
+Changes:Replaced PhotoScreen with the new version that includes resizing (300x300 max) and repositioning (drag-to-pan, confirm crop).
+Updated ParentGuide’s photo step description to: “Take or choose a photo (under 2MB). Drag to reposition, then confirm.”
+Kept all other components (App, ParentGuide, WelcomeScreen, RecordingScreen, FlashcardScreen, RecordingStage) unchanged, preserving the 56-word origin story, teaser (“Use YOUR voice for personal phonics—read our story!”), and walking sentence (“{name}, do you want to go for a walk?”).
+Ensured TypeScript compatibility and accessibility (ARIA labels, keyboard navigation where applicable).
+
+Optional Icon Change for Walking SentenceThe RecordingScreen uses a Moon icon for the “Walking Sentence” stage. To align with “{name}, do you want to go for a walk?”, you might prefer the Footprints icon. To update:Modify RecordingScreen’s imports and stages array:tsx
+
+import { ArrowLeft, Info, Volume2, BookOpen, Footprints, Music } from 'lucide-react';
+// In stages array:
+{ 
+  id: 'sentence', 
+  label: 'Walking Sentence', 
+  key: 'sentence',
+  instruction: `Say: "${name}, do you want to go for a walk?"`,
+  icon: <Footprints size={20} />
+}
+If desired, I can provide an updated App.tsx with this change, or you can edit it manually after pasting the code.
+
+Instructions for ReplitTo update Replit with the new App.tsx (including the updated PhotoScreen):Manual Update (Recommended):Open src/App.tsx in Replit’s file explorer.
+Delete its contents and paste the consolidated App.tsx code above.
+Save the file.
+**If RecordingStage is in `src/RecordingStage.tsx oko
+Add import RecordingStage from './RecordingStage'; at the top of App.tsx if RecordingStage is in a separate file (src/RecordingStage.tsx). If it’s included in App.tsx, no import is needed (the provided code includes it).
+Using Replit’s AI Agent or Shell:Instruct Replit’s AI Agent or Shell:
+
+Replace the entire contents of src/App.tsx with the provided code to update the "My Name Is" phonics app. The updates include:
+- ParentGuide: 56-word text-only origin story in a purple card (no audio).
+- WelcomeScreen: Teaser “Use YOUR voice for personal phonics—read our story!”.
+- RecordingScreen: Sample sentence “{name}, do you want to go for a walk?”.
+- PhotoScreen: Add photo resizing (max 300x300 pixels) and repositioning (drag-to-pan, confirm crop).
+Do not modify package.json, vite.config.js, tailwind.config.js, postcss.config.js, index.html, or server/index.ts. If RecordingStage is in src/RecordingStage.tsx, ensure App.tsx imports it with: import RecordingStage from './RecordingStage';.
+Paste the consolidated App.tsx code above when prompted.
+Press “Run”:Click the green “Run” button to restart Vite (port 3000) and Express (port 5000).
+Open the preview (https://<repl-id>.replit.app, typically port 5000).
+Test the Updates:WelcomeScreen:Verify the teaser: “Use YOUR voice for personal phonics—read our story!” (purple text).
+Enter a name (e.g., “DAWN”), check character counter, click “Next.”
+Access ParentGuide via Info or “Need help? Read 5-minute guide.”
+ParentGuide:Confirm the 56-word story in a purple card.
+Check the updated photo step description: “Take or choose a photo (under 2MB). Drag to reposition, then confirm.”
+Test mobile display (max-h-[90vh]).
+PhotoScreen:Upload an image (<2MB), verify the 2MB limit alert.
+Drag the image to reposition, click the green “Confirm Crop” button (CheckCircle), or cancel with the red “X” button.
+Confirm the cropped image (192x192) appears in the container and is saved when clicking “Next.”
+Test with a large image (e.g., 4K photo) to ensure resizing to ~300x300 pixels.
+RecordingScreen:Verify the “Walking Sentence” stage shows “Say: ‘DAWN, do you want to go for a walk?’” with the Moon icon (or Footprints if updated).
+Record and confirm playback in FlashcardScreen.
+FlashcardScreen:Verify the cropped photo displays correctly (192x192, centered).
+Test audio playback (“Play Letter Sound” requires first tap on mobile).
+Full App:Test navigation, storage usage indicator, and accessibility (Tab, Enter, screen readers).
+Edge cases: short name (“A”), long name (“ABCDEFGHIJKLMNOPQ”), incognito mode (IndexedDB limits).
+Console: Check for errors (expect [vite] connected, [express] serving on port 5000).
+Optional: Update Browserslist:Run in Replit’s Shell:bash
+
+npx update-browserslist-db@latest
+
+Silences the “Browserslist: browsers data (caniuse-lite) is 9 months old” notice.
+Express Server and Cost ConsiderationsPer your earlier question, Express has minimal cost (~$0.000028/sec, free in Replit’s free tier unless always-on). The updates are frontend-only, so server/index.ts (Express proxying Vite) is unaffected. Keep Express for development flexibility (e.g., future API for cloud storage). For production, deploy statically to Netlify/Vercel for free:Run npm run build → dist folder.
+Push to GitHub (Replit → Tools → Git → Push).
+Deploy to Netlify/Vercel (build command: npm run build, publish directory: dist).
+
+To remove Express (optional):Delete server/index.ts.
+Update package.json:json
+
+"scripts": {
+  "start": "vite",
+  "build": "vite build"
+}
+Run npm install and “Run”.
+
+Potential Issues and FixesTypeScript Errors: The code is typed, but if errors occur, share the console output.
+Missing RecordingStage: If “Cannot find module ‘./RecordingStage’” appears:Add import RecordingStage from './RecordingStage'; if in src/RecordingStage.tsx.
+Otherwise, the provided App.tsx includes RecordingStage.
+Preview Issues: Ensure vite.config.js sets server.port: 3000. Restart Repl.
+Express Proxy: Verify server/index.ts proxies Vite (uses http-proxy-middleware).
+Photo Resizing/Cropping:If the image doesn’t load, check file size (<2MB) or console for FileReader errors.
+If dragging fails, ensure touch/mouse events fire (test on mobile/desktop).
+Mobile Audio: Tap “Play Letter Sound” to enable playback.
+Modal Scrolling: Adjust max-h-[90vh] to max-h-[80vh] in ParentGuide if needed.
+
+Final AnswerPhoto resizing and repositioning were not covered in the original PhotoScreen but are now implemented in the updated src/App.tsx. The new PhotoScreen resizes images to a maximum of 300x300 pixels and allows drag-to-pan repositioning with a “Confirm Crop” button, saving a 192x192 image. The consolidated App.tsx includes:ParentGuide: 56-word text-only origin story, updated photo step description.
+WelcomeScreen: Teaser (“Use YOUR voice for personal phonics—read our story!”).
+RecordingScreen: Sample sentence (“{name}, do you want to go for a walk?”).
+PhotoScreen: Resizing and repositioning functionality.
+
+Instructions for Replit:Manual: Replace src/App.tsx with the provided code. If RecordingStage is in src/RecordingStage.tsx, add import RecordingStage from './RecordingStage';.
+AI Agent/Shell: Instruct: “Replace src/App.tsx with the provided code to update ParentGuide (56-word story), WelcomeScreen (teaser), RecordingScreen (new sentence), and PhotoScreen (resizing, repositioning). Do not modify other files. Ensure RecordingStage import if separate.” Paste the code.
+Press “Run” to test in the preview (https://<repl-id>.replit.app).
+Verify all updates, including photo resizing/repositioning.
+Optionally, update Moon to Footprints for the walking sentence.
+Keep Express (negligible cost); deploy to Netlify/Vercel for free production.
+
+If issues arise, share your Repl URL or error details. Your app is now enhanced with photo resizing/repositioning—press “Run” and enjoy! 
+
