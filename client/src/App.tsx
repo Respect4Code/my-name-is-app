@@ -1,6 +1,5 @@
 
 import React, { memo, useState, useEffect, useRef } from 'react';
-import ReactDOM from 'react-dom/client';
 import {
   Info, ChevronRight, ArrowLeft, Volume2, BookOpen, Moon, Music, Loader2, ArrowRight, ArrowLeft as ArrowLeftIcon,
   CheckCircle, Mic, Square, X, Camera, ChevronLeft
@@ -940,12 +939,5 @@ const App: React.FC = () => {
     </div>
   );
 };
-
-// Render the App
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
 
 export default App;
