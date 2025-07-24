@@ -84,7 +84,7 @@ const ParentGuide: React.FC<ParentGuideProps> = memo(({ onClose }) => {
             
             <div>
               <h4 className="font-bold">2️⃣ Add Photo (20 seconds)</h4>
-              <p className="text-gray-600">Take or choose a photo (under 2MB). It stays on your device - 100% private.</p>
+              <p className="text-gray-600">Take or choose a photo (under 2MB). Drag to reposition, then confirm. It stays on your device - 100% private.</p>
             </div>
             
             <div>
@@ -218,8 +218,15 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
   );
 });
 
-// PhotoScreen Component
+// PhotoScreen Component (Updated with Resizing and Repositioning)
 const PhotoScreen: React.FC<PhotoScreenProps> = memo(({ name, photo, setPhoto, onNext, onBack }) => {
+  const [tempImage, setTempImage] = useState<string | null>(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const imageRef = useRef<HTMLImageElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -227,12 +234,90 @@ const PhotoScreen: React.FC<PhotoScreenProps> = memo(({ name, photo, setPhoto, o
         alert('Photo must be under 2MB');
         return;
       }
+      const img = new Image();
       const reader = new FileReader();
-      reader.onload = () => setPhoto(reader.result as string);
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          img.src = event.target.result as string;
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const maxSize = 300;
+            let width = img.width;
+            let height = img.height;
+            if (width > height) {
+              if (width > maxSize) {
+                height = Math.round((height * maxSize) / width);
+                width = maxSize;
+              }
+            } else {
+              if (height > maxSize) {
+                width = Math.round((width * maxSize) / height);
+                height = maxSize;
+              }
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx?.drawImage(img, 0, 0, width, height);
+            const resizedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+            setTempImage(resizedDataUrl);
+            setPosition({ x: 0, y: 0 });
+          };
+        }
+      };
       reader.readAsDataURL(file);
     }
   };
-  
+
+  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    setDragStart({ x: clientX, y: clientY });
+  };
+
+  const handleDragMove = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!isDragging || !imageRef.current || !containerRef.current) return;
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    const deltaX = clientX - dragStart.x;
+    const deltaY = clientY - dragStart.y;
+    const container = containerRef.current.getBoundingClientRect();
+    const img = imageRef.current.getBoundingClientRect();
+    const maxX = Math.max(0, (img.width - container.width) / 2);
+    const maxY = Math.max(0, (img.height - container.height) / 2);
+    const newX = Math.max(-maxX, Math.min(maxX, position.x + deltaX));
+    const newY = Math.max(-maxY, Math.min(maxY, position.y + deltaY));
+    setPosition({ x: newX, y: newY });
+    setDragStart({ x: clientX, y: clientY });
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+  };
+
+  const handleConfirmCrop = () => {
+    if (!tempImage || !imageRef.current || !containerRef.current) return;
+    const img = imageRef.current;
+    const container = containerRef.current.getBoundingClientRect();
+    const canvas = document.createElement('canvas');
+    canvas.width = 192;
+    canvas.height = 192;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const scale = img.naturalWidth / img.width;
+    const sourceWidth = container.width * scale;
+    const sourceHeight = container.height * scale;
+    const sourceX = (img.naturalWidth - sourceWidth) / 2 - position.x * scale;
+    const sourceY = (img.naturalHeight - sourceHeight) / 2 - position.y * scale;
+    ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, 192, 192);
+    const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+    setPhoto(croppedDataUrl);
+    setTempImage(null);
+    setPosition({ x: 0, y: 0 });
+  };
+
   return (
     <div className="min-h-screen p-4 flex items-center justify-center">
       <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl relative">
@@ -249,11 +334,51 @@ const PhotoScreen: React.FC<PhotoScreenProps> = memo(({ name, photo, setPhoto, o
         </h2>
         
         <p className="text-sm text-gray-600 mb-4 text-center">
-          Upload a photo of {name} (under 2MB). It stays on your device - 100% private.
+          Upload a photo of {name} (under 2MB). Drag to reposition, then confirm. It stays on your device - 100% private.
         </p>
         
-        <div className="relative w-48 h-48 mx-auto mb-6 border-2 border-purple-200 rounded-xl overflow-hidden">
-          {photo ? (
+        <div
+          ref={containerRef}
+          className="relative w-48 h-48 mx-auto mb-6 border-2 border-purple-200 rounded-xl overflow-hidden"
+        >
+          {tempImage ? (
+            <>
+              <img
+                ref={imageRef}
+                src={tempImage}
+                alt="Photo preview"
+                className="w-auto h-auto max-w-none"
+                style={{
+                  transform: `translate(${position.x}px, ${position.y}px)`,
+                  cursor: isDragging ? 'grabbing' : 'grab',
+                }}
+                onMouseDown={handleDragStart}
+                onMouseMove={handleDragMove}
+                onMouseUp={handleDragEnd}
+                onMouseLeave={handleDragEnd}
+                onTouchStart={handleDragStart}
+                onTouchMove={handleDragMove}
+                onTouchEnd={handleDragEnd}
+              />
+              <button
+                onClick={handleConfirmCrop}
+                className="absolute bottom-2 right-2 p-2 bg-green-500 text-white rounded-full hover:bg-green-600"
+                aria-label="Confirm cropped photo"
+              >
+                <CheckCircle size={20} aria-hidden="true" />
+              </button>
+              <button
+                onClick={() => {
+                  setTempImage(null);
+                  setPosition({ x: 0, y: 0 });
+                }}
+                className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                aria-label="Cancel photo preview"
+              >
+                <X size={16} aria-hidden="true" />
+              </button>
+            </>
+          ) : photo ? (
             <>
               <img src={photo} alt={`${name}'s photo`} className="w-full h-full object-cover" />
               <button
