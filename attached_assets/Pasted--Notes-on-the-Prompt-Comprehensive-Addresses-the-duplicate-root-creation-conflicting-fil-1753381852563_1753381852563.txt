@@ -1,0 +1,101 @@
+
+### Notes on the Prompt
+- **Comprehensive**: Addresses the duplicate root creation, conflicting files, and correct `App.tsx` in one prompt to avoid loops.
+- **Explicit**: Specifies exact file deletions, `main.tsx` content, and `App.tsx` replacement, removing the `ReactDOM.createRoot` call and `ReactDOM` import.
+- **Verification**: Includes clear testing instructions to confirm the app works as expected.
+- **Safeguards**: Prohibits modifying unrelated files (`package.json`, `vite.config.js`, etc.) to prevent unintended changes.
+- **Fallback for `RecordingStage`**: Handles the case where `RecordingStage` might be in a separate file (unlikely but included for robustness).
+
+### Manual Steps (If AI Agent Fails)
+If Replit’s AI misapplies the changes (as X posts suggest it can), follow these manual steps:
+
+1. **Delete Conflicting Files**:
+   - In Replit’s file explorer, navigate to `client/src/`.
+   - Delete `App.jsx` and `App-minimal.tsx` if present.
+   - Or run in the shell:
+     ```bash
+     rm client/src/App.jsx
+     rm client/src/App-minimal.tsx
+     ```
+
+2. **Update `client/src/main.tsx`**:
+   - Open `client/src/main.tsx` in Replit’s editor.
+   - Replace with:
+     ```tsx
+     import React from 'react';
+     import ReactDOM from 'react-dom/client';
+     import App from './App.tsx';
+     import './index.css';
+
+     ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+       <React.StrictMode>
+         <App />
+       </React.StrictMode>
+     );
+     ```
+   - Save.
+
+3. **Replace `client/src/App.tsx`**:
+   - Open `client/src/App.tsx` in Replit’s editor.
+   - Copy the `App.tsx` code from the prompt above.
+   - Paste it, replacing the existing content.
+   - Ensure no `ReactDOM.createRoot` call or `import ReactDOM` remains at the bottom or top.
+   - If `RecordingStage` is in `client/src/RecordingStage.tsx`, add:
+     ```tsx
+     import RecordingStage from './RecordingStage';
+     ```
+     at the top of `App.tsx`.
+   - Save.
+
+4. **Restart Server**:
+   - Click “Run” in Replit to restart Vite (port 3000) and Express (port 5000).
+   - Open `https://name-badge-cyclone-media.replit.app`.
+   - Check console for:
+     ```
+     [vite] connected
+     [express] serving on port 5000
+     ```
+     Ensure no “ReactDOMClient.createRoot” warnings.
+
+### Testing to Confirm Fixes
+After applying the changes, test the app at `https://name-badge-cyclone-media.replit.app` (as of July 24, 2025, 1:18 PM BST):
+
+1. **WelcomeScreen**:
+   - Verify teaser: “Use YOUR voice for personal phonics—read our story!”.
+   - Enter “DAWN”, click “Next” or press Enter.
+   - Check `Info` button opens `ParentGuide`.
+
+2. **ParentGuide**:
+   - Confirm photo step: “Upload a photo of your child (under 2MB). It’s automatically resized to 300x300 pixels, then drag to reposition and confirm with the green checkmark. Cancel with the red X if needed. Stays private on your device, with smaller file sizes (~100KB).”
+   - Verify 56-word origin story.
+   - Test mobile view for scrolling (`max-h-[90vh]`).
+
+3. **PhotoScreen**:
+   - Upload image (<2MB); confirm 2MB limit alert for larger files.
+   - Verify resize to ~300x300 pixels (check dev tools).
+   - Drag to reposition (mouse/touch); confirm grab/grabbing cursor.
+   - Confirm crop with green checkmark (192x192 output); check `localStorage.getItem('childPhoto')` for ~100KB.
+   - Test cancel with red X.
+   - Check ARIA labels (`aria-label="Confirm cropped photo"`, etc.).
+
+4. **RecordingScreen**:
+   - Confirm “Walking Sentence”: “DAWN, do you want to go for a walk?” with `Footprints` icon.
+   - Record all stages; verify auto-advance and re-recording.
+   - Check progress bar (e.g., “4 of 6 done” for “DAWN”).
+
+5. **FlashcardScreen**:
+   - Verify 192x192 photo (`w-48 h-48`), 200px letters, 50/50 layout.
+   - Play all sounds; ensure first tap enables audio.
+   - Test navigation (arrows, “Previous”/“Next”, “Start Over”).
+
+6. **Edge Cases**:
+   - Test 4K images, long names (e.g., “ABCDEFGHIJKLMNOPQ”), incognito mode, mobile touch.
+   - Confirm no “ReactDOMClient.createRoot” warnings in console.
+
+### Troubleshooting
+If issues persist:
+- **Duplicate Root Warning**: Re-check `App.tsx` for any `ReactDOM.createRoot` call or `import ReactDOM`. Remove them.
+- **Wrong File Loaded**: Verify `main.tsx` imports `App.tsx`. Clear Vite cache:
+  ```bash
+  npm run build
+  npm run dev
