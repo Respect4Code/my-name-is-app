@@ -719,7 +719,7 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = memo(({ name, photo, rec
         </h2>
         
         {photo && (
-          <div className="w-32 h-32 mx-auto mb-4 rounded-xl overflow-hidden border-2 border-purple-200">
+          <div className="w-48 h-48 mx-auto mb-4 rounded-xl overflow-hidden border-2 border-purple-200">
             <img src={photo} alt={`${name}'s photo`} className="w-full h-full object-cover" />
           </div>
         )}
@@ -727,6 +727,7 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = memo(({ name, photo, rec
         <div className="text-center mb-6">
           <span
             className="text-8xl font-bold text-purple-600 animate-pulse"
+            style={{ fontSize: '200px' }}
             aria-label={`Current letter: ${letters[currentLetterIndex]}`}
           >
             {letters[currentLetterIndex]}
