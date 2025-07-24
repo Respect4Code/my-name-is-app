@@ -56,7 +56,7 @@ interface RecordingStageProps {
   onClick: () => void;
 }
 
-// ParentGuide Component
+// ParentGuide Component (Updated Photo Step)
 const ParentGuide: React.FC<ParentGuideProps> = memo(({ onClose }) => {
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" role="dialog" aria-labelledby="parent-guide-title">
@@ -84,7 +84,9 @@ const ParentGuide: React.FC<ParentGuideProps> = memo(({ onClose }) => {
             
             <div>
               <h4 className="font-bold">2️⃣ Add Photo (20 seconds)</h4>
-              <p className="text-gray-600">Take or choose a photo (under 2MB). Drag to reposition, then confirm. It stays on your device - 100% private.</p>
+              <p className="text-gray-600">
+                Upload a photo of your child (under 2MB). It's automatically resized to 300x300 pixels, then drag to reposition and confirm with the green checkmark. Cancel with the red X if needed. Stays private on your device, with smaller file sizes (~100KB).
+              </p>
             </div>
             
             <div>
