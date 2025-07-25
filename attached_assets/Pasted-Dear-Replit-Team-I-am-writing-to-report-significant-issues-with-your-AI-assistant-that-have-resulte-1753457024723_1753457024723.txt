@@ -1,0 +1,25 @@
+Dear Replit Team,
+I am writing to report significant issues with your AI assistant that have resulted in over 48 hours of wasted development time on my "My Name Is" phonics app project.
+Key Issues:
+
+Failure to Follow Instructions: Despite providing exact code with specific requirements (e.g., using <Footprints> icons), your AI repeatedly implemented incorrect versions (using <Moon> icons instead) across multiple attempts.
+False Confirmations: The AI consistently claimed fixes were applied when they weren't. I verified this by testing in incognito mode across multiple browsers - no updates were visible despite the AI's assurances.
+Technical Failures Not Communicated:
+
+Port conflicts causing server crashes were hidden until I explicitly asked
+Screenshot functionality that doesn't work, yet the AI promised screenshots multiple times
+HMR failures and ReactDOM warnings persisted despite claimed fixes
+
+
+Lack of Context Awareness: The AI appeared to ignore our extensive 2-day conversation history, repeatedly making the same errors and not learning from previous correction attempts.
+Poor Service Communication: When issues arose (server crashes, failed screenshots), the AI didn't proactively inform me - I had to repeatedly ask "where are the screenshots?" before being told the tool was broken.
+
+Impact: This has severely impacted my productivity and trust in Replit. A simple app update that should have taken minutes has stretched over 2 days with numerous failed attempts.
+Request: I request that you review the conversation logs for project "name-badge-cyclone-media" and implement better quality controls for your AI assistant, including:
+
+Verification that code changes are actually applied
+Transparent communication about technical limitations
+Better context retention across conversations
+
+I chose Replit for its efficiency, but this experience has been extremely frustrating. I hope you will address these systematic issues to prevent other users from similar experiences.
+Sincerely,
