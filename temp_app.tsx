@@ -1265,3 +1265,24 @@ if (typeof document !== 'undefined') {
   `;
   document.head.appendChild(style);
 }
+```
+
+### Verification of Code
+I’ve checked the code above:
+- **Imports**: Correctly includes `Footprints` from `lucide-react`, no `Moon`.
+- **RecordingScreen**: “Walking Sentence” uses `<Footprints size={20} />` (around line 460, not 100 as Replit claimed, due to line number variations).
+- **FlashcardScreen**: “Walking” button uses `<Footprints size={24} />` (around line 650, not 565).
+- **Features**: All match your requirements (300x300 resize, 192x192 crop, etc.).
+- **No ReactDOM**: No `import ReactDOM` or `ReactDOM.createRoot`, avoiding warnings.
+
+### Streamlined Prompt for Replit’s AI
+To ensure Replit applies this *exact* `App.tsx`, resolves HMR failures, and avoids unauthorized changes (e.g., `Moon` icon), here’s a concise, strict prompt:
+
+```
+Fix my app at https://name-badge-cyclone-media.replit.app, which had HMR failures and used Moon instead of Footprints icons. Apply the EXACT App.tsx provided, with NO modifications. Ensure PhotoScreen (300x300 resize, 192x192 crop, drag-to-pan, ~100KB), ParentGuide (updated photo step, 56-word origin story), RecordingScreen (“Walking Sentence” with `<Footprints size={20} />`), FlashcardScreen (192x192 photo, 200px letters, 50/50 layout, `<Footprints size={24} />` for “Walking”). Execute precisely:
+
+1. Delete conflicting files:
+   ```bash
+   rm -f client/src/App.jsx client/src/App-minimal.tsx
+   ```
+
