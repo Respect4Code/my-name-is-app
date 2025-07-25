@@ -141,7 +141,7 @@ export default function App() {
   const [currentStep, setCurrentStep] = useState('welcome');
   const [childName, setChildName] = useState('');
   const [childPhoto, setChildPhoto] = useState('');
-  const [recordings, setRecordings] = useState({});
+  const [recordings, setRecordings] = useState<Record<string, string>>({});
   const [currentFlashcard, setCurrentFlashcard] = useState(0);
   const [showGuide, setShowGuide] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -160,7 +160,7 @@ export default function App() {
           const letterKeys = savedName.split('').map((_, i) => `letter-${i}`);
           const allKeys = [...recordingKeys, ...letterKeys];
           
-          const loadedRecordings = {};
+          const loadedRecordings: Record<string, string> = {};
           for (const key of allKeys) {
             const value = await loadFromIndexedDB(key);
             if (value) loadedRecordings[key] = value;
@@ -1090,7 +1090,7 @@ function FlashcardScreen({
                   className="font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 select-none block animate-pulse"
                   style={{ fontSize: '200px', lineHeight: '1' }}
                   role="heading"
-                  aria-level="2"
+                  aria-level={2}
                   aria-label={`Letter ${letters[current]}`}
                 >
                   {letters[current]}
