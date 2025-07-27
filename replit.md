@@ -138,4 +138,5 @@ The application is designed to be easily deployable to various platforms includi
 - **Robust recording system**: Multiple audio format support, graceful error recovery, auto-advance
 - **Parent-optimized guide**: 4-minute setup respecting busy schedules with clear instructions
 - **Reliable persistence**: IndexedDB with localStorage fallback ensuring no data loss
+- **Tooltip positioning fixed**: User-reported overlay issue resolved - tooltips no longer block recording controls
 - **Deployment verified**: Clean production build, TypeScript error-free, ready for real parent use
