@@ -898,15 +898,15 @@ aria-label="Next letter"
 </button>
 </div>
 
-<ShareButton className="mb-4" />
-
 <button
 onClick={onReset}
-className="w-full py-3 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600"
+className="w-full py-3 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 mb-4"
 aria-label="Start over and clear all data"
 >
 Start Over
 </button>
+
+<ShareButton />
 </div>
 </div>
 );
