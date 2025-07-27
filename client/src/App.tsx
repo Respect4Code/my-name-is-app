@@ -5,16 +5,19 @@ Info, ChevronRight, ArrowLeft, Volume2, BookOpen, Moon, Music, Loader2, ArrowRig
 CheckCircle, Mic, Square, RefreshCw, Play, Share2
 } from 'lucide-react';
 import { openDB } from 'idb';
-// Import the colorful Bored Mama logo
-import boredMamaLogo from '@assets/Screenshot 2025-07-28 at 00.19.26_1753658469899.png';
-
-// BoredMama logo component using your actual image
+// BoredMama colorful logo component that will definitely work
 const BoredMamaLogo = () => (
-        <img 
-                src={boredMamaLogo} 
-                alt="Bored Mama - Revolutionising Motherhood" 
-                className="h-8 w-auto"
-        />
+        <div className="flex items-center gap-1 px-3 py-2 bg-white rounded-lg shadow-md border-2 border-purple-200">
+                <span className="text-yellow-500 font-bold text-lg">B</span>
+                <span className="text-green-500 font-bold text-lg">o</span>
+                <span className="text-blue-400 font-bold text-lg">r</span>
+                <span className="text-pink-500 font-bold text-lg">e</span>
+                <span className="text-red-500 font-bold text-lg">d</span>
+                <span className="text-blue-800 font-bold text-lg ml-1">M</span>
+                <span className="text-pink-400 font-bold text-lg">a</span>
+                <span className="text-orange-500 font-bold text-lg">m</span>
+                <span className="text-yellow-400 font-bold text-lg">a</span>
+        </div>
 );
 
 // Get vibrant colors for letters matching the BoredMama brand
@@ -926,7 +929,7 @@ Start Over
 const App = () => {
         // Test the logo at the top of the app
         const testLogo = (
-                <div style={{ position: 'fixed', top: '10px', left: '10px', zIndex: 9999, background: 'white', padding: '10px', borderRadius: '8px' }}>
+                <div style={{ position: 'fixed', top: '10px', left: '10px', zIndex: 9999 }}>
                         <BoredMamaLogo />
                 </div>
         );
@@ -1046,6 +1049,7 @@ setStep('welcome');
 
 return (
 <div className="min-h-screen bg-gradient-to-b from-purple-100 to-pink-100">
+{testLogo}
 {showGuide && <ParentGuide onClose={() => setShowGuide(false)} />}
 
 {step === 'welcome' && (
