@@ -72,7 +72,7 @@ As parents, we wanted our toddler to learn their name with our voices, not gener
 <div className="space-y-3">
 <div>
 <h4 className="font-bold">1️⃣ Enter Name (10 seconds)</h4>
-<p className="text-gray-600">Type your child's name (up to 20 letters).</p>
+<p className="text-gray-600">Type your child's name (up to 26 letters).</p>
 </div>
 
 <div>
@@ -166,14 +166,14 @@ onChange={(e) => setName(e.target.value.replace(/[^a-zA-Z]/g, ''))}
 onKeyPress={handleKeyPress}
 placeholder="Enter your child's name"
 className="w-full p-4 text-2xl text-center border-2 border-purple-200 rounded-xl text-gray-800 mb-6"
-maxLength={20}
+maxLength={26}
 autoFocus
 aria-label="Child's name"
 />
 
-{name.length >= 15 && (
+{name.length >= 20 && (
 <p className="text-xs text-orange-600 -mt-4 mb-4 text-center">
-{20 - name.length} characters left
+{26 - name.length} characters left
 </p>
 )}
 
