@@ -927,10 +927,22 @@ Start Over
 
 // App Component
 const App = () => {
-        // Test the logo at the top of the app
+        // Test the logo at the top of the app - make it very obvious
         const testLogo = (
-                <div style={{ position: 'fixed', top: '10px', left: '10px', zIndex: 9999 }}>
-                        <BoredMamaLogo />
+                <div style={{ 
+                        position: 'fixed', 
+                        top: '20px', 
+                        left: '20px', 
+                        zIndex: 9999,
+                        backgroundColor: 'red',
+                        padding: '20px',
+                        border: '5px solid black',
+                        borderRadius: '10px'
+                }}>
+                        <div style={{ backgroundColor: 'white', padding: '10px', borderRadius: '5px' }}>
+                                <div style={{ color: 'red', fontSize: '24px', fontWeight: 'bold' }}>BORED MAMA TEST</div>
+                                <BoredMamaLogo />
+                        </div>
                 </div>
         );
 const [step, setStep] = useState<'welcome' | 'recording' | 'flashcards'>('welcome');
