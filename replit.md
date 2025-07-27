@@ -149,3 +149,4 @@ The application is designed to be easily deployable to various platforms includi
 - **Photo screen eliminated**: App now flows Welcome → Recording → Flashcards (no photo upload)
 - **Cache-busting implemented**: Version 2.3 with headers to force fresh browser loading
 - **Social sharing added**: Interactive share button with WhatsApp, Facebook, X, and copy link functionality - optimized for friends & family viral growth
+- **Dual share strategy**: Share buttons on both Welcome (discovery excitement) and Flashcard screens (joy moment after hearing child's voice)

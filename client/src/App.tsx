@@ -898,6 +898,8 @@ aria-label="Next letter"
 </button>
 </div>
 
+<ShareButton className="mb-4" />
+
 <button
 onClick={onReset}
 className="w-full py-3 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600"
