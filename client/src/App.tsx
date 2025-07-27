@@ -854,19 +854,23 @@ aria-label="Play fun rhyme"
 </div>
 
 <div className="flex justify-between mb-6">
+<div className="flex flex-col items-center">
 <button
 onClick={() => setCurrentLetterIndex(currentLetterIndex - 1)}
 disabled={currentLetterIndex === 0}
 className={`p-3 rounded-xl ${
 currentLetterIndex === 0
 ? 'bg-gray-300 text-gray-500'
-: 'bg-purple-500 text-white hover:bg-purple-600'
+: 'bg-gray-500 text-white hover:bg-gray-600'
 }`}
 aria-label="Previous letter"
 >
 <ChevronLeft size={24} aria-hidden="true" />
 </button>
+<span className="text-sm text-gray-600 mt-2 font-medium">Previous Letter</span>
+</div>
 
+<div className="flex flex-col items-center">
 <button
 onClick={() => setCurrentLetterIndex(currentLetterIndex + 1)}
 disabled={currentLetterIndex === letters.length - 1}
@@ -879,6 +883,8 @@ aria-label="Next letter"
 >
 <ArrowRight size={24} aria-hidden="true" />
 </button>
+<span className="text-sm text-gray-600 mt-2 font-medium">Next Letter</span>
+</div>
 </div>
 
 <button
