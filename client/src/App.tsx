@@ -269,7 +269,8 @@ mediaRecorderRef.current.start();
 setIsRecording(true);
 } catch (err) {
 console.error('Recording error:', err);
-alert(`Recording failed: ${err.message}. Please ensure microphone access is granted.`);
+const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+alert(`Recording failed: ${errorMessage}. Please ensure microphone access is granted.`);
 setIsRecording(false);
 setIsStopping(false);
 setCountdown(null);
@@ -774,16 +775,30 @@ const [showGuide, setShowGuide] = useState(false);
 useEffect(() => {
 const loadData = async () => {
 try {
+// Try IndexedDB first, fallback to localStorage
+let loadedRecordings: Record<string, string> = {};
+
+try {
 const db = await openDB('MyNameIsDB', 1, {
 upgrade(db) {
 db.createObjectStore('recordings');
 },
 });
 const savedRecordings = await db.getAll('recordings');
-const loadedRecordings: Record<string, string> = {};
 for (const { key, value } of savedRecordings) {
 loadedRecordings[key] = value;
 }
+console.log('Loaded recordings from IndexedDB:', Object.keys(loadedRecordings).length);
+} catch (idbError) {
+console.warn('IndexedDB failed, trying localStorage:', idbError);
+// Fallback to localStorage
+const savedRecordings = localStorage.getItem('recordings');
+if (savedRecordings) {
+loadedRecordings = JSON.parse(savedRecordings);
+console.log('Loaded recordings from localStorage:', Object.keys(loadedRecordings).length);
+}
+}
+
 setRecordings(loadedRecordings);
 
 const savedName = localStorage.getItem('childName');
@@ -793,7 +808,7 @@ setStep('flashcards');
 }
 } catch (err) {
 console.error('Failed to load data:', err);
-alert('Unable to load saved data. Please try again.');
+// Don't show error alert on initial load - just start fresh
 }
 };
 loadData();
@@ -805,6 +820,10 @@ if (name) localStorage.setItem('childName', name);
 
 useEffect(() => {
 const saveRecordings = async () => {
+if (Object.keys(recordings).length === 0) return;
+
+try {
+// Try IndexedDB first
 try {
 const db = await openDB('MyNameIsDB', 1);
 const tx = db.transaction('recordings', 'readwrite');
@@ -813,25 +832,49 @@ for (const [key, value] of Object.entries(recordings)) {
 await store.put({ key, value });
 }
 await tx.done;
+console.log('Saved recordings to IndexedDB:', Object.keys(recordings).length);
+} catch (idbError) {
+console.warn('IndexedDB failed, using localStorage:', idbError);
+// Fallback to localStorage
+localStorage.setItem('recordings', JSON.stringify(recordings));
+console.log('Saved recordings to localStorage:', Object.keys(recordings).length);
+}
 } catch (err) {
 console.error('Failed to save recordings:', err);
-alert('Unable to save recordings. Please try again.');
+// Silent fallback - don't interrupt user experience
+localStorage.setItem('recordings', JSON.stringify(recordings));
 }
 };
-if (Object.keys(recordings).length > 0) {
 saveRecordings();
-}
 }, [recordings]);
 
-const handleReset = () => {
+const handleReset = async () => {
+if (window.confirm('This will clear all recordings and data. Are you sure?')) {
+try {
+// Clear both IndexedDB and localStorage
+try {
+const db = await openDB('MyNameIsDB', 1);
+const tx = db.transaction('recordings', 'readwrite');
+await tx.objectStore('recordings').clear();
+await tx.done;
+} catch (idbError) {
+console.warn('IndexedDB clear failed:', idbError);
+}
+localStorage.removeItem('recordings');
 localStorage.removeItem('childName');
 localStorage.removeItem('tooltipsDismissed');
-setName(null);
 setRecordings({});
+setName(null);
 setStep('welcome');
-openDB('MyNameIsDB', 1).then(db => {
-db.clear('recordings');
-});
+console.log('Reset complete - all data cleared');
+} catch (err) {
+console.error('Failed to clear data:', err);
+// Force reset even if clearing fails
+setRecordings({});
+setName(null);
+setStep('welcome');
+}
+}
 };
 
 return (
