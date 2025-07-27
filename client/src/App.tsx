@@ -261,6 +261,13 @@ setTempRecording(audioData);
 setIsRecording(false);
 setIsStopping(false);
 setCountdown(null);
+// Auto-save after 2 seconds delay so user can hear the recording preview
+setTimeout(() => {
+console.log('Auto-saving recording for stage:', stage.key);
+onRecord(audioData);
+setTempRecording(null);
+console.log('Auto-save completed');
+}, 2000);
 };
 reader.readAsDataURL(audioBlob);
 };
@@ -308,8 +315,12 @@ alert('Unable to play preview. Check your device volume or silent mode.');
 
 const saveRecording = () => {
 if (tempRecording) {
+console.log('Saving recording for stage:', stage.key);
 onRecord(tempRecording);
 setTempRecording(null);
+console.log('Recording saved and temp cleared');
+} else {
+console.log('No temp recording to save');
 }
 };
 
@@ -356,7 +367,7 @@ e.stopPropagation();
 saveRecording();
 }}
 className="p-2 bg-green-500 rounded-full hover:bg-green-600 text-white"
-aria-label={`Save recording for ${stage.label}`}
+aria-label={`SAVE recording for ${stage.label}`}
 >
 <CheckCircle size={20} aria-hidden="true" />
 </button>
@@ -441,7 +452,7 @@ icon: <BookOpen size={20} />
 id: 'sentence', 
 label: 'Walking Sentence', 
 key: 'sentence',
-instruction: `Say: "${name}, do you want to go for a walk?"`,
+instruction: `Say: "${name} likes to walk around the house"`,
 icon: <Moon size={20} />
 },
 { 
@@ -453,19 +464,11 @@ icon: <Music size={20} />
 }
 ];
 
-// Debug progress tracking
-console.log('Recordings object:', recordings);
-console.log('Stages count:', stages.length);
-console.log('Recordings count:', Object.keys(recordings).length);
-stages.forEach(stage => {
-console.log(`Stage ${stage.key}: ${recordings[stage.key] ? 'RECORDED' : 'MISSING'}`);
-});
-
 const isComplete = stages.every(stage => recordings[stage.key]);
 const nextUnrecordedStage = stages.findIndex(stage => !recordings[stage.key]);
 
-console.log('isComplete:', isComplete);
-console.log('nextUnrecordedStage:', nextUnrecordedStage);
+// Keep one debug line to track completion
+console.log(`Progress: ${Object.keys(recordings).length}/${stages.length} recordings complete`);
 
 const startRecordingForStage = async (stageIndex: number) => {
 setCurrentStage(stageIndex);
@@ -557,7 +560,7 @@ Record Your Voice for {name}
 <li>Tap the RED microphone to START recording</li>
 <li>Say the word/sound clearly</li>
 <li>Tap the SQUARE to STOP</li>
-<li>Preview with PLAY, then SAVE or RE-RECORD</li>
+<li>Recording auto-saves after 2 seconds - no need to click SAVE!</li>
 <li><strong>To re-record: Tap the BLUE refresh icon</strong></li>
 </ol>
 
@@ -593,15 +596,11 @@ isActive={index === currentStage}
 isComplete={!!recordings[stage.key]}
 isNext={index === nextUnrecordedStage}
 onRecord={(audioData: string) => {
-console.log('Recording saved for key:', stage.key);
-setRecordings(prev => {
-const newRecordings = {
+setRecordings(prev => ({
 ...prev,
 [stage.key]: audioData
-};
-console.log('Updated recordings:', Object.keys(newRecordings));
-return newRecordings;
-});
+}));
+// Auto-advance to next unrecorded stage after successful recording
 if (index < stages.length - 1) {
 setTimeout(() => setCurrentStage(index + 1), 1000);
 }
@@ -812,8 +811,6 @@ const savedRecordings = localStorage.getItem('recordings');
 if (savedRecordings) {
 try {
 loadedRecordings = JSON.parse(savedRecordings);
-console.log('Loaded recordings from localStorage:', Object.keys(loadedRecordings).length);
-console.log('Recording keys found:', Object.keys(loadedRecordings));
 } catch (parseError) {
 console.error('Failed to parse localStorage recordings:', parseError);
 loadedRecordings = {};
@@ -821,17 +818,12 @@ loadedRecordings = {};
 }
 }
 
-console.log('About to set recordings:', loadedRecordings);
 setRecordings(loadedRecordings);
 
 const savedName = localStorage.getItem('childName');
-console.log('Saved name:', savedName);
-console.log('Loaded recordings count:', Object.keys(loadedRecordings).length);
-
 if (savedName && Object.keys(loadedRecordings).length > 0) {
 setName(savedName);
 setStep('flashcards');
-console.log('Restoring to flashcards with', Object.keys(loadedRecordings).length, 'recordings');
 }
 } catch (err) {
 console.error('Failed to load data:', err);
