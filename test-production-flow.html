@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Production Flow Test - My Name Is</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <h1>Testing Critical Parent Scenarios</h1>
+    
+    <script>
+        // Test 1: IndexedDB availability
+        console.log('Testing IndexedDB...');
+        if (!window.indexedDB) {
+            console.error('CRITICAL: IndexedDB not supported');
+            document.body.innerHTML += '<p style="color:red">❌ IndexedDB not supported</p>';
+        } else {
+            console.log('✅ IndexedDB supported');
+            document.body.innerHTML += '<p style="color:green">✅ IndexedDB supported</p>';
+        }
+        
+        // Test 2: MediaRecorder API
+        console.log('Testing MediaRecorder...');
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            console.error('CRITICAL: MediaRecorder not supported');
+            document.body.innerHTML += '<p style="color:red">❌ MediaRecorder not supported</p>';
+        } else {
+            console.log('✅ MediaRecorder supported');
+            document.body.innerHTML += '<p style="color:green">✅ MediaRecorder supported</p>';
+        }
+        
+        // Test 3: Audio formats
+        console.log('Testing audio formats...');
+        const possibleTypes = [
+            'audio/webm;codecs=opus',
+            'audio/webm',
+            'audio/mp4',
+            'audio/mpeg',
+            'audio/ogg;codecs=opus',
+        ];
+        const supportedType = possibleTypes.find(type => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(type));
+        if (supportedType) {
+            console.log(`✅ Supported audio format: ${supportedType}`);
+            document.body.innerHTML += `<p style="color:green">✅ Audio format: ${supportedType}</p>`;
+        } else {
+            console.error('CRITICAL: No supported audio formats');
+            document.body.innerHTML += '<p style="color:red">❌ No supported audio formats</p>';
+        }
+        
+        // Test 4: LocalStorage
+        console.log('Testing localStorage...');
+        try {
+            localStorage.setItem('test', 'value');
+            localStorage.removeItem('test');
+            console.log('✅ localStorage working');
+            document.body.innerHTML += '<p style="color:green">✅ LocalStorage working</p>';
+        } catch (e) {
+            console.error('CRITICAL: localStorage failed', e);
+            document.body.innerHTML += '<p style="color:red">❌ LocalStorage failed</p>';
+        }
+        
+        console.log('Production readiness test complete');
+    </script>
+</body>
+</html>
