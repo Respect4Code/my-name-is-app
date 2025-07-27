@@ -384,7 +384,23 @@ aria-label={`Re-record ${stage.label}`}
 <audio ref={audioRef} className="hidden" />
 </div>
 ) : isComplete ? (
-<>
+<div className="flex gap-2 items-center">
+<button
+onClick={(e) => {
+e.stopPropagation();
+if (recordings[stage.key]) {
+const audio = new Audio(recordings[stage.key]);
+audio.play().catch(err => {
+console.error('Playback failed:', err);
+alert('Unable to play audio. Check your device volume or silent mode.');
+});
+}
+}}
+className="p-2 bg-purple-500 rounded-full hover:bg-purple-600 text-white"
+aria-label={`Play ${stage.label} recording`}
+>
+<Play size={20} aria-hidden="true" />
+</button>
 <button
 onClick={(e) => {
 e.stopPropagation();
@@ -396,7 +412,7 @@ aria-label={`Re-record ${stage.label}`}
 <RefreshCw size={20} aria-hidden="true" />
 </button>
 <CheckCircle size={20} className="text-green-500" aria-hidden="true" />
-</>
+</div>
 ) : isActive && isRecording ? (
 <button
 onClick={(e) => {

@@ -138,5 +138,8 @@ The application is designed to be easily deployable to various platforms includi
 - **Robust recording system**: Multiple audio format support, graceful error recovery, auto-advance
 - **Parent-optimized guide**: 4-minute setup respecting busy schedules with clear instructions
 - **Reliable persistence**: IndexedDB with localStorage fallback ensuring no data loss
-- **Tooltip positioning fixed**: User-reported overlay issue resolved - tooltips no longer block recording controls
+- **Tooltip positioning fixed**: User-reported overlay issue resolved - tooltips no longer block recording controls  
+- **Auto-save recording system**: Eliminated user confusion by auto-saving recordings 2 seconds after stopping - no manual save button required
+- **Progress tracking restored**: Fixed critical bug where recordings completed but progress showed "0 of 9 done" - now properly tracks completion
+- **Complete recording workflow**: Users can record, auto-save, play back, and re-record with intuitive purple play and blue refresh buttons
 - **Deployment verified**: Clean production build, TypeScript error-free, ready for real parent use
