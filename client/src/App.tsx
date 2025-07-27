@@ -453,8 +453,19 @@ icon: <Music size={20} />
 }
 ];
 
+// Debug progress tracking
+console.log('Recordings object:', recordings);
+console.log('Stages count:', stages.length);
+console.log('Recordings count:', Object.keys(recordings).length);
+stages.forEach(stage => {
+console.log(`Stage ${stage.key}: ${recordings[stage.key] ? 'RECORDED' : 'MISSING'}`);
+});
+
 const isComplete = stages.every(stage => recordings[stage.key]);
 const nextUnrecordedStage = stages.findIndex(stage => !recordings[stage.key]);
+
+console.log('isComplete:', isComplete);
+console.log('nextUnrecordedStage:', nextUnrecordedStage);
 
 const startRecordingForStage = async (stageIndex: number) => {
 setCurrentStage(stageIndex);
@@ -582,10 +593,15 @@ isActive={index === currentStage}
 isComplete={!!recordings[stage.key]}
 isNext={index === nextUnrecordedStage}
 onRecord={(audioData: string) => {
-setRecordings(prev => ({
+console.log('Recording saved for key:', stage.key);
+setRecordings(prev => {
+const newRecordings = {
 ...prev,
 [stage.key]: audioData
-}));
+};
+console.log('Updated recordings:', Object.keys(newRecordings));
+return newRecordings;
+});
 if (index < stages.length - 1) {
 setTimeout(() => setCurrentStage(index + 1), 1000);
 }
@@ -794,17 +810,28 @@ console.warn('IndexedDB failed, trying localStorage:', idbError);
 // Fallback to localStorage
 const savedRecordings = localStorage.getItem('recordings');
 if (savedRecordings) {
+try {
 loadedRecordings = JSON.parse(savedRecordings);
 console.log('Loaded recordings from localStorage:', Object.keys(loadedRecordings).length);
+console.log('Recording keys found:', Object.keys(loadedRecordings));
+} catch (parseError) {
+console.error('Failed to parse localStorage recordings:', parseError);
+loadedRecordings = {};
+}
 }
 }
 
+console.log('About to set recordings:', loadedRecordings);
 setRecordings(loadedRecordings);
 
 const savedName = localStorage.getItem('childName');
+console.log('Saved name:', savedName);
+console.log('Loaded recordings count:', Object.keys(loadedRecordings).length);
+
 if (savedName && Object.keys(loadedRecordings).length > 0) {
 setName(savedName);
 setStep('flashcards');
+console.log('Restoring to flashcards with', Object.keys(loadedRecordings).length, 'recordings');
 }
 } catch (err) {
 console.error('Failed to load data:', err);
