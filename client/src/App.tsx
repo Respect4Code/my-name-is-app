@@ -5,8 +5,12 @@ Info, ChevronRight, ArrowLeft, Volume2, BookOpen, Moon, Music, Loader2, ArrowRig
 CheckCircle, Mic, Square, RefreshCw, Play, Share2
 } from 'lucide-react';
 import { openDB } from 'idb';
-// BoredMama logo as data URL for better reliability
-const boredMamaLogo = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%238B5CF6'/%3E%3Ctext x='32' y='38' text-anchor='middle' fill='white' font-family='Arial, sans-serif' font-size='12' font-weight='bold'%3EBM%3C/text%3E%3C/svg%3E";
+// BoredMama branding component
+const BoredMamaLogo = () => (
+        <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center border-2 border-purple-300 shadow-md">
+                <span className="text-white font-bold text-sm">BM</span>
+        </div>
+);
 
 // TypeScript interfaces
 interface Stage {
