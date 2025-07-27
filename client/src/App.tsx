@@ -283,8 +283,12 @@ aria-label="Open parent guide"
 <Info size={20} aria-hidden="true" />
 </button>
 
+<div className="mb-4">
+        <BoredMamaLogo />
+</div>
 <h1 className="text-4xl font-bold text-gray-800 mb-2">My Name Is</h1>
 <p className="text-gray-600 mb-2">Teach your child their name with YOUR voice</p>
+<div className="text-xs text-purple-600 font-medium mb-2">Revolutionising Motherhood</div>
 <p className="text-purple-600 text-sm font-medium mb-6">
 ⭐ "My 18-month-old learned all letters phonetically!" - Real parent
 </p>
@@ -827,6 +831,9 @@ onKeyDown={handleKeyPress}
 aria-label="Flashcard navigation"
 >
 <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl">
+<div className="text-center mb-4">
+        <BoredMamaLogo />
+</div>
 <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
 {name}'s Flashcards
 </h2>
@@ -927,24 +934,7 @@ Start Over
 
 // App Component
 const App = () => {
-        // Test the logo at the top of the app - make it very obvious
-        const testLogo = (
-                <div style={{ 
-                        position: 'fixed', 
-                        top: '20px', 
-                        left: '20px', 
-                        zIndex: 9999,
-                        backgroundColor: 'red',
-                        padding: '20px',
-                        border: '5px solid black',
-                        borderRadius: '10px'
-                }}>
-                        <div style={{ backgroundColor: 'white', padding: '10px', borderRadius: '5px' }}>
-                                <div style={{ color: 'red', fontSize: '24px', fontWeight: 'bold' }}>BORED MAMA TEST</div>
-                                <BoredMamaLogo />
-                        </div>
-                </div>
-        );
+
 const [step, setStep] = useState<'welcome' | 'recording' | 'flashcards'>('welcome');
 const [name, setName] = useState<string | null>(null);
 const [recordings, setRecordings] = useState<Record<string, string>>({});
@@ -1061,7 +1051,6 @@ setStep('welcome');
 
 return (
 <div className="min-h-screen bg-gradient-to-b from-purple-100 to-pink-100">
-{testLogo}
 {showGuide && <ParentGuide onClose={() => setShowGuide(false)} />}
 
 {step === 'welcome' && (
