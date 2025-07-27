@@ -519,7 +519,7 @@ id="back-button"
 <ArrowLeft size={20} aria-hidden="true" />
 </button>
 {showTooltips && (
-<div className="absolute -top-2 left-12 bg-gray-800 text-white text-xs rounded p-2 max-w-xs">
+<div className="absolute -top-16 left-12 bg-gray-800 text-white text-xs rounded p-2 max-w-xs z-50">
 Tap to go back and change the name (clears recordings).
 <button
 onClick={dismissTooltips}
@@ -558,7 +558,7 @@ Record Your Voice for {name}
 <li><strong>To re-record: Tap the BLUE refresh icon</strong></li>
 </ol>
 {showTooltips && (
-<div className="absolute top-2 right-2 bg-gray-800 text-white text-xs rounded p-2 max-w-xs">
+<div className="absolute -top-12 right-2 bg-gray-800 text-white text-xs rounded p-2 max-w-xs z-50">
 Follow these steps to record. Tap "Got it" to hide tips.
 <button
 onClick={dismissTooltips}
@@ -615,7 +615,7 @@ startRecordingForStage(index);
 }}
 />
 {showTooltips && index === 0 && (
-<div className="absolute top-0 right-0 bg-gray-800 text-white text-xs rounded p-2 max-w-xs">
+<div className="absolute -bottom-16 left-0 bg-gray-800 text-white text-xs rounded p-2 max-w-xs z-50">
 Tap the orange mic to record, blue refresh to re-record.
 <button
 onClick={dismissTooltips}
