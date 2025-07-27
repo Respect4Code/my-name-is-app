@@ -46,6 +46,7 @@ isNext: boolean;
 onRecord: (audioData: string) => void;
 onClick: () => void;
 onReRecord: () => void;
+recordings: { [key: string]: string };
 }
 
 // ParentGuide Component
@@ -210,7 +211,7 @@ Perfect for sharing with friends & family!
 });
 
 // RecordingStage Component
-const RecordingStage: React.FC<RecordingStageProps> = memo(({ stage, isActive, isComplete, isNext, onRecord, onClick, onReRecord }) => {
+const RecordingStage: React.FC<RecordingStageProps> = memo(({ stage, isActive, isComplete, isNext, onRecord, onClick, onReRecord, recordings }) => {
 const [isRecording, setIsRecording] = useState(false);
 const [isStopping, setIsStopping] = useState(false);
 const [countdown, setCountdown] = useState<number | null>(null);
@@ -466,9 +467,9 @@ icon: <BookOpen size={20} />
 })),
 { 
 id: 'sentence', 
-label: 'Walking Sentence', 
+label: 'Say a Sentence', 
 key: 'sentence',
-instruction: `Say: "${name} likes to walk around the house"`,
+instruction: `Say a sentence using "${name}" - be creative!`,
 icon: <Moon size={20} />
 },
 { 
@@ -632,6 +633,7 @@ return newRecordings;
 });
 setCurrentStage(index);
 }}
+recordings={recordings}
 />
 
 </div>
