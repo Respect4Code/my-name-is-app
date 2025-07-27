@@ -149,27 +149,10 @@ const handleShare = async (platform: string) => {
                 whatsapp: `https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`,
                 facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
                 twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
-                snapchat: `https://www.snapchat.com/scan?attachmentUrl=${encodeURIComponent(shareUrl)}`,
-                copy: shareUrl
+                snapchat: `https://www.snapchat.com/scan?attachmentUrl=${encodeURIComponent(shareUrl)}`
         };
 
-        if (platform === 'copy') {
-                try {
-                        await navigator.clipboard.writeText(shareUrl);
-                        alert('Link copied to clipboard!');
-                } catch (err) {
-                        // Fallback for older browsers
-                        const textArea = document.createElement('textarea');
-                        textArea.value = shareUrl;
-                        document.body.appendChild(textArea);
-                        textArea.select();
-                        document.execCommand('copy');
-                        document.body.removeChild(textArea);
-                        alert('Link copied to clipboard!');
-                }
-        } else {
-                window.open(urls[platform as keyof typeof urls], '_blank', 'width=600,height=400');
-        }
+        window.open(urls[platform as keyof typeof urls], '_blank', 'width=600,height=400');
         setIsExpanded(false);
 };
 
@@ -247,15 +230,6 @@ return (
                                                         <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/>
                                                 </svg>
                                                 X (Twitter)
-                                        </button>
-                                        <button
-                                                onClick={() => handleShare('copy')}
-                                                className="flex items-center gap-2 p-3 rounded-lg bg-gray-600 text-white hover:bg-gray-700 transition-colors"
-                                        >
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                                </svg>
-                                                Copy Link
                                         </button>
                                 </div>
                         </div>
