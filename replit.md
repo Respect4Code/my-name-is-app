@@ -142,4 +142,6 @@ The application is designed to be easily deployable to various platforms includi
 - **Auto-save recording system**: Eliminated user confusion by auto-saving recordings 2 seconds after stopping - no manual save button required
 - **Progress tracking restored**: Fixed critical bug where recordings completed but progress showed "0 of 9 done" - now properly tracks completion
 - **Complete recording workflow**: Users can record, auto-save, play back, and re-record with intuitive purple play and blue refresh buttons
+- **Flashcard UX improved**: Removed confusing disabled state on "Play Letter Sound" button - all buttons now work immediately without requiring "Name" to be pressed first
+- **Marketing copy accuracy**: Fixed three technical inaccuracies - corrected letter interactivity description, clarified mobile audio requirements, updated parent voice messaging to be more inclusive
 - **Deployment verified**: Clean production build, TypeScript error-free, ready for real parent use

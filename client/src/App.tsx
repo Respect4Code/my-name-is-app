@@ -60,7 +60,7 @@ return (
 <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
 <h3 className="font-bold mb-2">Why I Made This App</h3>
 <p className="text-gray-600">
-As a parent, I wanted my toddler to learn their name with our voices, not generic videos. Inspired by phonemes, I created this app to let parents record their voice, helping toddlers connect letters to sounds in a fun, personal way! And there is nothing more personal than parents’ voices, after all they have been hearing them since they were in the womb.
+As parents, we wanted our toddler to learn their name with our voices, not generic videos. Inspired by phonemes, I created this app to let parents record their voice, helping toddlers connect letters to sounds in a fun, personal way! And there is nothing more personal than parents’ voices, after all they have been hearing them since they were in the womb.
 </p>
 </div>
 
@@ -90,7 +90,7 @@ As a parent, I wanted my toddler to learn their name with our voices, not generi
 
 <div>
 <h4 className="font-bold">3️⃣ Done! Give to child</h4>
-<p className="text-gray-600">They tap the big letters and hear YOUR voice.</p>
+<p className="text-gray-600">They tap the colored buttons to hear YOUR voice.</p>
 </div>
 </div>
 
@@ -115,7 +115,7 @@ As a parent, I wanted my toddler to learn their name with our voices, not generi
 <li>Going back clears recordings—confirm carefully!</li>
 <li>Works best without toddler present 😅</li>
 <li>If audio doesn't play, check volume/silent mode</li>
-<li>First audio requires a tap (mobile safety)</li>
+<li>Web browsers require user interaction before playing audio</li>
 </ul>
 </div>
 </div>
