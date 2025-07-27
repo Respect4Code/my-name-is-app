@@ -789,7 +789,7 @@ Start Over
 });
 
 // App Component
-const App: React.FC = () => {
+const App = () => {
 const [step, setStep] = useState<'welcome' | 'recording' | 'flashcards'>('welcome');
 const [name, setName] = useState<string | null>(null);
 const [recordings, setRecordings] = useState<Record<string, string>>({});
