@@ -148,3 +148,4 @@ The application is designed to be easily deployable to various platforms includi
 - **Name length extended**: Increased from 20 to 26 letters to support full alphabet names 
 - **Photo screen eliminated**: App now flows Welcome → Recording → Flashcards (no photo upload)
 - **Cache-busting implemented**: Version 2.3 with headers to force fresh browser loading
+- **Social sharing added**: Interactive share button with WhatsApp, Facebook, X, and copy link functionality - optimized for friends & family viral growth
