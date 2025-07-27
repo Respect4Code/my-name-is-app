@@ -5,19 +5,16 @@ Info, ChevronRight, ArrowLeft, Volume2, BookOpen, Moon, Music, Loader2, ArrowRig
 CheckCircle, Mic, Square, RefreshCw, Play, Share2
 } from 'lucide-react';
 import { openDB } from 'idb';
-// BoredMama colorful logo inspired by the uploaded design
+// Import the colorful Bored Mama logo
+import boredMamaLogo from '@assets/Screenshot 2025-07-28 at 00.19.26_1753658469899.png';
+
+// BoredMama logo component using your actual image
 const BoredMamaLogo = () => (
-        <div className="flex items-center gap-1 px-2 py-1 bg-white rounded-lg shadow-sm border">
-                <span className="text-yellow-500 font-bold text-xs">B</span>
-                <span className="text-green-500 font-bold text-xs">o</span>
-                <span className="text-blue-400 font-bold text-xs">r</span>
-                <span className="text-pink-500 font-bold text-xs">e</span>
-                <span className="text-red-500 font-bold text-xs">d</span>
-                <span className="text-blue-800 font-bold text-xs ml-1">M</span>
-                <span className="text-pink-400 font-bold text-xs">a</span>
-                <span className="text-orange-500 font-bold text-xs">m</span>
-                <span className="text-yellow-400 font-bold text-xs">a</span>
-        </div>
+        <img 
+                src={boredMamaLogo} 
+                alt="Bored Mama - Revolutionising Motherhood" 
+                className="h-8 w-auto"
+        />
 );
 
 // Get vibrant colors for letters matching the BoredMama brand
