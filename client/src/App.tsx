@@ -666,12 +666,11 @@ aria-label={isComplete ? "Create flashcards" : "Complete all recordings to proce
 // FlashcardScreen Component
 const FlashcardScreen: React.FC<FlashcardScreenProps> = memo(({ name, recordings, onReset }) => {
 const [currentLetterIndex, setCurrentLetterIndex] = useState(0);
-const [hasPlayed, setHasPlayed] = useState(false);
 const letters = name.split('');
 
 const playAudio = (key: string) => {
-if (!hasPlayed) {
-setHasPlayed(true);
+if (!recordings[key]) {
+console.warn(`No recording found for key: ${key}`);
 return;
 }
 const audio = new Audio(recordings[key]);
@@ -723,19 +722,10 @@ aria-label="Play full name"
 
 <button
 onClick={() => playAudio(`letter-${currentLetterIndex}`)}
-disabled={!hasPlayed}
-className={`px-4 py-2 rounded-xl flex items-center gap-2 ${
-hasPlayed
-? 'bg-purple-500 text-white hover:bg-purple-600'
-: 'bg-gray-300 text-gray-500'
-}`}
-aria-label={hasPlayed ? 'Play letter sound' : 'Tap to enable audio playback'}
+className="px-4 py-2 bg-purple-500 text-white rounded-xl hover:bg-purple-600 flex items-center gap-2"
+aria-label="Play letter sound"
 >
-<Loader2
-size={20}
-className={hasPlayed ? 'hidden' : 'animate-spin'}
-aria-hidden="true"
-/>
+<Volume2 size={20} aria-hidden="true" />
 <span>Play Letter Sound</span>
 </button>
 </div>
