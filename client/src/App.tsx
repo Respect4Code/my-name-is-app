@@ -7,11 +7,15 @@ CheckCircle, Mic, Square, RefreshCw, Play, Share2
 import { openDB } from 'idb';
 // BoredMama colorful logo component that will definitely work
 const BoredMamaLogo = () => (
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-center mb-2">
                 <img 
-                        src="/logo.png?v=1" 
+                        src="/logo.png?v=2" 
                         alt="BoredMama - Revolutionising Motherhood" 
-                        className="h-12 w-auto object-contain"
+                        className="h-16 w-auto object-contain max-w-full"
+                        onError={(e) => {
+                                console.log('Logo failed to load');
+                                e.currentTarget.style.display = 'none';
+                        }}
                 />
         </div>
 );
@@ -279,7 +283,7 @@ aria-label="Open parent guide"
 <Info size={20} aria-hidden="true" />
 </button>
 
-<div className="mb-4">
+<div className="mb-6">
         <BoredMamaLogo />
 </div>
 <h1 className="text-4xl font-bold text-gray-800 mb-2">My Name Is</h1>
