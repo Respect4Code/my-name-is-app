@@ -80,7 +80,7 @@ As parents, we wanted our toddler to learn their name with our voices, not gener
 <p className="text-gray-600">Record 4 types of sounds:</p>
 <ul className="ml-4 mt-1 text-gray-600 list-disc">
 <li>Their full name</li>
-<li>Each letter SOUND (not name!)</li>
+<li>Each letter sound (A = "ahh", B = "buh")</li>
 <li>Sentence with name</li>
 <li>Rhyme with name</li>
 </ul>
