@@ -81,8 +81,8 @@ As a parent, I wanted my toddler to learn their name with our voices, not generi
 <ul className="ml-4 mt-1 text-gray-600 list-disc">
 <li>Their full name</li>
 <li>Each letter SOUND (not name!)</li>
-<li>Sentence with the name</li>
-<li>Rhyme with the name</li>
+<li>Sentence with name</li>
+<li>Rhyme with name</li>
 </ul>
 <p className="text-gray-600 mt-1"><strong>To re-record:</strong> Tap the blue refresh icon next to any completed item!</p>
 <p className="text-gray-600 mt-1"><strong>Preview:</strong> Listen to your recording before saving to ensure it’s perfect.</p>
@@ -467,14 +467,14 @@ icon: <BookOpen size={20} />
 })),
 { 
 id: 'sentence', 
-label: 'Say a sentence with the name', 
+label: 'Say a sentence with name', 
 key: 'sentence',
 instruction: `Say a sentence using "${name}" - be creative!`,
 icon: <Moon size={20} />
 },
 { 
 id: 'rhyme', 
-label: `Say a fun rhyme with the name`, 
+label: `Say a fun rhyme with name`, 
 key: 'rhyme',
 instruction: `Make a fun rhyme with "${name}"\nExample: "${name} is sweet, from head to feet!"`,
 icon: <Music size={20} />
