@@ -5,12 +5,30 @@ Info, ChevronRight, ArrowLeft, Volume2, BookOpen, Moon, Music, Loader2, ArrowRig
 CheckCircle, Mic, Square, RefreshCw, Play, Share2
 } from 'lucide-react';
 import { openDB } from 'idb';
-// BoredMama branding component
+// BoredMama colorful logo inspired by the uploaded design
 const BoredMamaLogo = () => (
-        <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center border-2 border-purple-300 shadow-md">
-                <span className="text-white font-bold text-sm">BM</span>
+        <div className="flex items-center gap-1 px-2 py-1 bg-white rounded-lg shadow-sm border">
+                <span className="text-yellow-500 font-bold text-xs">B</span>
+                <span className="text-green-500 font-bold text-xs">o</span>
+                <span className="text-blue-400 font-bold text-xs">r</span>
+                <span className="text-pink-500 font-bold text-xs">e</span>
+                <span className="text-red-500 font-bold text-xs">d</span>
+                <span className="text-blue-800 font-bold text-xs ml-1">M</span>
+                <span className="text-pink-400 font-bold text-xs">a</span>
+                <span className="text-orange-500 font-bold text-xs">m</span>
+                <span className="text-yellow-400 font-bold text-xs">a</span>
         </div>
 );
+
+// Get vibrant colors for letters matching the BoredMama brand
+const getLetterColor = (index: number) => {
+        const colors = [
+                'text-yellow-500', 'text-green-500', 'text-blue-400', 'text-pink-500', 
+                'text-red-500', 'text-purple-600', 'text-orange-500', 'text-teal-500',
+                'text-indigo-500', 'text-rose-500'
+        ];
+        return colors[index % colors.length];
+};
 
 // TypeScript interfaces
 interface Stage {
