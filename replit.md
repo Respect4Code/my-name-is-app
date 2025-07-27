@@ -145,3 +145,6 @@ The application is designed to be easily deployable to various platforms includi
 - **Flashcard UX improved**: Removed confusing disabled state on "Play Letter Sound" button - all buttons now work immediately without requiring "Name" to be pressed first
 - **Marketing copy accuracy**: Fixed three technical inaccuracies - corrected letter interactivity description, clarified mobile audio requirements, updated parent voice messaging to be more inclusive
 - **Deployment verified**: Clean production build, TypeScript error-free, ready for real parent use
+- **Name length extended**: Increased from 20 to 26 letters to support full alphabet names 
+- **Photo screen eliminated**: App now flows Welcome → Recording → Flashcards (no photo upload)
+- **Cache-busting implemented**: Version 2.3 with headers to force fresh browser loading
