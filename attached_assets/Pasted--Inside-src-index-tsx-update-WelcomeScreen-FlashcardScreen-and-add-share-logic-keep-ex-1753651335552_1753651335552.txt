@@ -1,0 +1,328 @@
+// Inside src/index.tsx, update WelcomeScreen, FlashcardScreen, and add share logic
+
+// ... (keep existing imports and interfaces unchanged)
+
+// WelcomeScreen Component
+const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onStart }) => {
+  const [name, setName] = useState('');
+  const [showShareOptions, setShowShareOptions] = useState(false);
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: 'My Name Is Phonics',
+        text: 'Share this free phonics app with other parents!',
+        url: 'https://my-name-is.replit.app', // Update to your preferred URL
+      }).catch(err => console.error('Share failed:', err));
+    }
+    setShowShareOptions(true);
+  };
+
+  const shareOnSocial = (platform: string) => {
+    const baseUrl = 'https://my-name-is.replit.app'; // Update to your preferred URL
+    let shareUrl = '';
+    switch (platform) {
+      case 'whatsapp':
+        shareUrl = `https://api.whatsapp.com/send?text=Share this free phonics app ${encodeURIComponent(baseUrl)}`;
+        break;
+      case 'facebook':
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(baseUrl)}`;
+        break;
+      case 'instagram':
+        shareUrl = `https://www.instagram.com/create/story/?url=${encodeURIComponent(baseUrl)}`; // Note: Instagram requires manual posting
+        break;
+      case 'email':
+        shareUrl = `mailto:?subject=Free Phonics App&body=Check out this amazing phonics app for kids: ${encodeURIComponent(baseUrl)}`;
+        break;
+    }
+    window.open(shareUrl, '_blank');
+    setShowShareOptions(false);
+  };
+
+  return (
+    <div className="min-h-screen p-4 flex items-center justify-center">
+      <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl text-center">
+        <h1 className="text-3xl font-bold text-gray-800 mb-4">My Name Is</h1>
+        <p className="text-gray-600 mb-6">
+          Create personalized phonics flashcards with your voice for your child!
+        </p>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Enter your child's name"
+          className="w-full p-3 border border-gray-300 rounded-xl mb-4 focus:outline-none focus:ring-2 focus:ring-purple-500"
+          aria-label="Enter child's name"
+        />
+        <button
+          onClick={() => onStart(name)}
+          disabled={!name.trim()}
+          className={`w-full py-4 rounded-xl font-bold text-xl transition-all ${
+            name.trim()
+              ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
+              : 'bg-gray-300 text-gray-500'
+          }`}
+          aria-label="Start recording with child's name"
+        >
+          Start
+        </button>
+        <p className="text-xs text-gray-500 mt-4">
+          Need help? Read 4-minute <a href="#parent-guide" className="text-purple-500 underline">parent guide</a>.
+        </p>
+        <p className="text-xs text-gray-500 mt-2">
+          Made with ❤️ by [Your Name] - v1.0
+        </p>
+        <div className="mt-4">
+          <button
+            onClick={handleShare}
+            className="w-full py-2 text-purple-500 font-medium flex items-center justify-center gap-2 hover:bg-orange-500 hover:text-white transition-colors rounded-xl"
+            aria-label="Share this app"
+          >
+            <Share2 size={20} aria-hidden="true" /> Share this app with other parents!
+          </button>
+          {showShareOptions && (
+            <div className="mt-2 flex justify-center gap-4">
+              <button
+                onClick={() => shareOnSocial('whatsapp')}
+                className="text-green-500 hover:text-green-700"
+                aria-label="Share on WhatsApp"
+              >
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.15-.174.2-.347.134-.58-.067-.214-.134-.461-.202-.676-.133-.326-.314-1.183-.445-2.04-.13-.841-.087-1.462-.087-1.671 0-.184-.045-.348-.134-.483-.09-.129-.26-.174-.437-.174-.25 0-.455.18-.496.2-.04.021-1.136 1.109-1.136 2.771 0 1.662.88 3.353 1.043 3.566.157.207.387.363.613.51.313.174.669.26 1.034.26.75 0 1.34-.31 1.613-.31.272 0 .652.144.964.348l-1.136 1.109c-.657.646-1.136.99-1.136 1.424 0 .484.39 1.034 1.136 1.424l.965.783c.119.095.198.157.31.193a1.4 1.4 0 0 0 .583.114c.405 0 .923-.23 1.136-.348.214-.12.415-.26.613-.446.384-.38.731-.663 1.035-.84.501-.277 1.04-.236 1.308 0 .27.237.498.623.623 1.037.125.416.3.79.521 1.151.25.407.67.687 1.193.687.46 0 .883-.268 1.136-.348.252-.08.47-.147.669-.196.738-.173 1.34-.676 1.556-1.174.217-.498.217-.923.152-1.148-.068-.226-.273-.433-.602-.498z"/>
+                </svg>
+              </button>
+              <button
+                onClick={() => shareOnSocial('facebook')}
+                className="text-blue-600 hover:text-blue-800"
+                aria-label="Share on Facebook"
+              >
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M22.675 0H1.325C.593 0 0 .593 0 1.325v21.351C0 23.407.593 24 1.325 24h11.494v-9.294H9.691v-3.621h3.128V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.621h-3.12V24h6.116c.732 0 1.325-.593 1.325-1.324V1.325C24 .593 23.407 0 22.675 0z"/>
+                </svg>
+              </button>
+              <button
+                onClick={() => shareOnSocial('instagram')}
+                className="text-pink-500 hover:text-pink-700"
+                aria-label="Share on Instagram"
+              >
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.366.062 2.173.281 2.69.531.518.25.972.598 1.417 1.043.445.445.793.899 1.043 1.417.25.517.469 1.324.531 2.69.058 1.266.069 1.646.069 4.85s-.011 3.584-.069 4.85c-.062 1.366-.281 2.173-.531 2.69-.25.518-.598.972-1.043 1.417-.445.445-.899.793-1.417 1.043-.517.25-1.324.469-2.69.531-1.266.058-1.646.069-4.85.069s-3.584-.011-4.85-.069c-1.366-.062-2.173-.281-2.69-.531-.518-.25-.972-.598-1.417-1.043-.445-.445-.793-.899-1.043-1.417-.25-.517-.469-1.324-.531-2.69-.058-1.266-.069-1.646-.069-4.85s.011-3.584.069-4.85c.062-1.366.281-2.173.531-2.69.25-.518.598-.972 1.043-1.417.445-.445.899-.793 1.417-1.043.517-.25 1.324-.469 2.69-.531 1.266-.058 1.646-.069 4.85-.069m0-2.163c-3.259 0-3.67.014-4.95.072-1.315.064-2.2.277-2.965.598-.832.321-1.531.709-2.218 1.396-.687.687-1.075 1.386-1.396 2.218-.321.765-.534 1.65-.598 2.965-.058 1.28-.072 1.691-.072 4.95s.014 3.67.072 4.95c.064 1.315.277 2.2.598 2.965.321.832.709 1.531 1.396 2.218.687.687 1.386 1.075 2.218 1.396.765.321 1.65.534 2.965.598 1.28.058 1.691.072 4.95.072s3.67-.014 4.95-.072c1.315-.064 2.2-.277 2.965-.598.832-.321 1.531-.709 2.218-1.396.687-.687 1.075-1.386 1.396-2.218.321-.765.534-1.65.598-2.965.058-1.28.072-1.691.072-4.95s-.014-3.67-.072-4.95c-.064-1.315-.277-2.2-.598-2.965-.321-.832-.709-1.531-1.396-2.218-.687-.687-1.386-1.075-2.218-1.396-.765-.321-1.65-.534-2.965-.598-1.28-.058-1.691-.072-4.95-.072z"/>
+                  <path d="M12 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.162 6.162 6.162 6.162-2.759 6.162-6.162-2.759-6.162-6.162-6.162m0 10.162c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.441s.645 1.441 1.441 1.441 1.441-.645 1.441-1.441-.645-1.441-1.441-1.441z"/>
+                </svg>
+              </button>
+              <button
+                onClick={() => shareOnSocial('email')}
+                className="text-gray-600 hover:text-gray-800"
+                aria-label="Share via Email"
+              >
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                </svg>
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+});
+
+// FlashcardScreen Component
+const FlashcardScreen: React.FC<FlashcardScreenProps> = memo(({ name, recordings, onReset }) => {
+  const [currentLetterIndex, setCurrentLetterIndex] = useState(0);
+  const [hasPlayed, setHasPlayed] = useState(false);
+  const letters = name.split('');
+  const [showShareOptions, setShowShareOptions] = useState(false);
+
+  const playAudio = (key: string) => {
+    // ... (keep existing playAudio unchanged)
+  };
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: 'My Name Is Phonics',
+        text: 'Love this app? Share it with friends!',
+        url: 'https://my-name-is.replit.app', // Update to your preferred URL
+      }).catch(err => console.error('Share failed:', err));
+    }
+    setShowShareOptions(true);
+  };
+
+  const shareOnSocial = (platform: string) => {
+    const baseUrl = 'https://my-name-is.replit.app'; // Update to your preferred URL
+    let shareUrl = '';
+    switch (platform) {
+      case 'whatsapp':
+        shareUrl = `https://api.whatsapp.com/send?text=Love this app? Share it with friends! ${encodeURIComponent(baseUrl)}`;
+        break;
+      case 'facebook':
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(baseUrl)}`;
+        break;
+      case 'instagram':
+        shareUrl = `https://www.instagram.com/create/story/?url=${encodeURIComponent(baseUrl)}`; // Note: Instagram requires manual posting
+        break;
+      case 'email':
+        shareUrl = `mailto:?subject=Amazing Phonics App&body=Found something amazing for kids: ${encodeURIComponent(baseUrl)}`;
+        break;
+    }
+    window.open(shareUrl, '_blank');
+    setShowShareOptions(false);
+  };
+
+  return (
+    <div
+      className="min-h-screen p-4 flex items-center justify-center"
+      tabIndex={0}
+      onKeyDown={handleKeyPress}
+      aria-label="Flashcard navigation"
+    >
+      <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl">
+        <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
+          {name}'s Flashcards
+        </h2>
+
+        <div className="text-center mb-6">
+          <span
+            className="text-8xl font-bold text-purple-600 animate-pulse"
+            aria-label={`Current letter: ${letters[currentLetterIndex]}`}
+          >
+            {letters[currentLetterIndex]}
+          </span>
+        </div>
+
+        <div className="flex justify-center gap-4 mb-6">
+          <button
+            onClick={() => playAudio('fullname')}
+            className="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 flex items-center gap-2"
+            aria-label="Play full name"
+          >
+            <Volume2 size={20} aria-hidden="true" /> Name
+          </button>
+          <button
+            onClick={() => playAudio(`letter-${currentLetterIndex}`)}
+            disabled={!hasPlayed}
+            className={`px-4 py-2 rounded-xl flex items-center gap-2 ${
+              hasPlayed
+                ? 'bg-purple-500 text-white hover:bg-purple-600'
+                : 'bg-gray-300 text-gray-500'
+            }`}
+            aria-label={hasPlayed ? 'Play letter sound' : 'Tap to enable audio playback'}
+          >
+            <Loader2
+              size={20}
+              className={hasPlayed ? 'hidden' : 'animate-spin'}
+              aria-hidden="true"
+            />
+            <span>Play Letter Sound</span>
+          </button>
+        </div>
+
+        <div className="flex justify-center gap-4 mb-6">
+          <button
+            onClick={() => playAudio('sentence')}
+            className="px-4 py-2 bg-green-500 text-white rounded-xl hover:bg-green-600 flex items-center gap-2"
+            aria-label="Play walking sentence"
+          >
+            <Moon size={20} aria-hidden="true" /> Sentence
+          </button>
+          <button
+            onClick={() => playAudio('rhyme')}
+            className="px-4 py-2 bg-pink-500 text-white rounded-xl hover:bg-pink-600 flex items-center gap-2"
+            aria-label="Play fun rhyme"
+          >
+            <Music size={20} aria-hidden="true" /> Rhyme
+          </button>
+        </div>
+
+        <div className="flex justify-between mb-6">
+          <button
+            onClick={() => setCurrentLetterIndex(currentLetterIndex - 1)}
+            disabled={currentLetterIndex === 0}
+            className={`p-3 rounded-xl ${
+              currentLetterIndex === 0
+                ? 'bg-gray-300 text-gray-500'
+                : 'bg-purple-500 text-white hover:bg-purple-600'
+            }`}
+            aria-label="Previous letter"
+          >
+            <ChevronLeft size={24} aria-hidden="true" />
+          </button>
+          <button
+            onClick={() => setCurrentLetterIndex(currentLetterIndex + 1)}
+            disabled={currentLetterIndex === letters.length - 1}
+            className={`p-3 rounded-xl ${
+              currentLetterIndex === letters.length - 1
+                ? 'bg-gray-300 text-gray-500'
+                : 'bg-purple-500 text-white hover:bg-purple-600'
+            }`}
+            aria-label="Next letter"
+          >
+            <ArrowRight size={24} aria-hidden="true" />
+          </button>
+        </div>
+
+        <button
+          onClick={onReset}
+          className="w-full py-3 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600"
+          aria-label="Start over and clear all data"
+        >
+          Start Over
+        </button>
+
+        <div className="mt-4">
+          <button
+            onClick={handleShare}
+            className="w-full py-2 text-purple-500 font-medium flex items-center justify-center gap-2 hover:bg-orange-500 hover:text-white transition-colors rounded-xl"
+            aria-label="Share this app"
+          >
+            <Share2 size={20} aria-hidden="true" /> Love this app? Share it with friends!
+          </button>
+          {showShareOptions && (
+            <div className="mt-2 flex justify-center gap-4">
+              <button
+                onClick={() => shareOnSocial('whatsapp')}
+                className="text-green-500 hover:text-green-700"
+                aria-label="Share on WhatsApp"
+              >
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.15-.174.2-.347.134-.58-.067-.214-.134-.461-.202-.676-.133-.326-.314-1.183-.445-2.04-.13-.841-.087-1.462-.087-1.671 0-.184-.045-.348-.134-.483-.09-.129-.26-.174-.437-.174-.25 0-.455.18-.496.2-.04.021-1.136 1.109-1.136 2.771 0 1.662.88 3.353 1.043 3.566.157.207.387.363.613.51.313.174.669.26 1.034.26.75 0 1.34-.31 1.613-.31.272 0 .652.144.964.348l-1.136 1.109c-.657.646-1.136.99-1.136 1.424 0 .484.39 1.034 1.136 1.424l.965.783c.119.095.198.157.31.193a1.4 1.4 0 0 0 .583.114c.405 0 .923-.23 1.136-.348.214-.12.415-.26.613-.446.384-.38.731-.663 1.035-.84.501-.277 1.04-.236 1.308 0 .27.237.498.623.623 1.037.125.416.3.79.521 1.151.25.407.67.687 1.193.687.46 0 .883-.268 1.136-.348.252-.08.47-.147.669-.196.738-.173 1.34-.676 1.556-1.174.217-.498.217-.923.152-1.148-.068-.226-.273-.433-.602-.498z"/>
+                </svg>
+              </button>
+              <button
+                onClick={() => shareOnSocial('facebook')}
+                className="text-blue-600 hover:text-blue-800"
+                aria-label="Share on Facebook"
+              >
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M22.675 0H1.325C.593 0 0 .593 0 1.325v21.351C0 23.407.593 24 1.325 24h11.494v-9.294H9.691v-3.621h3.128V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.621h-3.12V24h6.116c.732 0 1.325-.593 1.325-1.324V1.325C24 .593 23.407 0 22.675 0z"/>
+                </svg>
+              </button>
+              <button
+                onClick={() => shareOnSocial('instagram')}
+                className="text-pink-500 hover:text-pink-700"
+                aria-label="Share on Instagram"
+              >
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.366.062 2.173.281 2.69.531.518.25.972.598 1.417 1.043.445.445.793.899 1.043 1.417.25.517.469 1.324.531 2.69.058 1.266.069 1.646.069 4.85s-.011 3.584-.069 4.85c-.062 1.366-.281 2.173-.531 2.69-.25.518-.598.972-1.043 1.417-.445.445-.899.793-1.417 1.043-.517.25-1.324.469-2.69.531-1.266.058-1.646.069-4.85.069s-3.584-.011-4.85-.069c-1.366-.062-2.173-.281-2.69-.531-.518-.25-.972-.598-1.417-1.043-.445-.445-.793-.899-1.043-1.417-.25-.517-.469-1.324-.531-2.69-.058-1.266-.069-1.646-.069-4.85s.011-3.584.069-4.85c.062-1.366.281-2.173.531-2.69.25-.518.598-.972 1.043-1.417.445-.445.899-.793 1.417-1.043.517-.25 1.324-.469 2.69-.531 1.266-.058 1.646-.069 4.85-.069m0-2.163c-3.259 0-3.67.014-4.95.072-1.315.064-2.2.277-2.965.598-.832.321-1.531.709-2.218 1.396-.687.687-1.075 1.386-1.396 2.218-.321.765-.534 1.65-.598 2.965-.058 1.28-.072 1.691-.072 4.95s.014 3.67.072 4.95c.064 1.315.277 2.2.598 2.965.321.832.709 1.531 1.396 2.218.687.687 1.386 1.075 2.218 1.396.765.321 1.65.534 2.965.598 1.28.058 1.691.072 4.95.072s3.67-.014 4.95-.072c1.315-.064 2.2-.277 2.965-.598.832-.321 1.531-.709 2.218-1.396.687-.687 1.075-1.386 1.396-2.218.321-.765.534-1.65.598-2.965.058-1.28.072-1.691.072-4.95s-.014-3.67-.072-4.95c-.064-1.315-.277-2.2-.598-2.965-.321-.832-.709-1.531-1.396-2.218-.687-.687-1.386-1.075-2.218-1.396-.765-.321-1.65-.534-2.965-.598-1.28-.058-1.691-.072-4.95-.072z"/>
+                  <path d="M12 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.162 6.162 6.162 6.162-2.759 6.162-6.162-2.759-6.162-6.162-6.162m0 10.162c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.441s.645 1.441 1.441 1.441 1.441-.645 1.441-1.441-.645-1.441-1.441-1.441z"/>
+                </svg>
+              </button>
+              <button
+                onClick={() => shareOnSocial('email')}
+                className="text-gray-600 hover:text-gray-800"
+                aria-label="Share via Email"
+              >
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                </svg>
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+});
+
+// ... (keep RecordingScreen, RecordingStage, App, and other components unchanged)
