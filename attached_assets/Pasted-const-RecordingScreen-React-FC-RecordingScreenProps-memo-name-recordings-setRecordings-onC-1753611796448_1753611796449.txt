@@ -1,0 +1,198 @@
+const RecordingScreen: React.FC<RecordingScreenProps> = memo(({ name, recordings, setRecordings, onComplete, onBack }) => {
+  const [currentStage, setCurrentStage] = useState(0);
+  const letters = name.split('');
+
+  const stages: Stage[] = [
+    { 
+      id: 'fullname', 
+      label: `Full Name: "${name}"`, 
+      key: 'fullname',
+      instruction: `Say their name clearly: "${name}"`,
+      icon: <Volume2 size={20} />
+    },
+    ...letters.map((letter, i) => ({
+      id: `letter-${i}`,
+      label: `Letter ${i + 1}: "${letter}"`,
+      key: `letter-${i}`,
+      instruction: `Say the SOUND of "${letter}" (not the letter name)\nExample: B = "buh" not "bee"`,
+      icon: <BookOpen size={20} />
+    })),
+    { 
+      id: 'sentence', 
+      label: 'Walking Sentence', 
+      key: 'sentence',
+      instruction: `Say: "${name}, do you want to go for a walk?"`,
+      icon: <Moon size={20} />
+    },
+    { 
+      id: 'rhyme', 
+      label: `Fun Rhyme`, 
+      key: 'rhyme',
+      instruction: `Make a fun rhyme with "${name}"\nExample: "${name} is sweet, from head to feet!"`,
+      icon: <Music size={20} />
+    }
+  ];
+
+  const isComplete = stages.every(stage => recordings[stage.key]);
+  const nextUnrecordedStage = stages.findIndex(stage => !recordings[stage.key]);
+
+  const startRecordingForStage = async (stageIndex: number) => {
+    setCurrentStage(stageIndex);
+    const stage = stages[stageIndex];
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const possibleTypes = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/mp4',
+        'audio/mpeg',
+        'audio/ogg;codecs=opus',
+      ];
+      const mimeType = possibleTypes.find(type => MediaRecorder.isTypeSupported(type)) || 'audio/webm';
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
+      const audioChunks: Blob[] = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          audioChunks.push(e.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        stream.getTracks().forEach(track => track.stop());
+        const audioBlob = new Blob(audioChunks, { type: mimeType });
+        const reader = new FileReader();
+        reader.onload = () => {
+          setRecordings(prev => ({
+            ...prev,
+            [stage.key]: reader.result as string
+          }));
+        };
+        reader.readAsDataURL(audioBlob);
+      };
+
+      setTimeout(() => {
+        mediaRecorder.start();
+      }, 1000);
+    } catch (err) {
+      console.error('Recording failed:', err);
+      alert('Please allow microphone access to record your voice');
+    }
+  };
+
+  const handleBack = () => {
+    if (window.confirm('Going back will clear all recordings and the name. Are you sure?')) {
+      onBack();
+    }
+  };
+
+  return (
+    <div className="min-h-screen p-4 flex items-center justify-center">
+      <div className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl relative">
+        <div className="relative">
+          <button
+            onClick={handleBack}
+            className="absolute top-4 left-4 p-2 text-gray-600 hover:bg-gray-100 rounded-full"
+            aria-label="Go back to name entry and clear recordings"
+            id="back-button"
+          >
+            <ArrowLeft size={20} aria-hidden="true" />
+          </button>
+        </div>
+
+        <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+          Record Your Voice for {name}
+        </h2>
+
+        {Object.keys(recordings).length > 0 && Object.keys(recordings).length < stages.length && (
+          <div className="bg-purple-50 border border-purple-200 p-2 rounded-lg mb-3 text-center">
+            <p className="text-xs text-purple-700">
+              💜 Even partial recordings help! You can always add more later.
+            </p>
+          </div>
+        )}
+
+        <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-4">
+          <div className="flex items-center gap-2 text-blue-800">
+            <Info size={16} aria-hidden="true" />
+            <p className="text-sm font-medium">How to Record:</p>
+          </div>
+          <ol className="text-sm text-blue-700 mt-1 ml-6 list-decimal">
+            <li>Tap any item to select it</li>
+            <li>Tap the RED microphone to START recording</li>
+            <li>Say the word/sound clearly</li>
+            <li>Tap the SQUARE to STOP</li>
+            <li>Preview with PLAY, then SAVE or RE-RECORD</li>
+            <li><strong>To re-record: Tap the BLUE refresh icon</strong></li>
+          </ol>
+        </div>
+
+        <div className="mb-4">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm text-gray-600 font-medium">Your Progress</span>
+            <span className="text-sm text-gray-600 font-medium">
+              {Object.keys(recordings).length} of {stages.length} done
+            </span>
+          </div>
+          <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500"
+              style={{ width: `${(Object.keys(recordings).length / stages.length) * 100}%` }}
+            />
+          </div>
+          {Object.keys(recordings).length > 0 && (
+            <p className="text-xs text-gray-500 mt-1 text-center">
+              Storage used: ~{((JSON.stringify(recordings).length / 1024 / 1024) * 2).toFixed(1)}MB
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-2 mb-6 max-h-80 overflow-y-auto">
+          {stages.map((stage, index) => (
+            <div key={stage.id} className="relative">
+              <RecordingStage
+                stage={stage}
+                isActive={index === currentStage}
+                isComplete={!!recordings[stage.key]}
+                isNext={index === nextUnrecordedStage}
+                onRecord={(audioData: string) => {
+                  setRecordings(prev => ({
+                    ...prev,
+                    [stage.key]: audioData
+                  }));
+                  if (index < stages.length - 1) {
+                    setTimeout(() => setCurrentStage(index + 1), 1000);
+                  }
+                }}
+                onClick={() => setCurrentStage(index)}
+                onReRecord={() => {
+                  setCurrentStage(index);
+                  startRecordingForStage(index);
+                }}
+              />
+            </div>
+          ))}
+        </div>
+
+        <button
+          onClick={onComplete}
+          disabled={!isComplete}
+          className={`w-full py-4 rounded-xl font-bold text-xl transition-all ${
+            isComplete
+              ? 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700'
+              : 'bg-gray-300 text-gray-500'
+          }`}
+          aria-label={isComplete ? "Create flashcards" : "Complete all recordings to proceed"}
+        >
+          {isComplete ? '🎉 All Done! Create Flashcards' : `📝 ${stages.length - Object.keys(recordings).length} recordings left`}
+        </button>
+
+        {isComplete && (
+          <p className="text-xs text-gray-500 text-center mt-2">
+            💡 Tip: Test audio playback in flashcards. If no sound, check volume/silent mode.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+});

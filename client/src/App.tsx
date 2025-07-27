@@ -414,7 +414,7 @@ disabled={countdown !== null}
 // RecordingScreen Component
 const RecordingScreen: React.FC<RecordingScreenProps> = memo(({ name, recordings, setRecordings, onComplete, onBack }) => {
 const [currentStage, setCurrentStage] = useState(0);
-const [showTooltips, setShowTooltips] = useState(() => !localStorage.getItem('tooltipsDismissed'));
+
 const letters = name.split('');
 
 const stages: Stage[] = [
@@ -501,10 +501,7 @@ onBack();
 }
 };
 
-const dismissTooltips = () => {
-setShowTooltips(false);
-localStorage.setItem('tooltipsDismissed', 'true');
-};
+
 
 return (
 <div className="min-h-screen p-4 flex items-center justify-center">
@@ -512,24 +509,13 @@ return (
 <div className="relative">
 <button
 onClick={handleBack}
-className="absolute top-4 left-4 p-2 text-gray-600 hover:bg-gray-100 rounded-full z-20"
+className="absolute top-4 left-4 p-2 text-gray-600 hover:bg-gray-100 rounded-full"
 aria-label="Go back to name entry and clear recordings"
 id="back-button"
 >
 <ArrowLeft size={20} aria-hidden="true" />
 </button>
-{showTooltips && (
-<div className="absolute -top-12 left-12 bg-gray-800 text-white text-xs rounded p-2 max-w-xs z-10 pointer-events-none">
-Tap to go back and change the name (clears recordings).
-<button
-onClick={dismissTooltips}
-className="ml-2 text-purple-300 underline"
-aria-label="Dismiss tooltip"
->
-Got it
-</button>
-</div>
-)}
+
 
 </div>
 
@@ -550,7 +536,7 @@ Record Your Voice for {name}
 <Info size={16} aria-hidden="true" />
 <p className="text-sm font-medium">How to Record:</p>
 </div>
-<ol className="text-sm text-blue-700 mt-1 ml-6 list-decimal z-20">
+<ol className="text-sm text-blue-700 mt-1 ml-6 list-decimal">
 <li>Tap any item to select it</li>
 <li>Tap the RED microphone to START recording</li>
 <li>Say the word/sound clearly</li>
@@ -558,18 +544,7 @@ Record Your Voice for {name}
 <li>Preview with PLAY, then SAVE or RE-RECORD</li>
 <li><strong>To re-record: Tap the BLUE refresh icon</strong></li>
 </ol>
-{showTooltips && (
-<div className="absolute top-2 right-20 bg-gray-800 text-white text-xs rounded p-2 max-w-xs z-10 pointer-events-none">
-Follow these steps to record. Tap "Got it" to hide tips.
-<button
-onClick={dismissTooltips}
-className="ml-2 text-purple-300 underline"
-aria-label="Dismiss tooltip"
->
-Got it
-</button>
-</div>
-)}
+
 
 </div>
 
@@ -616,18 +591,7 @@ setCurrentStage(index);
 startRecordingForStage(index);
 }}
 />
-{showTooltips && index === 0 && (
-<div className="absolute top-0 left-72 bg-gray-800 text-white text-xs rounded p-2 max-w-xs z-10 pointer-events-none">
-Tap the orange mic to record, blue refresh to re-record.
-<button
-onClick={dismissTooltips}
-className="ml-2 text-purple-300 underline"
-aria-label="Dismiss tooltip"
->
-Got it
-</button>
-</div>
-)}
+
 </div>
 ))}
 </div>
