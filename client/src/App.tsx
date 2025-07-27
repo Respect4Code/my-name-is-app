@@ -9,7 +9,7 @@ import { openDB } from 'idb';
 const BoredMamaLogo = () => (
         <div className="flex items-center justify-center">
                 <img 
-                        src="/logo.png" 
+                        src="/logo.png?v=1" 
                         alt="BoredMama - Revolutionising Motherhood" 
                         className="h-12 w-auto object-contain"
                 />
