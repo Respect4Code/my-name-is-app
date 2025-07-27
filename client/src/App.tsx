@@ -229,7 +229,9 @@ mediaRecorderRef.current.stop();
 
 const startRecording = async () => {
 try {
+console.log('Attempting to start recording for:', stage.label);
 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+if (!stream) throw new Error('No audio stream available');
 const possibleTypes = [
 'audio/webm;codecs=opus',
 'audio/webm',
@@ -238,7 +240,7 @@ const possibleTypes = [
 'audio/ogg;codecs=opus',
 ];
 const mimeType = possibleTypes.find(type => MediaRecorder.isTypeSupported(type)) || 'audio/webm';
-console.log('Using audio format:', mimeType);
+console.log('Using mimeType:', mimeType);
 mediaRecorderRef.current = new MediaRecorder(stream, { mimeType });
 audioChunksRef.current = [];
 
@@ -253,7 +255,9 @@ stream.getTracks().forEach(track => track.stop());
 const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
 const reader = new FileReader();
 reader.onload = () => {
-setTempRecording(reader.result as string);
+const audioData = reader.result as string;
+console.log('Recording stopped, data length:', audioData.length);
+setTempRecording(audioData);
 setIsRecording(false);
 setIsStopping(false);
 setCountdown(null);
@@ -264,8 +268,8 @@ reader.readAsDataURL(audioBlob);
 mediaRecorderRef.current.start();
 setIsRecording(true);
 } catch (err) {
-console.error('Recording failed:', err);
-alert('Please allow microphone access to record your voice');
+console.error('Recording error:', err);
+alert(`Recording failed: ${err.message}. Please ensure microphone access is granted.`);
 setIsRecording(false);
 setIsStopping(false);
 setCountdown(null);
@@ -587,8 +591,14 @@ setTimeout(() => setCurrentStage(index + 1), 1000);
 }}
 onClick={() => setCurrentStage(index)}
 onReRecord={() => {
+console.log('Re-recording initiated for:', stage.label);
+setRecordings(prev => {
+const newRecordings = { ...prev };
+delete newRecordings[stage.key]; // Clear the existing recording
+console.log('Cleared recording for:', stage.label);
+return newRecordings;
+});
 setCurrentStage(index);
-startRecordingForStage(index);
 }}
 />
 
