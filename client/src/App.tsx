@@ -201,7 +201,7 @@ Need help? Read 4-minute guide
 100% Private • Works Offline • CC BY-NC-SA 4.0<br/>
 Created with ❤️ by BoredMamaApp<br/>
 <span className="text-purple-600 font-medium">
-Use YOUR voice for personal phonics—read our story!
+Perfect for sharing with friends & family!
 </span>
 </p>
 </div>
