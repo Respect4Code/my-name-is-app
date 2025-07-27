@@ -7,16 +7,12 @@ CheckCircle, Mic, Square, RefreshCw, Play, Share2
 import { openDB } from 'idb';
 // BoredMama colorful logo component that will definitely work
 const BoredMamaLogo = () => (
-        <div className="flex items-center gap-1 px-3 py-2 bg-white rounded-lg shadow-md border-2 border-purple-200">
-                <span className="text-yellow-500 font-bold text-lg">B</span>
-                <span className="text-green-500 font-bold text-lg">o</span>
-                <span className="text-blue-400 font-bold text-lg">r</span>
-                <span className="text-pink-500 font-bold text-lg">e</span>
-                <span className="text-red-500 font-bold text-lg">d</span>
-                <span className="text-blue-800 font-bold text-lg ml-1">M</span>
-                <span className="text-pink-400 font-bold text-lg">a</span>
-                <span className="text-orange-500 font-bold text-lg">m</span>
-                <span className="text-yellow-400 font-bold text-lg">a</span>
+        <div className="flex items-center justify-center">
+                <img 
+                        src="/logo.png" 
+                        alt="BoredMama - Revolutionising Motherhood" 
+                        className="h-12 w-auto object-contain"
+                />
         </div>
 );
 
