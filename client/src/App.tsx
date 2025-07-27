@@ -924,6 +924,12 @@ Start Over
 
 // App Component
 const App = () => {
+        // Test the logo at the top of the app
+        const testLogo = (
+                <div style={{ position: 'fixed', top: '10px', left: '10px', zIndex: 9999, background: 'white', padding: '10px', borderRadius: '8px' }}>
+                        <BoredMamaLogo />
+                </div>
+        );
 const [step, setStep] = useState<'welcome' | 'recording' | 'flashcards'>('welcome');
 const [name, setName] = useState<string | null>(null);
 const [recordings, setRecordings] = useState<Record<string, string>>({});
