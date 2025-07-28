@@ -153,3 +153,6 @@ The application is designed to be easily deployable to various platforms includi
 - **Snapchat integration**: Added Snapchat sharing for perfect parent-friendly viral content - personal voice recordings are ideal for Snapchat stories
 - **Clean 2x2 share grid**: Removed Copy Link for perfect 4-platform layout (WhatsApp, Snapchat, Facebook, X) - streamlined UX with most important social platforms
 - **Clear navigation labels**: Added "Previous Letter" and "Next Letter" text labels under navigation buttons for improved usability and parent-friendly interface
+- **Optimized flashcard design**: Removed BoredMama logo from flashcard screen to eliminate visual conflicts with child's name and maximize space for phonics learning
+- **Enhanced letter visibility**: Increased letter size to text-9xl for optimal toddler readability and focus during phonics practice
+- **Streamlined learning interface**: Clean, uncluttered flashcard design focused purely on phonics education without brand distractions
