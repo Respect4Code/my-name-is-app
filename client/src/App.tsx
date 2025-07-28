@@ -845,16 +845,13 @@ onKeyDown={handleKeyPress}
 aria-label="Flashcard navigation"
 >
 <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl">
-<div className="text-center mb-4">
-        <BoredMamaLogo />
-</div>
-<h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
+<h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
 {name}'s Flashcards
 </h2>
 
-<div className="text-center mb-6">
+<div className="text-center mb-8">
 <span
-className="text-8xl font-bold text-purple-600 animate-pulse"
+className="text-9xl font-bold text-purple-600 animate-pulse"
 aria-label={`Current letter: ${letters[currentLetterIndex]}`}
 >
 { letters[currentLetterIndex]}
