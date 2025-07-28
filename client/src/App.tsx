@@ -349,8 +349,10 @@ Need help? Read 4-minute guide
 
 <p className="text-xs text-gray-500 mt-6 text-center">
 100% Private • Works Offline • CC BY-NC-SA 4.0<br/>
-Created with ❤️ by BoredMamaApp<br/>
-<span className="text-purple-600 font-medium">Revolutionising Motherhood</span>
+Created with ❤️ by BoredMamaApp
+</p>
+<p className="text-center mt-3">
+<span className="text-purple-600 font-medium text-sm">Revolutionising Motherhood</span>
 </p>
 </div>
 </div>
