@@ -156,3 +156,5 @@ The application is designed to be easily deployable to various platforms includi
 - **Optimized flashcard design**: Removed BoredMama logo from flashcard screen to eliminate visual conflicts with child's name and maximize space for phonics learning
 - **Enhanced letter visibility**: Increased letter size to text-9xl for optimal toddler readability and focus during phonics practice
 - **Streamlined learning interface**: Clean, uncluttered flashcard design focused purely on phonics education without brand distractions
+- **Recording timeout updated**: Extended recommended recording time from 10 to 15 seconds to accommodate longer names up to 26 letters
+- **Footer spacing improved**: Added white space separation for "Revolutionising Motherhood" tagline to prevent visual crowding

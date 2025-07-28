@@ -113,7 +113,7 @@ As parents, we wanted our toddler to learn their name with our voices, not gener
 
 <div className="space-y-3">
 <div>
-<h4 className="font-bold">1️⃣ Enter Name (10 seconds)</h4>
+<h4 className="font-bold">1️⃣ Enter Name (15 seconds)</h4>
 <p className="text-gray-600">Type your child's name (up to 26 letters).</p>
 </div>
 
