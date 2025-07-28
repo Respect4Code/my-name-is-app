@@ -297,10 +297,10 @@ aria-label="Open parent guide"
 <Info size={20} aria-hidden="true" />
 </button>
 
-<p className="text-sm text-gray-600 mb-2 font-medium">My Name Is</p>
 <div className="mb-6">
         <BoredMamaLogo />
 </div>
+<h1 className="text-4xl font-bold text-gray-800 mb-2">My Name Is</h1>
 <p className="text-gray-600 mb-2">Teach your child their name with YOUR voice</p>
 <p className="text-purple-600 text-sm font-medium mb-6">
 ⭐ "My 18-month-old learned all letters phonetically!" - Real parent
