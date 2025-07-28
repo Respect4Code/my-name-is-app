@@ -288,7 +288,6 @@ aria-label="Open parent guide"
 </div>
 <h1 className="text-4xl font-bold text-gray-800 mb-2">My Name Is</h1>
 <p className="text-gray-600 mb-2">Teach your child their name with YOUR voice</p>
-<div className="text-xs text-purple-600 font-medium mb-2">Revolutionising Motherhood</div>
 <p className="text-purple-600 text-sm font-medium mb-6">
 ⭐ "My 18-month-old learned all letters phonetically!" - Real parent
 </p>
@@ -336,7 +335,8 @@ Need help? Read 4-minute guide
 
 <p className="text-xs text-gray-500 mt-6">
 100% Private • Works Offline • CC BY-NC-SA 4.0<br/>
-Created with ❤️ by BoredMamaApp
+Created with ❤️ by BoredMamaApp<br/>
+<span className="text-purple-600 font-medium">Revolutionising Motherhood</span>
 </p>
 </div>
 </div>
