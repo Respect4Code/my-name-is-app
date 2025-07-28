@@ -6,19 +6,33 @@ CheckCircle, Mic, Square, RefreshCw, Play, Share2
 } from 'lucide-react';
 import { openDB } from 'idb';
 // BoredMama colorful logo component that will definitely work
-const BoredMamaLogo = () => (
-        <div className="flex items-center justify-center mb-2">
-                <img 
-                        src="/logo.png?v=2" 
-                        alt="BoredMama - Revolutionising Motherhood" 
-                        className="h-16 w-auto object-contain max-w-full"
-                        onError={(e) => {
-                                console.log('Logo failed to load');
-                                e.currentTarget.style.display = 'none';
-                        }}
-                />
-        </div>
-);
+const BoredMamaLogo = () => {
+        const [imageLoaded, setImageLoaded] = useState(false);
+        const [imageError, setImageError] = useState(false);
+        
+        return (
+                <div className="flex items-center justify-center mb-2">
+                        {!imageError && (
+                                <img 
+                                        src="/logo.png?v=3" 
+                                        alt="BoredMama - Revolutionising Motherhood" 
+                                        className="h-16 w-auto object-contain max-w-full"
+                                        onLoad={() => setImageLoaded(true)}
+                                        onError={() => {
+                                                console.log('Logo failed to load, showing fallback');
+                                                setImageError(true);
+                                        }}
+                                        style={{ display: imageLoaded ? 'block' : 'none' }}
+                                />
+                        )}
+                        {(imageError || !imageLoaded) && (
+                                <div className="flex items-center gap-1 px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg shadow-lg">
+                                        <span className="text-white font-bold text-xl">BoredMama</span>
+                                </div>
+                        )}
+                </div>
+        );
+};
 
 // Get vibrant colors for letters matching the BoredMama brand
 const getLetterColor = (index: number) => {
