@@ -333,7 +333,7 @@ Need help? Read 4-minute guide
 
 <ShareButton className="mt-6" />
 
-<p className="text-xs text-gray-500 mt-6">
+<p className="text-xs text-gray-500 mt-6 text-center">
 100% Private • Works Offline • CC BY-NC-SA 4.0<br/>
 Created with ❤️ by BoredMamaApp<br/>
 <span className="text-purple-600 font-medium">Revolutionising Motherhood</span>
