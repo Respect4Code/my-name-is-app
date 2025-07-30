@@ -306,17 +306,7 @@ aria-label="Open parent guide"
 ⭐ "My 18-month-old learned all letters phonetically!" - Real parent
 </p>
 
-<div className="mb-6">
-        <a
-                href="/blog.html"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 underline text-sm hover:text-blue-700 transition-colors inline-flex items-center gap-1"
-                aria-label="Read expert tips on teaching phonics"
-        >
-                📚 Expert Tips: How to Teach Your Child Their Name
-        </a>
-</div>
+
 
 <input
 type="text"
