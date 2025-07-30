@@ -302,9 +302,21 @@ aria-label="Open parent guide"
 </div>
 <h1 className="text-4xl font-bold text-gray-800 mb-2">My Name Is</h1>
 <p className="text-gray-600 mb-2">Teach your child their name with YOUR voice</p>
-<p className="text-purple-600 text-sm font-medium mb-6">
+<p className="text-purple-600 text-sm font-medium mb-4">
 ⭐ "My 18-month-old learned all letters phonetically!" - Real parent
 </p>
+
+<div className="mb-6">
+        <a
+                href="/blog.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 underline text-sm hover:text-blue-700 transition-colors inline-flex items-center gap-1"
+                aria-label="Read expert tips on teaching phonics"
+        >
+                📚 Expert Tips: How to Teach Your Child Their Name
+        </a>
+</div>
 
 <input
 type="text"
