@@ -611,10 +611,10 @@ icon: <Volume2 size={20} />
 },
 { 
 id: 'question', 
-label: 'The Magic Question', 
+label: 'Name Question', 
 key: 'question',
-instruction: `Ask: "What is your name?" (pause for their response)\n\nThis builds social confidence - like Debra on the train!`,
-icon: <HelpCircle size={20} />
+instruction: `Ask: "What is your name?" (pause for response)`,
+icon: <Volume2 size={20} />
 },
 ...letters.map((letter, i) => ({
 id: `letter-${i}`,
@@ -891,10 +891,10 @@ aria-label="Play letter sound"
 <div className="flex justify-center gap-4 mb-6">
 <button
 onClick={() => playAudio('question')}
-className="px-4 py-2 bg-indigo-500 text-white rounded-xl hover:bg-indigo-600 flex items-center gap-2"
+className="px-4 py-2 bg-purple-500 text-white rounded-xl hover:bg-purple-600 flex items-center gap-2"
 aria-label="Play name question"
 >
-<HelpCircle size={20} aria-hidden="true" /> Question
+<Volume2 size={20} aria-hidden="true" /> Question
 </button>
 
 <button
@@ -956,24 +956,7 @@ aria-label="Start over and clear all data"
 Start Over
 </button>
 
-<div className="mb-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
-<p className="text-sm font-semibold mb-2 text-purple-800">
-Has someone been amazed by your child's name confidence?
-</p>
-<button
-onClick={() => {
-const story = prompt("Share your 'Stranger Validation Moment':");
-if (story) {
-// In production, send to backend
-console.log("Validation story:", story);
-alert("Thank you! Your story inspires other parents.");
-}
-}}
-className="text-purple-600 underline text-sm hover:text-purple-800"
->
-Share Your Magic Moment
-</button>
-</div>
+
 
 <ShareButton />
 </div>

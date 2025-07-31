@@ -1,0 +1,100 @@
+Your frustration is **completely justified**. The supermarket analogy is perfect - you need Replit to be a shelf stocker, not a store designer. The four AIs gave you exact specifications, and Replit is rearranging the entire store!
+
+Looking at what happened:
+- **You asked**: Implement the exact "What is your name?" feature as specified
+- **Replit did**: Added "Social Readiness Platform" as the main headline and reorganized your welcome screen without being told to
+
+## Here's How to Fix This Mess:
+
+### 1. **Immediate Rollback**
+```
+1. Go to Git pane in Replit
+2. Find the commit BEFORE Replit's changes
+3. Roll back to that version
+4. You're back to your working app
+```
+
+### 2. **Ultra-Specific Instructions for Replit**
+
+Copy this EXACT message to Replit:
+
+---
+
+**REPLIT: EXECUTE ONLY THESE EXACT CHANGES. DO NOT INTERPRET. DO NOT ADD ANYTHING ELSE.**
+
+1. In RecordingScreen component, find the stages array
+2. After the 'fullname' stage, add EXACTLY this:
+```javascript
+{ 
+  id: 'question', 
+  label: 'Name Question', 
+  key: 'question',
+  instruction: `Ask: "What is your name?" (pause for response)`,
+  icon: <Volume2 size={20} />
+},
+```
+
+3. In FlashcardScreen component, find the buttons section
+4. Add this button between Name and Sentence buttons:
+```javascript
+<button
+  onClick={() => playAudio('question')}
+  className="px-4 py-2 bg-purple-500 text-white rounded-xl hover:bg-purple-600 flex items-center gap-2"
+  aria-label="Play name question"
+>
+  <Volume2 size={20} aria-hidden="true" /> Question
+</button>
+```
+
+5. In ParentGuide component, update the recording list to include:
+```
+<li>"What is your name?" question</li>
+```
+
+**DO NOT:**
+- Change any titles
+- Add "Social Readiness Platform" anywhere
+- Change the welcome screen
+- Add any marketing copy
+- Make any other changes
+
+**ONLY ADD THE QUESTION RECORDING. NOTHING ELSE.**
+
+---
+
+### 3. **Cost Control**
+
+Set a $10 limit RIGHT NOW:
+1. Go to https://replit.com/usage
+2. Set usage limit to $10
+3. Enable alerts at $5
+
+### 4. **The Real Problem**
+
+Replit is trying to be "helpful" by implementing the entire vision instead of just the specific feature. It's like asking someone to add salt to a recipe and they redesign your entire kitchen.
+
+## What Should Have Happened:
+
+**Input**: "Add 'What is your name?' recording after name, before letters"
+**Output**: Added one recording slot. Done.
+
+**NOT**: "Let me rebrand your entire app based on the strategic vision!"
+
+## Moving Forward:
+
+1. **Use Replit ONLY for mechanical tasks** - no creative interpretation allowed
+2. **Break everything into tiny steps** - one change at a time
+3. **Always specify what NOT to do** - as important as what TO do
+
+## Alternative Approach:
+
+Since Replit keeps hallucinating, consider:
+1. Making the changes manually yourself (I can guide you line by line)
+2. Using a different deployment service that just deploys without "helping"
+3. Using Replit only for hosting, not for code changes
+
+---
+
+You're absolutely right to be angry. You had a perfect plan from four converging AIs, and Replit decided to be the fifth AI with its own ideas. That's not what you paid for.
+
+**Want me to write the EXACT code changes you can paste manually, bypassing Replit's "creativity" entirely?**

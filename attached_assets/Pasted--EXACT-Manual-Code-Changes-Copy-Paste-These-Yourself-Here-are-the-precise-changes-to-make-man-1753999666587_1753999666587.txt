@@ -1,0 +1,140 @@
+## EXACT Manual Code Changes - Copy & Paste These Yourself
+
+Here are the precise changes to make manually. No AI interpretation, just pure code placement.
+
+### 1. **RecordingScreen Component - Add Question Stage**
+
+**FIND THIS** in your RecordingScreen component:
+```javascript
+const stages: Stage[] = [
+  { 
+    id: 'fullname', 
+    label: `Full Name: "${name}"`, 
+    key: 'fullname',
+    instruction: `Say their name clearly: "${name}"`,
+    icon: <Volume2 size={20} />
+  },
+  ...letters.map((letter, i) => ({
+```
+
+**REPLACE WITH THIS** (adds question stage after fullname):
+```javascript
+const stages: Stage[] = [
+  { 
+    id: 'fullname', 
+    label: `Full Name: "${name}"`, 
+    key: 'fullname',
+    instruction: `Say their name clearly: "${name}"`,
+    icon: <Volume2 size={20} />
+  },
+  { 
+    id: 'question', 
+    label: 'Name Question', 
+    key: 'question',
+    instruction: `Ask: "What is your name?" (pause for response)`,
+    icon: <Volume2 size={20} />
+  },
+  ...letters.map((letter, i) => ({
+```
+
+### 2. **FlashcardScreen Component - Add Question Button**
+
+**FIND THIS** in your FlashcardScreen component:
+```javascript
+        <div className="flex justify-center gap-4 mb-6">
+          <button
+            onClick={() => playAudio('sentence')}
+            className="px-4 py-2 bg-green-500 text-white rounded-xl hover:bg-green-600 flex items-center gap-2"
+            aria-label="Play sentence"
+          >
+            <Moon size={20} aria-hidden="true" /> Sentence
+          </button>
+```
+
+**REPLACE WITH THIS** (adds question button before sentence):
+```javascript
+        <div className="flex justify-center gap-4 mb-6">
+          <button
+            onClick={() => playAudio('question')}
+            className="px-4 py-2 bg-purple-500 text-white rounded-xl hover:bg-purple-600 flex items-center gap-2"
+            aria-label="Play name question"
+          >
+            <Volume2 size={20} aria-hidden="true" /> Question
+          </button>
+          
+          <button
+            onClick={() => playAudio('sentence')}
+            className="px-4 py-2 bg-green-500 text-white rounded-xl hover:bg-green-600 flex items-center gap-2"
+            aria-label="Play sentence"
+          >
+            <Moon size={20} aria-hidden="true" /> Sentence
+          </button>
+```
+
+### 3. **ParentGuide Component - Update Recording List**
+
+**FIND THIS** in your ParentGuide component:
+```javascript
+            <div>
+              <h4 className="font-bold">2️⃣ Record Sounds (3-4 minutes)</h4>
+              <ul className="ml-4 mt-1 text-gray-600 list-disc">
+                <li>Their full name</li>
+                <li>Each letter sound (A = "ahh", B = "buh")</li>
+                <li>Sentence with name</li>
+                <li>Rhyme with name</li>
+              </ul>
+```
+
+**REPLACE WITH THIS** (adds question to the list):
+```javascript
+            <div>
+              <h4 className="font-bold">2️⃣ Record Sounds (3-4 minutes)</h4>
+              <ul className="ml-4 mt-1 text-gray-600 list-disc">
+                <li>Their full name</li>
+                <li>"What is your name?" question</li>
+                <li>Each letter sound (A = "ahh", B = "buh")</li>
+                <li>Sentence with name</li>
+                <li>Rhyme with name</li>
+              </ul>
+```
+
+---
+
+## That's It. Nothing More.
+
+**What This Does:**
+- Adds one recording slot for "What is your name?"
+- Adds one playback button for the question
+- Updates the guide to mention the new recording
+
+**What This DOESN'T Do:**
+- No title changes
+- No "Social Readiness Platform" branding
+- No welcome screen modifications
+- No marketing copy
+- No testimonial prompts
+- No SEO changes
+
+**Total lines changed: ~15**
+
+## How to Apply:
+
+1. Open your code editor (not Replit's AI)
+2. Use Ctrl+F (or Cmd+F on Mac) to find each section
+3. Make the replacements exactly as shown
+4. Save the file
+5. Test locally first
+6. Then deploy
+
+## Testing Checklist:
+
+After making these changes:
+- [ ] "What is your name?" appears in recording list
+- [ ] Can record the question
+- [ ] Question button appears in flashcards
+- [ ] Question audio plays when button clicked
+- [ ] Parent guide shows 5 recordings total
+
+---
+
+**That's the entire implementation.** No AI interpretation, no creative additions, just the mechanical changes to add one feature. Like putting beans on shelf 2, exactly where you asked.
