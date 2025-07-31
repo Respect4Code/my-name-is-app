@@ -8,6 +8,8 @@
 
 Preferred communication style: Simple, everyday language.
 
+**Family Voice Recording Philosophy**: The app supports familiar family voices (one or both parents, elder siblings) that would actually be present when using the app with the child. This creates the bonding and learning experience magic - children have been hearing these voices since they were in the womb. While the core value is parent voices, any familiar family member can record to maintain the emotional connection during learning.
+
 ## System Architecture
 
 This is a full-stack TypeScript application built with a React frontend and Express backend, designed as a monorepo structure with shared types and schemas.
