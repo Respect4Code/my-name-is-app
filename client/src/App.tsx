@@ -301,12 +301,9 @@ aria-label="Open parent guide"
         <BoredMamaLogo />
 </div>
 <h1 className="text-4xl font-bold text-gray-800 mb-2">My Name Is</h1>
-<p className="text-gray-600 mb-2">Social Readiness Platform</p>
-<p className="text-purple-600 text-sm font-medium mb-2">
-Build confident communicators with the "What is your name?" feature
-</p>
-<p className="text-gray-500 text-xs mb-4">
-"18-month-old Debra amazed a stranger on the train" - Magic Moment
+<p className="text-gray-600 mb-2">Teach your child their name with YOUR voice</p>
+<p className="text-purple-600 text-sm font-medium mb-4">
+⭐ "My 18-month-old learned all letters phonetically!" - Real parent
 </p>
 
 
