@@ -2,7 +2,7 @@ import React, { memo, useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import {
 Info, ChevronRight, ArrowLeft, Volume2, BookOpen, Moon, Music, Loader2, ArrowRight, ChevronLeft,
-CheckCircle, Mic, Square, RefreshCw, Play, Share2
+CheckCircle, Mic, Square, RefreshCw, Play, Share2, HelpCircle
 } from 'lucide-react';
 import { openDB } from 'idb';
 // BoredMama colorful logo component that will definitely work
@@ -119,9 +119,9 @@ As parents, we wanted our toddler to learn their name with our voices, not gener
 
 <div>
 <h4 className="font-bold">2️⃣ Record Sounds (3-4 minutes)</h4>
-<p className="text-gray-600">Record 4 types of sounds:</p>
 <ul className="ml-4 mt-1 text-gray-600 list-disc">
 <li>Their full name</li>
+<li>"What is your name?" question ✨NEW</li>
 <li>Each letter sound (A = "ahh", B = "buh")</li>
 <li>Sentence with name</li>
 <li>Rhyme with name</li>
@@ -301,9 +301,12 @@ aria-label="Open parent guide"
         <BoredMamaLogo />
 </div>
 <h1 className="text-4xl font-bold text-gray-800 mb-2">My Name Is</h1>
-<p className="text-gray-600 mb-2">Teach your child their name with YOUR voice</p>
-<p className="text-purple-600 text-sm font-medium mb-4">
-⭐ "My 18-month-old learned all letters phonetically!" - Real parent
+<p className="text-gray-600 mb-2">Social Readiness Platform</p>
+<p className="text-purple-600 text-sm font-medium mb-2">
+Build confident communicators with the "What is your name?" feature
+</p>
+<p className="text-gray-500 text-xs mb-4">
+"18-month-old Debra amazed a stranger on the train" - Magic Moment
 </p>
 
 
@@ -609,6 +612,13 @@ key: 'fullname',
 instruction: `Say their name clearly: "${name}"`,
 icon: <Volume2 size={20} />
 },
+{ 
+id: 'question', 
+label: 'The Magic Question', 
+key: 'question',
+instruction: `Ask: "What is your name?" (pause for their response)\n\nThis builds social confidence - like Debra on the train!`,
+icon: <HelpCircle size={20} />
+},
 ...letters.map((letter, i) => ({
 id: `letter-${i}`,
 label: `Letter ${i + 1}: "${letter}"`,
@@ -883,6 +893,14 @@ aria-label="Play letter sound"
 
 <div className="flex justify-center gap-4 mb-6">
 <button
+onClick={() => playAudio('question')}
+className="px-4 py-2 bg-indigo-500 text-white rounded-xl hover:bg-indigo-600 flex items-center gap-2"
+aria-label="Play name question"
+>
+<HelpCircle size={20} aria-hidden="true" /> Question
+</button>
+
+<button
 onClick={() => playAudio('sentence')}
 className="px-4 py-2 bg-green-500 text-white rounded-xl hover:bg-green-600 flex items-center gap-2"
 aria-label="Play walking sentence"
@@ -940,6 +958,25 @@ aria-label="Start over and clear all data"
 >
 Start Over
 </button>
+
+<div className="mb-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
+<p className="text-sm font-semibold mb-2 text-purple-800">
+Has someone been amazed by your child's name confidence?
+</p>
+<button
+onClick={() => {
+const story = prompt("Share your 'Stranger Validation Moment':");
+if (story) {
+// In production, send to backend
+console.log("Validation story:", story);
+alert("Thank you! Your story inspires other parents.");
+}
+}}
+className="text-purple-600 underline text-sm hover:text-purple-800"
+>
+Share Your Magic Moment
+</button>
+</div>
 
 <ShareButton />
 </div>
