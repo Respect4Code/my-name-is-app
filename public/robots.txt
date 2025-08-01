@@ -1,14 +1,59 @@
 User-agent: *
 Allow: /
-Allow: /blog.html
 
+# Sitemaps
 Sitemap: https://mynameisapp.com/sitemap.xml
 
-# Optimize for educational content discovery
-User-agent: Googlebot
-Allow: /
-Crawl-delay: 1
+# Important pages for crawling
+Allow: /phonics-for-toddlers/
+Allow: /parent-voice-recording/
+Allow: /social-confidence-training/
+Allow: /english-pronunciation-practice/
+Allow: /adult-esl-learning/
 
-User-agent: Bingbot  
-Allow: /
+# Regional pages
+Allow: /uk/
+Allow: /canada/
+Allow: /australia/
+Allow: /new-zealand/
+Allow: /ireland/
+Allow: /india/
+Allow: /philippines/
+Allow: /singapore/
+Allow: /malaysia/
+Allow: /thailand/
+Allow: /vietnam/
+Allow: /indonesia/
+Allow: /china/
+Allow: /japan/
+Allow: /south-korea/
+Allow: /hong-kong/
+Allow: /taiwan/
+Allow: /bangladesh/
+Allow: /pakistan/
+Allow: /south-africa/
+Allow: /nigeria/
+Allow: /kenya/
+Allow: /ghana/
+Allow: /egypt/
+Allow: /russia/
+Allow: /poland/
+Allow: /romania/
+Allow: /bulgaria/
+Allow: /czech-republic/
+Allow: /slovakia/
+Allow: /hungary/
+Allow: /croatia/
+Allow: /ukraine/
+Allow: /jamaica/
+Allow: /trinidad/
+Allow: /barbados/
+Allow: /malta/
+Allow: /cyprus/
+Allow: /fiji/
+
+# Blog and educational content
+Allow: /blog/
+
+# Crawl delay (optional - helps with server load)
 Crawl-delay: 1

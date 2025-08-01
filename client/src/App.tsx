@@ -100,9 +100,9 @@ return (
 
 <div className="space-y-4 text-sm">
 <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-<h3 className="font-bold mb-2">Why I Made This App</h3>
+<h3 className="font-bold mb-2">From Recognition to Global Confidence</h3>
 <p className="text-gray-600">
-As parents, we wanted our toddler to learn their name with our voices, not generic videos. Inspired by phonemes, I created this app to let parents record their voice, helping toddlers connect letters to sounds in a fun, personal way! And there is nothing more personal than parents’ voices, after all they have been hearing them since they were in the womb.
+"In the Philippines, my 18-month-old Debra answered 'What is your name?' on a train, amazing a stranger. Parents in India, Nigeria, and 50+ countries use MyNameIsApp to build English confidence!"
 </p>
 </div>
 
