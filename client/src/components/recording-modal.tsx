@@ -152,6 +152,21 @@ export default function RecordingModal({ isOpen, onClose, phonics, name, setting
           </DialogDescription>
         </DialogHeader>
 
+        {/* What is your name? Recording Option */}
+        <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="text-sm font-semibold text-blue-800 mb-2">✨ Special Recording</h3>
+          <p className="text-sm text-blue-700 mb-3">
+            Record "What is your name?" in your voice for social confidence practice
+          </p>
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="bg-blue-100 border-blue-300 hover:bg-blue-200 text-blue-800"
+          >
+            🎤 Record Question
+          </Button>
+        </div>
+
         <div className="grid gap-4 py-4">
           <div className="flex items-center space-x-2">
             <label htmlFor="volume" className="text-sm font-medium">Volume</label>
