@@ -22,7 +22,8 @@ export function useParentRecordings() {
       
       // Convert blob to base64
       const arrayBuffer = await recording.blob.arrayBuffer();
-      const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+      const uint8Array = new Uint8Array(arrayBuffer);
+      const base64 = btoa(String.fromCharCode.apply(null, Array.from(uint8Array)));
 
       const storedRecording: StoredRecording = {
         id: recording.id,
@@ -37,7 +38,7 @@ export function useParentRecordings() {
       setRecordings(prev => ({
         ...prev,
         [key]: storedRecording
-      }));
+      }) as Record<string, StoredRecording>);
     } catch (error) {
       console.error('Error saving recording:', error);
     }
@@ -84,15 +85,21 @@ export function useParentRecordings() {
       const updated = { ...prev };
       delete updated[key];
       return updated;
-    });
+    } as Record<string, StoredRecording>);
   };
 
   const getNameRecordings = (name: string) => {
     const nameKeys = Object.keys(recordings).filter(key => key.startsWith(`${name}-`));
-    return nameKeys.map(key => ({
-      key,
-      recording: getRecording(key)
-    })).filter(item => item.recording !== null);
+    return nameKeys.map(key => {
+      const parts = key.split('-');
+      const name = parts[0];
+      const letter = parts[1];
+      const position = parts[2];
+      return {
+        key,
+        recording: getRecording(name, letter, position)
+      };
+    }).filter(item => item.recording !== null);
   };
 
   const hasRecordingsForName = (name: string) => {

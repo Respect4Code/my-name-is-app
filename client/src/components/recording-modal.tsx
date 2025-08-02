@@ -84,7 +84,7 @@ export default function RecordingModal({ isOpen, onClose, phonics, name, setting
 
   const handleSave = () => {
     if (currentRecording) {
-      saveRecording(name, phonics.letter, phonics.position, currentRecording);
+      saveRecording(name, currentRecording);
       toast({
         title: "Recording Saved!",
         description: `Voice recording for letter ${phonics.letter} has been saved.`,
@@ -94,7 +94,7 @@ export default function RecordingModal({ isOpen, onClose, phonics, name, setting
 
   const handleDelete = () => {
     if (existingRecording) {
-      deleteRecording(name, phonics.letter, phonics.position);
+      deleteRecording(`${name}-${phonics.letter}-${phonics.position}`);
       toast({
         title: "Recording Deleted",
         description: `Voice recording for letter ${phonics.letter} has been deleted.`,
