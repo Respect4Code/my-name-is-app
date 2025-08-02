@@ -979,10 +979,30 @@ const [step, setStep] = useState<'welcome' | 'recording' | 'flashcards'>('welcom
 const [name, setName] = useState<string | null>(null);
 const [recordings, setRecordings] = useState<Record<string, string>>({});
 const [showGuide, setShowGuide] = useState(false);
+const [showPrivateBrowsingWarning, setShowPrivateBrowsingWarning] = useState(false);
 
 useEffect(() => {
+const detectPrivateBrowsing = () => {
+try {
+// Test localStorage access
+localStorage.setItem('test', 'test');
+localStorage.removeItem('test');
+
+// Test IndexedDB access
+const dbTest = indexedDB.open('test');
+dbTest.onerror = () => {
+setShowPrivateBrowsingWarning(true);
+};
+} catch (err) {
+setShowPrivateBrowsingWarning(true);
+}
+};
+
 const loadData = async () => {
 try {
+// Check for private browsing first
+detectPrivateBrowsing();
+
 // Try IndexedDB first, fallback to localStorage
 let loadedRecordings: Record<string, string> = {};
 
@@ -1091,6 +1111,36 @@ setStep('welcome');
 
 return (
 <div className="min-h-screen bg-gradient-to-b from-purple-100 to-pink-100">
+{showPrivateBrowsingWarning && (
+<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+<div className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl">
+<div className="text-center">
+<div className="w-16 h-16 mx-auto mb-4 bg-orange-100 rounded-full flex items-center justify-center">
+<span className="text-3xl">🔒</span>
+</div>
+<h3 className="text-xl font-bold text-gray-800 mb-2">Private Browsing Detected</h3>
+<p className="text-gray-600 mb-4">
+This app needs to save your recordings and data. Private browsing mode prevents this from working properly.
+</p>
+<div className="bg-blue-50 p-3 rounded-lg mb-4 text-left">
+<h4 className="font-bold text-blue-800 mb-2">To use MyNameIsApp:</h4>
+<ol className="text-sm text-blue-700 list-decimal ml-4 space-y-1">
+<li>Close this private window</li>
+<li>Open a regular browser window</li>
+<li>Visit the app again</li>
+<li>Your recordings will save properly</li>
+</ol>
+</div>
+<button
+onClick={() => setShowPrivateBrowsingWarning(false)}
+className="w-full py-3 bg-purple-500 text-white rounded-lg font-bold hover:bg-purple-600"
+>
+I understand - Continue anyway
+</button>
+</div>
+</div>
+</div>
+)}
 {showGuide && <ParentGuide onClose={() => setShowGuide(false)} />}
 
 {step === 'welcome' && (
