@@ -102,9 +102,7 @@ return (
 <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
 <h3 className="font-bold mb-2">💡 Why I Made This App</h3>
 <p className="text-gray-600">
-As a parent, I wanted my toddler to learn their own name — using our voices, not some generic cartoon.<br/>
-Inspired by phonics and early speech science (and a real train moment in the UK where my 18-month-old said her name), I created <em>MyNameIsApp</em> so parents can record their voices and upload real photos.<br/><br/>
-After all, your child has been hearing your voice since before they were born — let that be their teacher.
+As parents, we wanted our toddler to learn their own name with our voices, not generic videos or cartoons. Inspired by phonics and early speech science, I created <em>MyNameIsApp</em> so parents can record their voices, helping toddlers connect the sounds in a fun, personal way. There is nothing more personal than own parents' voices, after all they have been hearing them since they were in the womb.
 </p>
 </div>
 
