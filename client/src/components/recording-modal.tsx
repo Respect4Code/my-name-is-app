@@ -14,8 +14,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Mic, Play, Stop, Trash2 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { Mic, Play, Trash2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { useRecording } from "@/hooks/use-recording";
 import { useParentRecordings } from "@/hooks/use-parent-recordings";
 import { Settings } from "@/pages/home";
@@ -36,11 +36,7 @@ export default function RecordingModal({ isOpen, onClose, phonics, name, setting
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const { getRecording, saveRecording, deleteRecording } = useParentRecordings();
-  const { recording, startRecording, stopRecording, playRecording, stopPlaying, hasRecording } = useRecording({
-    phonics,
-    name,
-    settings,
-  });
+  const { currentRecording, startRecording, stopRecording, playRecording, clearRecording, isRecording } = useRecording();
 
   // Check for existing saved recording
   const existingRecording = getRecording(name, phonics.letter, phonics.position);
@@ -48,10 +44,10 @@ export default function RecordingModal({ isOpen, onClose, phonics, name, setting
 
   // Function to handle playing the recording
   const handlePlay = async () => {
-    if (recording && !isPlaying) {
+    if (currentRecording && !isPlaying) {
       setIsPlaying(true);
       try {
-        await playRecording(recording, audioRef);
+        await playRecording(currentRecording);
       } catch (error) {
         console.error("Error playing recording:", error);
         toast({
@@ -70,7 +66,7 @@ export default function RecordingModal({ isOpen, onClose, phonics, name, setting
     if (existingRecording && !isPlaying) {
       setIsPlaying(true);
       try {
-        const audio = new Audio(existingRecording.audioUrl);
+        const audio = new Audio(existingRecording.url);
         audio.volume = volume / 100;
         await audio.play();
         audio.onended = () => setIsPlaying(false);
@@ -87,16 +83,8 @@ export default function RecordingModal({ isOpen, onClose, phonics, name, setting
   };
 
   const handleSave = () => {
-    if (recording) {
-      const recordingData = {
-        id: `${phonics.letter}-${phonics.position}`,
-        audioUrl: recording,
-        letter: phonics.letter,
-        position: phonics.position,
-        type: 'phonetic' as const,
-        createdAt: new Date()
-      };
-      saveRecording(name, recordingData);
+    if (currentRecording) {
+      saveRecording(name, phonics.letter, phonics.position, currentRecording);
       toast({
         title: "Recording Saved!",
         description: `Voice recording for letter ${phonics.letter} has been saved.`,
@@ -121,9 +109,9 @@ export default function RecordingModal({ isOpen, onClose, phonics, name, setting
   useEffect(() => {
     if (!isOpen) {
       setIsPlaying(false);
-      stopPlaying();
+      // stopPlaying no longer exists in the hook
     }
-  }, [isOpen, stopPlaying]);
+  }, [isOpen]);
 
   const onVolumeChange = useCallback(
     (value: number[]) => {
@@ -137,10 +125,10 @@ export default function RecordingModal({ isOpen, onClose, phonics, name, setting
 
   // Ensure audioRef.current is updated when recording changes
   useEffect(() => {
-    if (recording && audioRef.current) {
-      audioRef.current.src = recording;
+    if (currentRecording && audioRef.current) {
+      audioRef.current.src = currentRecording.url;
     }
-  }, [recording]);
+  }, [currentRecording]);
 
   return (
     <Dialog open={showModal} onOpenChange={onClose}>
@@ -221,14 +209,23 @@ export default function RecordingModal({ isOpen, onClose, phonics, name, setting
               {hasSavedRecording ? 'Record New Voice:' : 'Create New Recording:'}
             </p>
 
-            {!recording ? (
+            {!currentRecording && !isRecording ? (
               <Button
-                onClick={startRecording}
+                onClick={() => startRecording(`${phonics.letter}-${phonics.position}`, 'phonetic')}
                 variant="outline"
                 className="w-full flex items-center justify-center gap-2 bg-purple-50 border-purple-200 hover:bg-purple-100"
               >
                 <Mic className="w-4 h-4" />
                 <span>{hasSavedRecording ? 'Re-record Voice' : 'Start Recording'}</span>
+              </Button>
+            ) : isRecording ? (
+              <Button
+                onClick={stopRecording}
+                variant="outline"
+                className="w-full flex items-center justify-center gap-2 bg-red-50 border-red-200 hover:bg-red-100"
+              >
+                <Mic className="w-4 h-4" />
+                <span>Stop Recording</span>
               </Button>
             ) : (
               <div className="space-y-2">
@@ -251,12 +248,12 @@ export default function RecordingModal({ isOpen, onClose, phonics, name, setting
                   )}
                 </Button>
                 <Button
-                  onClick={stopRecording}
+                  onClick={clearRecording}
                   variant="outline"
                   className="w-full flex items-center justify-center gap-2 bg-red-50 border-red-200 hover:bg-red-100"
                 >
-                  <Stop className="w-4 h-4" />
-                  <span>Stop & Clear</span>
+                  <Trash2 className="w-4 h-4" />
+                  <span>Clear Recording</span>
                 </Button>
               </div>
             )}
@@ -267,7 +264,7 @@ export default function RecordingModal({ isOpen, onClose, phonics, name, setting
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          {recording && (
+          {currentRecording && (
             <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700">
               Save Recording
             </Button>
