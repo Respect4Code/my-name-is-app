@@ -121,7 +121,7 @@ As parents, we wanted our toddler to learn their own name with our voices, not g
 <p className="text-gray-600 mb-2">You'll be prompted to record:</p>
 <ul className="ml-4 mt-1 text-gray-600 list-disc">
 <li>Their full name</li>
-<li>"What is your name?" ✨ <em>(New!)</em></li>
+<li><strong>"What is your name?"</strong> ✨ <em>(New 6th recording!)</em></li>
 <li>Each phoneme (letter sound) — A = "ahh", B = "buh" <em>(not "ay" or "bee")</em></li>
 <li>Sentence with name</li>
 <li>Rhyme with name</li>
@@ -652,6 +652,7 @@ const nextUnrecordedStage = stages.findIndex(stage => !recordings[stage.key]);
 
 // Keep one debug line to track completion
 console.log(`Progress: ${Object.keys(recordings).length}/${stages.length} recordings complete`);
+console.log('Available recording stages:', stages.map(s => s.label));
 
 const startRecordingForStage = async (stageIndex: number) => {
 setCurrentStage(stageIndex);
