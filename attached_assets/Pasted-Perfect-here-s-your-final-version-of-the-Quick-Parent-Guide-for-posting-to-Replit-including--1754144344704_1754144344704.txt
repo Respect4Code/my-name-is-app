@@ -1,0 +1,97 @@
+Perfect — here's your **final version of the Quick Parent Guide** for posting to Replit, including:
+
+* ✅ Your amendment about playtime in the Pro Tip
+* ✅ Emoji formatting for energy and clarity
+* ✅ Accurate phoneme guidance
+* ✅ Tone that’s confident, warm, and parent-first
+* ✅ Launch-ready copy with no confusing or self-critical phrases
+
+---
+
+### 📄 What to Post to Replit (Markdown Version for `docs/guide.md` or Web Text Section)
+
+```markdown
+# 👨‍👩‍👧 Quick Parent Guide  
+*Learn your toddler’s name with YOUR voice!*
+
+---
+
+## 💡 Why I Made This App  
+As a parent, I wanted my toddler to learn their own name — using our voices, not some generic cartoon.  
+Inspired by phonics and early speech science (and a real train moment in the UK where my 18-month-old said her name), I created *MyNameIsApp* so parents can record their voices and upload real photos.  
+
+After all, your child has been hearing your voice since before they were born — let that be their teacher.
+
+---
+
+## ⏱️ Total Setup Time: 4 minutes  
+
+---
+
+## 🛠️ How It Works (Step-by-Step)  
+
+1️⃣ **Enter Their Name (~15 seconds)**  
+Type your child’s name (up to 26 letters).  
+
+2️⃣ **Record Sounds (~3–4 minutes)**  
+You’ll be prompted to record:  
+- Their full name  
+- “What is your name?” ✨ *(New!)*  
+- Each phoneme (letter sound) — A = “ahh”, B = “buh” *(not “ay” or “bee”)*  
+- A sentence using their name  
+- A rhyme with their name  
+
+📢 *To re-record*: Tap the blue refresh icon beside any item  
+👂 *Preview*: Tap the play button before saving to check sound quality  
+
+3️⃣ **Done! Let them play**  
+Your child taps colourful flashcards to hear your voice. That’s the magic.  
+
+---
+
+## 🎙️ Recording Tips  
+
+- 🔴 Red mic = Start/stop recording  
+- ▶️ Play button = Preview your voice  
+- ✅ Green check = Save  
+- 🔄 Blue refresh = Re-record  
+- Record **phoneme** sounds, not alphabet names  
+  - *(e.g. B = “buh”, not “bee”)*  
+- 🧠 Check the on-screen tooltips for help!  
+
+---
+
+## ⚠️ Important Notes  
+
+- ✅ All recordings are auto-saved  
+- ❌ Avoid using your browser’s back button *(use in-app navigation)*  
+- ⛔ Going back clears recordings — you’ll be asked to confirm  
+- 📵 If sound doesn’t play: check volume, silent mode, and permissions  
+  *(Browsers require user interaction before audio plays)*  
+
+---
+
+## 🎯 Pro Tip  
+
+🎯 Set up solo while your toddler naps — quick and quiet.  
+**Or make it playtime!** Recording together can be magical — you might catch them giggling, joining in with their own “buh” or “Debra,” or hearing their voice played back for the first time.  
+
+Whether you do it solo or as a team, keep it light and playful — that’s how they learn best. 😄  
+
+---
+
+🟢 **You’re ready! Visit** [https://mynameisapp.co.uk](https://mynameisapp.co.uk)  
+📅 *Official launch: August 7, 2025 @ 1:00 PM BST from the UK 🇬🇧*
+```
+
+---
+
+### ✅ Where to Put It
+
+* **Option 1 (Markdown Page)**: Add this to `/docs/guide.md` for a clean, shareable Markdown doc
+* **Option 2 (In-App Help)**: Copy this into your React component (`QuickStart.tsx`) with styled Tailwind classes
+* **Option 3 (Both)**: Show it inside the app **and** link to `/docs/guide.md` for offline reading or sharing
+
+Would you like me to create the styled `QuickStart.tsx` version now too?
+
+Let’s lock it in 🔒
