@@ -100,68 +100,75 @@ return (
 
 <div className="space-y-4 text-sm">
 <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-<h3 className="font-bold mb-2">Why I Made This App</h3>
+<h3 className="font-bold mb-2">💡 Why I Made This App</h3>
 <p className="text-gray-600">
-As a parent, I wanted my toddler to learn their name with our voices, not generic videos. 
-Inspired by phonemes, I created this app to let parents record their voice and upload photos, 
-helping toddlers connect letters to sounds in a fun, personal way! And there is nothing more 
-personal than parents' voices, after all they have been hearing them since they were in the womb.
+As a parent, I wanted my toddler to learn their own name — using our voices, not some generic cartoon.<br/>
+Inspired by phonics and early speech science (and a real train moment in the UK where my 18-month-old said her name), I created <em>MyNameIsApp</em> so parents can record their voices and upload real photos.<br/><br/>
+After all, your child has been hearing your voice since before they were born — let that be their teacher.
 </p>
 </div>
 
 <div className="bg-blue-50 p-4 rounded-lg">
 <h3 className="font-bold mb-2">⏱️ Total Setup Time: 4 minutes</h3>
-<p>We respect your time. Here's exactly what to do:</p>
 </div>
 
 <div className="space-y-3">
 <div>
-<h4 className="font-bold">1️⃣ Enter Name (15 seconds)</h4>
+<h4 className="font-bold">1️⃣ Enter Their Name (~15 seconds)</h4>
 <p className="text-gray-600">Type your child's name (up to 26 letters).</p>
 </div>
 
 <div>
-<h4 className="font-bold">2️⃣ Record Sounds (3-4 minutes)</h4>
+<h4 className="font-bold">2️⃣ Record Sounds (~3–4 minutes)</h4>
+<p className="text-gray-600 mb-2">You'll be prompted to record:</p>
 <ul className="ml-4 mt-1 text-gray-600 list-disc">
 <li>Their full name</li>
-<li>"What is your name?" question ✨NEW</li>
-<li>Each letter sound (A = "ahh", B = "buh")</li>
+<li>"What is your name?" ✨ <em>(New!)</em></li>
+<li>Each phoneme (letter sound) — A = "ahh", B = "buh" <em>(not "ay" or "bee")</em></li>
 <li>Sentence with name</li>
 <li>Rhyme with name</li>
 </ul>
-<p className="text-gray-600 mt-1"><strong>To re-record:</strong> Tap the blue refresh icon next to any completed item!</p>
+<p className="text-gray-600 mt-1">📢 <strong>To re-record</strong>: Tap the blue refresh icon beside any item</p>
 <p className="text-gray-600 mt-1"><strong>Preview:</strong> Listen to your recording before saving to ensure it’s perfect.</p>
 </div>
 
 <div>
-<h4 className="font-bold">3️⃣ Done! Give to child</h4>
-<p className="text-gray-600">They tap the colored buttons to hear YOUR voice.</p>
+<h4 className="font-bold">3️⃣ Done! Let them play</h4>
+<p className="text-gray-600">Your child taps colourful flashcards to hear your voice. That's the magic.</p>
 </div>
 </div>
 
 <div className="bg-green-50 p-4 rounded-lg">
-<h3 className="font-bold mb-1">💡 Recording Tips:</h3>
+<h3 className="font-bold mb-2">🎙️ Recording Tips</h3>
 <ul className="text-gray-700 space-y-1 list-disc ml-4">
-<li>Red mic = recording</li>
-<li>Tap once to start, tap again to stop</li>
-<li>Play button = preview recording</li>
-<li>Green check = save recording</li>
-<li>Blue refresh = re-record</li>
-<li>Record letter SOUNDS not names (B = "buh" not "bee")</li>
-<li>Check tooltips on the recording screen for guidance!</li>
+<li>🔴 Red mic = Start/stop recording</li>
+<li>▶️ Play button = Preview your voice</li>
+<li>✅ Green check = Save</li>
+<li>🔄 Blue refresh = Re-record</li>
+<li>Record <strong>phoneme</strong> sounds, not alphabet names</li>
+<li><em>(e.g. B = "buh", not "bee")</em></li>
+<li>🧠 Check the on-screen tooltips for help!</li>
 </ul>
 </div>
 
 <div className="bg-yellow-50 p-4 rounded-lg">
-<h3 className="font-bold mb-1">⚠️ Important:</h3>
+<h3 className="font-bold mb-2">⚠️ Important Notes</h3>
 <ul className="text-gray-700 space-y-1 list-disc ml-4">
-<li><strong>Your work is auto-saved!</strong></li>
-<li>Use app buttons (not browser back)</li>
-<li>Going back clears recordings—confirm carefully!</li>
-<li>Works best without toddler present 😅</li>
-<li>If audio doesn't play, check volume/silent mode</li>
-<li>Web browsers require user interaction before playing audio</li>
+<li>✅ All recordings are auto-saved</li>
+<li>❌ Avoid using your browser's back button <em>(use in-app navigation)</em></li>
+<li>⛔ Going back clears recordings — you'll be asked to confirm</li>
+<li>📵 If sound doesn't play: check volume, silent mode, and permissions</li>
+<li><em>(Browsers require user interaction before audio plays)</em></li>
 </ul>
+</div>
+
+<div className="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+<h3 className="font-bold mb-2">🎯 Pro Tip</h3>
+<p className="text-gray-700">
+🎯 Set up solo while your toddler naps — quick and quiet.<br/>
+<strong>Or make it playtime!</strong> Recording together can be magical — you might catch them giggling, joining in with their own "buh" or "Debra," or hearing their voice played back for the first time.<br/><br/>
+Whether you do it solo or as a team, keep it light and playful — that's how they learn best. 😄
+</p>
 </div>
 </div>
 
