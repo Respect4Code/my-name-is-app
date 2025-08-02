@@ -8,6 +8,11 @@ Preferred communication style: Simple, everyday language.
 
 **Family Voice Recording Philosophy**: The app supports familiar family voices (one or both parents, elder siblings) that would actually be present when using the app with the child. This creates the bonding and learning experience magic - children have been hearing these voices since they were in the womb. While the core value is parent voices, any familiar family member can record to maintain the emotional connection during learning.
 
+**Content Preferences**:
+- "Why I Made This App" testimonial must stay permanently - never remove until explicitly told
+- "What is your name?" feature is approved and important - keep as core functionality
+- Require explicit approval before making any code changes ("Do nothing until I tell you")
+
 ### System Architecture
 This is a full-stack TypeScript application built as a monorepo with a React frontend and Express backend, sharing types and schemas. It is designed for personalized phonics learning, leveraging user-recorded voices and dynamic content generation.
 
