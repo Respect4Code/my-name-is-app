@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # Sitemaps
-Sitemap: https://mynameisapp.com/sitemap.xml
+Sitemap: https://mynameisapp.co.uk/sitemap.xml
 
 # Important pages for crawling
 Allow: /phonics-for-toddlers/

@@ -4,49 +4,49 @@
   
   <!-- Main Domain Pages -->
   <url>
-    <loc>https://mynameisapp.com/</loc>
+    <loc>https://mynameisapp.co.uk/</loc>
     <priority>1.0</priority>
     <changefreq>weekly</changefreq>
     <lastmod>2025-01-31</lastmod>
-    <xhtml:link rel="alternate" hreflang="en-us" href="https://mynameisapp.com/" />
-    <xhtml:link rel="alternate" hreflang="en-gb" href="https://mynameisapp.com/uk/" />
-    <xhtml:link rel="alternate" hreflang="en-ca" href="https://mynameisapp.com/canada/" />
-    <xhtml:link rel="alternate" hreflang="en-au" href="https://mynameisapp.com/australia/" />
-    <xhtml:link rel="alternate" hreflang="en-nz" href="https://mynameisapp.com/new-zealand/" />
-    <xhtml:link rel="alternate" hreflang="en-ie" href="https://mynameisapp.com/ireland/" />
-    <xhtml:link rel="alternate" hreflang="en-in" href="https://mynameisapp.com/india/" />
-    <xhtml:link rel="alternate" hreflang="en-ph" href="https://mynameisapp.com/philippines/" />
-    <xhtml:link rel="alternate" hreflang="en-sg" href="https://mynameisapp.com/singapore/" />
-    <xhtml:link rel="alternate" hreflang="en-za" href="https://mynameisapp.com/south-africa/" />
+    <xhtml:link rel="alternate" hreflang="en-us" href="https://mynameisapp.co.uk/" />
+    <xhtml:link rel="alternate" hreflang="en-gb" href="https://mynameisapp.co.uk/uk/" />
+    <xhtml:link rel="alternate" hreflang="en-ca" href="https://mynameisapp.co.uk/canada/" />
+    <xhtml:link rel="alternate" hreflang="en-au" href="https://mynameisapp.co.uk/australia/" />
+    <xhtml:link rel="alternate" hreflang="en-nz" href="https://mynameisapp.co.uk/new-zealand/" />
+    <xhtml:link rel="alternate" hreflang="en-ie" href="https://mynameisapp.co.uk/ireland/" />
+    <xhtml:link rel="alternate" hreflang="en-in" href="https://mynameisapp.co.uk/india/" />
+    <xhtml:link rel="alternate" hreflang="en-ph" href="https://mynameisapp.co.uk/philippines/" />
+    <xhtml:link rel="alternate" hreflang="en-sg" href="https://mynameisapp.co.uk/singapore/" />
+    <xhtml:link rel="alternate" hreflang="en-za" href="https://mynameisapp.co.uk/south-africa/" />
   </url>
 
   <!-- Regional Landing Pages -->
   <url>
-    <loc>https://mynameisapp.com/uk/</loc>
+    <loc>https://mynameisapp.co.uk/uk/</loc>
     <priority>0.9</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/canada/</loc>
+    <loc>https://mynameisapp.co.uk/canada/</loc>
     <priority>0.9</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/australia/</loc>
+    <loc>https://mynameisapp.co.uk/australia/</loc>
     <priority>0.9</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/new-zealand/</loc>
+    <loc>https://mynameisapp.co.uk/new-zealand/</loc>
     <priority>0.9</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/ireland/</loc>
+    <loc>https://mynameisapp.co.uk/ireland/</loc>
     <priority>0.9</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
@@ -54,85 +54,85 @@
 
   <!-- ESL Markets - Asia Pacific -->
   <url>
-    <loc>https://mynameisapp.com/india/</loc>
+    <loc>https://mynameisapp.co.uk/india/</loc>
     <priority>0.9</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/philippines/</loc>
+    <loc>https://mynameisapp.co.uk/philippines/</loc>
     <priority>0.9</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/singapore/</loc>
+    <loc>https://mynameisapp.co.uk/singapore/</loc>
     <priority>0.9</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/malaysia/</loc>
+    <loc>https://mynameisapp.co.uk/malaysia/</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/thailand/</loc>
+    <loc>https://mynameisapp.co.uk/thailand/</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/vietnam/</loc>
+    <loc>https://mynameisapp.co.uk/vietnam/</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/indonesia/</loc>
+    <loc>https://mynameisapp.co.uk/indonesia/</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/china/</loc>
+    <loc>https://mynameisapp.co.uk/china/</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/japan/</loc>
+    <loc>https://mynameisapp.co.uk/japan/</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/south-korea/</loc>
+    <loc>https://mynameisapp.co.uk/south-korea/</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/hong-kong/</loc>
+    <loc>https://mynameisapp.co.uk/hong-kong/</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/taiwan/</loc>
+    <loc>https://mynameisapp.co.uk/taiwan/</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/bangladesh/</loc>
+    <loc>https://mynameisapp.co.uk/bangladesh/</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/pakistan/</loc>
+    <loc>https://mynameisapp.co.uk/pakistan/</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
@@ -140,31 +140,31 @@
 
   <!-- ESL Markets - Africa -->
   <url>
-    <loc>https://mynameisapp.com/south-africa/</loc>
+    <loc>https://mynameisapp.co.uk/south-africa/</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/nigeria/</loc>
+    <loc>https://mynameisapp.co.uk/nigeria/</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/kenya/</loc>
+    <loc>https://mynameisapp.co.uk/kenya/</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/ghana/</loc>
+    <loc>https://mynameisapp.co.uk/ghana/</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/egypt/</loc>
+    <loc>https://mynameisapp.co.uk/egypt/</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
@@ -172,55 +172,55 @@
 
   <!-- ESL Markets - Eastern Europe -->
   <url>
-    <loc>https://mynameisapp.com/russia/</loc>
+    <loc>https://mynameisapp.co.uk/russia/</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/poland/</loc>
+    <loc>https://mynameisapp.co.uk/poland/</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/romania/</loc>
+    <loc>https://mynameisapp.co.uk/romania/</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/bulgaria/</loc>
+    <loc>https://mynameisapp.co.uk/bulgaria/</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/czech-republic/</loc>
+    <loc>https://mynameisapp.co.uk/czech-republic/</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/slovakia/</loc>
+    <loc>https://mynameisapp.co.uk/slovakia/</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/hungary/</loc>
+    <loc>https://mynameisapp.co.uk/hungary/</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/croatia/</loc>
+    <loc>https://mynameisapp.co.uk/croatia/</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/ukraine/</loc>
+    <loc>https://mynameisapp.co.uk/ukraine/</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
@@ -228,37 +228,37 @@
 
   <!-- Commonwealth Countries -->
   <url>
-    <loc>https://mynameisapp.com/jamaica/</loc>
+    <loc>https://mynameisapp.co.uk/jamaica/</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/trinidad/</loc>
+    <loc>https://mynameisapp.co.uk/trinidad/</loc>
     <priority>0.7</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/barbados/</loc>
+    <loc>https://mynameisapp.co.uk/barbados/</loc>
     <priority>0.7</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/malta/</loc>
+    <loc>https://mynameisapp.co.uk/malta/</loc>
     <priority>0.7</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/cyprus/</loc>
+    <loc>https://mynameisapp.co.uk/cyprus/</loc>
     <priority>0.7</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/fiji/</loc>
+    <loc>https://mynameisapp.co.uk/fiji/</loc>
     <priority>0.7</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
@@ -266,31 +266,31 @@
 
   <!-- Feature-Specific Pages -->
   <url>
-    <loc>https://mynameisapp.com/phonics-for-toddlers/</loc>
+    <loc>https://mynameisapp.co.uk/phonics-for-toddlers/</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/parent-voice-recording/</loc>
+    <loc>https://mynameisapp.co.uk/parent-voice-recording/</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/social-confidence-training/</loc>
+    <loc>https://mynameisapp.co.uk/social-confidence-training/</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/english-pronunciation-practice/</loc>
+    <loc>https://mynameisapp.co.uk/english-pronunciation-practice/</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/adult-esl-learning/</loc>
+    <loc>https://mynameisapp.co.uk/adult-esl-learning/</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
@@ -298,31 +298,31 @@
 
   <!-- Educational Content Pages -->
   <url>
-    <loc>https://mynameisapp.com/blog/</loc>
+    <loc>https://mynameisapp.co.uk/blog/</loc>
     <priority>0.7</priority>
     <changefreq>weekly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/blog/teach-kids-their-name/</loc>
+    <loc>https://mynameisapp.co.uk/blog/teach-kids-their-name/</loc>
     <priority>0.7</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/blog/phonics-vs-whole-word/</loc>
+    <loc>https://mynameisapp.co.uk/blog/phonics-vs-whole-word/</loc>
     <priority>0.7</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/blog/early-literacy-development/</loc>
+    <loc>https://mynameisapp.co.uk/blog/early-literacy-development/</loc>
     <priority>0.7</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/blog/english-pronunciation-for-professionals/</loc>
+    <loc>https://mynameisapp.co.uk/blog/english-pronunciation-for-professionals/</loc>
     <priority>0.7</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
@@ -330,25 +330,25 @@
 
   <!-- Support and Legal Pages -->
   <url>
-    <loc>https://mynameisapp.com/privacy-policy/</loc>
+    <loc>https://mynameisapp.co.uk/privacy-policy/</loc>
     <priority>0.5</priority>
     <changefreq>yearly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/terms-of-service/</loc>
+    <loc>https://mynameisapp.co.uk/terms-of-service/</loc>
     <priority>0.5</priority>
     <changefreq>yearly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/contact/</loc>
+    <loc>https://mynameisapp.co.uk/contact/</loc>
     <priority>0.6</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
   </url>
   <url>
-    <loc>https://mynameisapp.com/help/</loc>
+    <loc>https://mynameisapp.co.uk/help/</loc>
     <priority>0.6</priority>
     <changefreq>monthly</changefreq>
     <lastmod>2025-01-31</lastmod>
