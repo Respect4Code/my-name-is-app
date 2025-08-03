@@ -126,14 +126,14 @@ function RecordingScreen({
   const [currentRecording, setCurrentRecording] = useState(0);
   
   const recordingStages = [
-    { id: 'fullname', label: `Say "${name}"` },
-    { id: 'question', label: 'Say "What is your name?"' },
+    { id: 'fullname', label: `Full Name: "${name}"` },
+    { id: 'question', label: 'Name Question: "What is your name?"' },
     ...name.split('').map((letter, i) => ({
       id: `letter-${i}`,
-      label: `Say the SOUND of "${letter}" (not letter name)`
+      label: `Letter Sound: "${letter}" (say the sound, not letter name)`
     })),
-    { id: 'sentence', label: `Say "${name}, time for bed!"` },
-    { id: 'rhyme', label: `Make a rhyme with "${name}"` }
+    { id: 'sentence', label: `Sentence: "${name}, time for bed!"` },
+    { id: 'rhyme', label: `Rhyme with "${name}"` }
   ];
 
   const allComplete = recordingStages.every(stage => recordings[stage.id]);
