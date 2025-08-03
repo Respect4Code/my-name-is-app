@@ -21,7 +21,7 @@ This is a full-stack TypeScript application built as a monorepo with a React fro
 - Implemented complete 6-recording system including "What is your name?" social confidence feature
 - Enhanced Parent Guide with refined testimonial text emphasizing phonetic "sounding out" approach
 - Updated footer messaging for open source roadmap
-- **COMPLETELY ELIMINATED** all private browsing detection and mobile modal sources
+- **COMPLETELY ELIMINATED** all browser detection and mobile modal sources
 - Removed all browser alert(), confirm(), and prompt() calls from main app
 - Fixed recording hook to use silent fallbacks instead of throwing errors
 - Replaced all browser capability warnings with non-intrusive error states

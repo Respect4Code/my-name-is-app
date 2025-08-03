@@ -15,7 +15,7 @@ That's why I built **My Name Is** - the only phonics app where parents record th
 - 🎤 **Parent Voice Recording**: YOU record how each letter sounds  
 - 🦻 **Inclusive Design**: Visual mode for deaf/hard-of-hearing learners
 - 📱 **Works Offline**: Install as an app on any device
-- 🔒 **Privacy First**: All recordings stay on your device
+- 🔒 **Security First**: All recordings stay on your device
 - 💝 **Made with Love**: By a parent, for parents
 
 ## 🚀 How to Use
@@ -29,7 +29,7 @@ That's why I built **My Name Is** - the only phonics app where parents record th
 
 - Built with React and TypeScript
 - Progressive Web App (PWA) for offline access
-- Local storage for privacy
+- Local storage for security
 - Accessible design following WCAG guidelines
 
 ## 📜 License
