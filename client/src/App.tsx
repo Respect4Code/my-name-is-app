@@ -230,10 +230,10 @@ return (
                         <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border-2 border-gray-100 p-4 z-50">
                                 <button 
                                         onClick={() => setIsExpanded(false)}
-                                        className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                                        className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
                                         aria-label="Close sharing options"
                                 >
-                                        <X size={14} />
+                                        <X size={16} />
                                 </button>
                                 <div className="grid grid-cols-2 gap-3">
                                         <button
