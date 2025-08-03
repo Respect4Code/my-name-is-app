@@ -12,15 +12,16 @@ Preferred communication style: Simple, everyday language.
 - "Why I Made This App" testimonial must stay permanently - never remove until explicitly told
 - "What is your name?" feature is approved and important - keep as core functionality
 - Require explicit approval before making any code changes ("Do nothing until I tell you")
+- Privacy-first approach: avoid any features that might raise trust concerns (e.g., detection modals)
 
 ### System Architecture
 This is a full-stack TypeScript application built as a monorepo with a React frontend and Express backend, sharing types and schemas. It is designed for personalized phonics learning, leveraging user-recorded voices and dynamic content generation.
 
 **Recent Updates (January 2025)**:
 - Implemented complete 6-recording system including "What is your name?" social confidence feature
-- Added private browsing detection with user-friendly warnings
 - Enhanced Parent Guide with refined testimonial text emphasizing phonetic "sounding out" approach
 - Updated footer messaging for open source roadmap
+- Removed private browsing detection to maintain user trust and simplicity
 
 **Frontend Architecture:**
 - **Framework**: React 18 with TypeScript
