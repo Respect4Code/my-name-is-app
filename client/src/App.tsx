@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Mic, Play, Check, ChevronRight, ChevronLeft, 
@@ -144,7 +145,7 @@ function WelcomeScreen({ onNext, onGuide }: { onNext: (name: string) => void; on
         {/* BoredMama Logo */}
         <div className="mb-6">
           <div className="bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg px-6 py-3 mx-auto w-fit shadow-lg">
-            <span className="text-white font-bold text-2xl">BoredMamaApp</span>
+            <span className="text-white font-bold text-2xl">MyNameIsApp</span>
           </div>
         </div>
         
@@ -198,7 +199,7 @@ function WelcomeScreen({ onNext, onGuide }: { onNext: (name: string) => void; on
         
         <p className="text-xs text-gray-500 mt-8">
           100% Secure • Works Offline • CC BY-NC-SA 4.0<br/>
-          Created with ❤️ by BoredMamaApp<br/>
+          Created with ❤️ by MyNameIsApp<br/>
           <span className="text-green-600 font-medium">✓ Auto-saves your work</span>
         </p>
         
@@ -780,8 +781,8 @@ export default function App() {
   };
   
   const goHome = () => {
-    setCurrentScreen('flashcards');
-    saveToIndexedDB('currentScreen', 'flashcards');
+    setCurrentScreen('welcome');
+    saveToIndexedDB('currentScreen', 'welcome');
   };
   
   const resetApp = async () => {
