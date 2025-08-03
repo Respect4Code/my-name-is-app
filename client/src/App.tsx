@@ -164,7 +164,7 @@ As parents, we wanted our toddler to learn their own name with our voices soundi
 <h3 className="font-bold mb-2">🎯 Pro Tip</h3>
 <p className="text-gray-700">
 🎯 Set up solo while your toddler naps — quick and quiet.<br/>
-<strong>Or make it playtime!</strong> Recording together can be magical — you might catch them giggling, joining in with their own "buh" or "Debra," or hearing their voice played back for the first time.<br/><br/>
+<strong>Or make it playtime!</strong> Recording together can be magical — you might catch them giggling, joining in with their own sounds like "buh" or "mmmm," or hearing their voice played back for the first time.<br/><br/>
 Whether you do it solo or as a team, keep it light and playful — that's how they learn best. 😄
 </p>
 </div>
