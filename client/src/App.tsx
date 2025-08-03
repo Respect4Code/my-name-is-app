@@ -79,7 +79,7 @@ function ParentGuide({ onClose }: { onClose: () => void }) {
               <p className="text-gray-600">
                 Upload a photo of your child (under 2MB). It’s automatically resized to 300x300 pixels, 
                 then drag to reposition and confirm with the green checkmark. Cancel with the red X if needed. 
-                Stays private on your device, with smaller file sizes (~100KB).
+                Stays secure on your device, with smaller file sizes (~100KB).
               </p>
             </div>
             
@@ -346,7 +346,7 @@ function WelcomeScreen({ onNext, onGuide }: { onNext: (name: string) => void; on
         </button>
         
         <p className="text-xs text-gray-500 mt-8">
-          100% Private • Works Offline • CC BY-NC-SA 4.0<br/>
+          100% Secure • Works Offline • CC BY-NC-SA 4.0<br/>
           Created with ❤️ by BoredMamaApp<br/>
           <span className="text-green-600 font-medium">✓ Auto-saves your work</span>
         </p>
@@ -566,7 +566,7 @@ function PhotoScreen({ name, onNext, onBack }: { name: string; onNext: (photo: s
           <>
             <div className="bg-green-50 border border-green-200 p-4 rounded-lg mb-6 text-left">
               <p className="text-sm text-green-800">
-                🔒 <strong>100% Private:</strong> This photo stays on YOUR device only. 
+                🔒 <strong>100% Secure:</strong> This photo stays on YOUR device only. 
                 Never uploaded. Works offline forever.
               </p>
             </div>
