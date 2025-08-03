@@ -126,13 +126,13 @@ As parents, we wanted our toddler to learn their own name with our voices soundi
 <li>Sentence with name</li>
 <li>Rhyme with name</li>
 </ul>
-<p className="text-gray-600 mt-1">📢 <strong>To re-record</strong>: Tap the blue refresh icon beside any item</p>
-<p className="text-gray-600 mt-1"><strong>Preview:</strong> Listen to your recording before saving to ensure it’s perfect.</p>
+<p className="text-gray-600 mt-1">📢 <strong>Recordings auto-save instantly!</strong></p>
+<p className="text-gray-600 mt-1"><strong>Don't like it?</strong> Tap the blue refresh icon to re-record any item</p>
 </div>
 
 <div>
-<h4 className="font-bold">3️⃣ Done! Let them play</h4>
-<p className="text-gray-600">Your child taps colourful flashcards to hear your voice. That's the magic.</p>
+<h4 className="font-bold">3️⃣ Done! Time to Play Together</h4>
+<p className="text-gray-600">Tap the colourful flashcards together to hear your voice. Watch their face light up!</p>
 </div>
 </div>
 
@@ -140,23 +140,23 @@ As parents, we wanted our toddler to learn their own name with our voices soundi
 <h3 className="font-bold mb-2">🎙️ Recording Tips</h3>
 <ul className="text-gray-700 space-y-1 list-disc ml-4">
 <li>🔴 Red mic = Start/stop recording</li>
-<li>▶️ Play button = Preview your voice</li>
-<li>✅ Green check = Save</li>
-<li>🔄 Blue refresh = Re-record</li>
+<li>▶️ Play button = Listen to what you just recorded</li>
+<li>✅ Recordings save automatically</li>
+<li>🔄 Blue refresh = Re-record if needed</li>
 <li>Record <strong>phoneme</strong> sounds, not alphabet names</li>
 <li><em>(e.g. B = "buh", not "bee")</em></li>
-<li>🧠 Check the on-screen tooltips for help!</li>
+
 </ul>
 </div>
 
 <div className="bg-yellow-50 p-4 rounded-lg">
 <h3 className="font-bold mb-2">⚠️ Important Notes</h3>
 <ul className="text-gray-700 space-y-1 list-disc ml-4">
-<li>✅ All recordings are auto-saved</li>
-<li>❌ Avoid using your browser's back button <em>(use in-app navigation)</em></li>
+<li>✅ All recordings auto-save instantly (no save button needed!)</li>
+<li>❌ Avoid using your browser's back button (use in-app navigation)</li>
 <li>⛔ Going back clears recordings — you'll be asked to confirm</li>
 <li>📵 If sound doesn't play: check volume, silent mode, and permissions</li>
-<li><em>(Browsers require user interaction before audio plays)</em></li>
+<li><em>(Most browsers require user interaction before audio plays)</em></li>
 </ul>
 </div>
 
