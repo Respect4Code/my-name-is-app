@@ -18,9 +18,9 @@ This is a full-stack TypeScript application built as a monorepo with a React fro
 
 **Recent Updates (January 2025)**:
 - Implemented complete 6-recording system including "What is your name?" social confidence feature
-- Added private browsing detection with user-friendly warnings
 - Enhanced Parent Guide with refined testimonial text emphasizing phonetic "sounding out" approach
 - Updated footer messaging for open source roadmap
+- Removed all private browsing detection code for improved user trust and simplified experience
 
 **Frontend Architecture:**
 - **Framework**: React 18 with TypeScript
