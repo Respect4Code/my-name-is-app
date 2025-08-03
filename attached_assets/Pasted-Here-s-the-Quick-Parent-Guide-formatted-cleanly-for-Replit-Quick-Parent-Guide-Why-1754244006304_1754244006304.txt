@@ -1,0 +1,55 @@
+Here's the Quick Parent Guide formatted cleanly for Replit:
+
+```
+👨‍👩‍👧 Quick Parent Guide
+
+💡 Why I Made This App
+As parents, we wanted our toddler to learn their own name with our voices sounding it out, not generic videos or cartoons. Inspired by phonics and early speech science, I created MyNameIsApp so parents can record their voices, helping toddlers connect the sounds in a fun, personal way. There's nothing more personal than parents' voices—after all, they have been hearing them since they were in the womb.
+
+⏱️ Total Setup Time: 4 Minutes
+
+1️⃣ Enter Their Name (~15 seconds)
+Type your child's name (up to 26 letters).
+
+2️⃣ Record Sounds (~3–4 minutes)
+You'll be prompted to record:
+• Their full name
+• "What is your name?" ✨ (New!)
+• Each phoneme (letter sound) — A = "ahh", B = "buh" (not "ay" or "bee")
+• A sentence with their name
+• A rhyme with their name
+
+📢 To re-record: Tap the blue refresh icon beside any item
+👂 Preview: Listen before saving to ensure it's perfect
+
+3️⃣ Done! Let Them Play
+Your child taps colourful flashcards to hear your voice. That's the magic.
+
+🎙️ Recording Tips
+• 🔴 Red mic = Start/stop recording
+• ▶️ Play button = Preview your voice
+• ✅ Green check = Save
+• 🔄 Blue refresh = Re-record
+• Record phoneme sounds, not alphabet names (e.g. B = "buh", not "bee")
+• 🧠 Check the on-screen tooltips for help!
+
+⚠️ Important Notes
+• ✅ All recordings are auto-saved
+• ❌ Avoid using your browser's back button (use in-app navigation)
+• ⛔ Going back clears recordings — you'll be asked to confirm
+• 📵 If sound doesn't play: check volume, silent mode, and permissions
+(Most browsers require user interaction before audio plays)
+
+🎯 Pro Tip
+Set up solo while your toddler naps — quick and quiet. Or make it playtime! Recording together can be magical — you might catch them giggling, joining in with their own sounds like "buh" or "mmmm," or hearing their voice played back for the first time.
+
+Whether you go solo or team up, keep it light and playful — that's how they learn best. 😄
+```
+
+**Key changes for Replit:**
+- Changed `*` to `•` for bullet points
+- Used straight quotes throughout
+- Clean spacing
+- No special markdown formatting
+
+Just copy and paste this directly! 🚀

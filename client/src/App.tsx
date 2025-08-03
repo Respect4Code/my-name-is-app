@@ -51,38 +51,60 @@ function ParentGuide({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" role="dialog" aria-labelledby="parent-guide-title">
       <div className="bg-white rounded-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <h2 id="parent-guide-title" className="text-2xl font-bold mb-4">Quick Parent Guide</h2>
+        <h2 id="parent-guide-title" className="text-2xl font-bold mb-4">👨‍👩‍👧 Quick Parent Guide</h2>
         <div className="space-y-4 text-sm">
           <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-            <h3 className="font-bold mb-2">Why I Made This App</h3>
-            <p className="text-gray-600">
-              As parents, we wanted our toddler to learn their own name with our voices sounding it out, not generic videos or cartoons. Inspired by phonics and early speech science, I created MyNameIsApp so parents can record their voices, helping toddlers connect the sounds in a fun, personal way. There is nothing more personal than parents'—after all, they have been hearing them since they were in the womb.
+            <h3 className="font-bold mb-2">💡 Why I Made This App</h3>
+            <p className="text-gray-600 mb-3">
+              As parents, we wanted our toddler to learn their own name with our voices sounding it out, not generic videos or cartoons. Inspired by phonics and early speech science, I created MyNameIsApp so parents can record their voices, helping toddlers connect the sounds in a fun, personal way. There's nothing more personal than parents' voices—after all, they have been hearing them since they were in the womb.
             </p>
-            <p className="text-purple-600 text-sm font-medium">
-              💡 Pro tip upgrade - Recording together can be magical — you might catch them giggling, joining in with their own sounds like "buh" or "mmmm," or hearing their voice played back for the first time.
-            </p>
+            <p className="text-sm text-gray-500">⏱️ Total Setup Time: 4 Minutes</p>
           </div>
           
           <div className="bg-blue-50 p-4 rounded-lg">
-            <h3 className="font-bold mb-2">📱 Recording Order & Prompts</h3>
-            <div className="space-y-2 text-sm">
-              <div><strong>1️⃣ Full Name:</strong> "Record their full name" (e.g., "Debra")</div>
-              <div><strong>2️⃣ "What is your name?" ✨:</strong> Record this question - your KEY feature!</div>
-              <div><strong>3️⃣ Individual Phonemes:</strong> Record each sound (D="duh", E="eh", B="buh", R="ruh", A="ah")</div>
-              <div><strong>4️⃣ Sentence with Name:</strong> "Debra loves to play"</div>
-              <div><strong>5️⃣ Rhyme with Name:</strong> "Debra, Debra, like a zebra!"</div>
+            <h3 className="font-bold mb-2">2️⃣ Record Sounds (~3–4 minutes)</h3>
+            <div className="space-y-1 text-sm">
+              <div>• Their full name</div>
+              <div>• "What is your name?" ✨ (New!)</div>
+              <div>• Each phoneme (letter sound) — A = "ahh", B = "buh" (not "ay" or "bee")</div>
+              <div>• A sentence with their name</div>
+              <div>• A rhyme with their name</div>
             </div>
+            <p className="text-xs text-blue-600 mt-2">
+              📢 To re-record: Tap the blue refresh icon beside any item<br/>
+              👂 Preview: Listen before saving to ensure it's perfect
+            </p>
           </div>
           
           <div className="bg-green-50 p-4 rounded-lg">
-            <h3 className="font-bold mb-1">💡 Recording Tips:</h3>
-            <ul className="text-gray-700 space-y-1">
-              <li>• Red mic = recording</li>
-              <li>• Tap once to start, tap again to stop</li>
-              <li>• Green check = saved</li>
-              <li>• Orange mic = re-recording</li>
-              <li>• Record letter SOUNDS not names (B = "buh" not "bee")</li>
+            <h3 className="font-bold mb-2">🎙️ Recording Tips</h3>
+            <ul className="text-gray-700 space-y-1 text-xs">
+              <li>• 🔴 Red mic = Start/stop recording</li>
+              <li>• ▶️ Play button = Preview your voice</li>
+              <li>• ✅ Green check = Save</li>
+              <li>• 🔄 Blue refresh = Re-record</li>
+              <li>• Record phoneme sounds, not alphabet names (e.g. B = "buh", not "bee")</li>
+              <li>• 🧠 Check the on-screen tooltips for help!</li>
             </ul>
+          </div>
+          
+          <div className="bg-orange-50 p-3 rounded-lg">
+            <h3 className="font-bold mb-1 text-sm">⚠️ Important Notes</h3>
+            <ul className="text-xs text-gray-700 space-y-1">
+              <li>• ✅ All recordings are auto-saved</li>
+              <li>• ❌ Avoid using your browser's back button (use in-app navigation)</li>
+              <li>• 📵 If sound doesn't play: check volume, silent mode, and permissions</li>
+            </ul>
+          </div>
+          
+          <div className="bg-yellow-50 p-3 rounded-lg">
+            <h3 className="font-bold mb-1 text-sm">🎯 Pro Tip</h3>
+            <p className="text-xs text-gray-700">
+              Set up solo while your toddler naps — quick and quiet. Or make it playtime! Recording together can be magical — you might catch them giggling, joining in with their own sounds like "buh" or "mmmm," or hearing their voice played back for the first time.
+            </p>
+            <p className="text-xs text-gray-700 mt-1">
+              Whether you go solo or team up, keep it light and playful — that's how they learn best. 😄
+            </p>
           </div>
         </div>
         
@@ -703,7 +725,7 @@ export default function App() {
         
         // Load all recordings
         const recordingKeys = ['fullname', 'question', 'sentence', 'rhyme'];
-        const letterKeys = letters.map((_, i) => `letter-${i}`);
+        const letterKeys = letters.map((_: string, i: number) => `letter-${i}`);
         const allKeys = [...recordingKeys, ...letterKeys];
         
         const savedRecordings: Record<string, string> = {};
