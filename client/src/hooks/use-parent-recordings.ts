@@ -16,7 +16,7 @@ export function useParentRecordings() {
     try {
       // Check if browser APIs are available
       if (typeof window === 'undefined' || !window.btoa || !recording.blob?.arrayBuffer) {
-        // Browser APIs not available - silent fallback
+        console.warn('Browser APIs not available for recording storage');
         return;
       }
       
@@ -52,7 +52,7 @@ export function useParentRecordings() {
     try {
       // Check if browser APIs are available
       if (typeof window === 'undefined' || !window.atob || !window.URL?.createObjectURL) {
-        // Browser APIs not available - silent fallback
+        console.warn('Browser APIs not available for recording retrieval');
         return null;
       }
       

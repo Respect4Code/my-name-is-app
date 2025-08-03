@@ -19,12 +19,8 @@ export function useRecording() {
 
   const startRecording = useCallback(async (id: string, stage: string) => {
     try {
-      // Silent fallback - no error thrown for trust
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        console.log('Media recording not available, using fallback');
-        setError('Microphone not available');
-        setIsRecording(false);
-        return;
+        throw new Error('Media recording not supported');
       }
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -68,7 +64,7 @@ export function useRecording() {
       setError(null);
     } catch (error) {
       console.error('Error starting recording:', error);
-      setError('Recording unavailable');
+      setError('Failed to start recording. Please check microphone permissions.');
       setIsRecording(false);
     }
   }, []);

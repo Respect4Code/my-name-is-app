@@ -211,7 +211,7 @@ function PhotoScreen({ name, onNext }) {
         />
 
         <div className="mt-4 text-sm text-gray-600 bg-purple-50 rounded-md p-2 mb-6">
-          <span className="font-semibold text-purple-700">🔒 Security Promise:</span> This photo
+          <span className="font-semibold text-purple-700">🔒 Privacy Promise:</span> This photo
           stays on your device only. It's never uploaded anywhere.
         </div>
 
