@@ -980,6 +980,8 @@ const [step, setStep] = useState<'welcome' | 'recording' | 'flashcards'>('welcom
 const [name, setName] = useState<string | null>(null);
 const [recordings, setRecordings] = useState<Record<string, string>>({});
 const [showGuide, setShowGuide] = useState(false);
+
+useEffect(() => {
 const loadData = async () => {
 try {
 
