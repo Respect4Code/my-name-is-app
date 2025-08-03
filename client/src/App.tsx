@@ -160,7 +160,7 @@ export default function App() {
           const letterKeys = savedName.split('').map((_, i) => `letter-${i}`);
           const allKeys = [...recordingKeys, ...letterKeys];
           
-          const loadedRecordings = {};
+          const loadedRecordings: { [key: string]: string } = {};
           for (const key of allKeys) {
             const value = await loadFromIndexedDB(key);
             if (value) loadedRecordings[key] = value;
@@ -298,6 +298,9 @@ function WelcomeScreen({ onNext, onGuide }: { onNext: (name: string) => void; on
         </button>
         
         <h1 className="text-4xl font-bold text-gray-800 mb-2">My Name Is</h1>
+        <div className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded mb-2 inline-block">
+          ✅ SECURE VERSION - Mobile Issues Fixed
+        </div>
         <p className="text-gray-600 mb-2">Teach your child their name with YOUR voice</p>
         <p className="text-purple-600 text-sm font-medium mb-6">
           ⭐ Use YOUR voice for personal phonics—read our story!
@@ -1089,7 +1092,7 @@ function FlashcardScreen({
                   className="font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 select-none block animate-pulse"
                   style={{ fontSize: '200px', lineHeight: '1' }}
                   role="heading"
-                  aria-level="2"
+                  aria-level={2}
                   aria-label={`Letter ${letters[current]}`}
                 >
                   {letters[current]}
