@@ -202,7 +202,7 @@ export default function PhotoUpload({ name, onNext }) {
         
         <div className="bg-blue-50 p-4 rounded-lg mb-6 text-left">
           <p className="text-sm text-blue-800">
-            🔒 <strong>Privacy Promise:</strong> This photo stays on your device only. 
+            🔒 <strong>Security Promise:</strong> This photo stays on your device only. 
             It's never uploaded anywhere.
           </p>
         </div>
@@ -579,7 +579,7 @@ PACKAGE.JSON DEPENDENCIES:
 
 FEATURES INCLUDED:
 ✅ Real audio recording with MediaRecorder API
-✅ Photo upload with privacy messaging
+✅ Photo upload with security messaging
 ✅ LocalStorage persistence
 ✅ Auto-advancing recording stages
 ✅ Working audio playback
