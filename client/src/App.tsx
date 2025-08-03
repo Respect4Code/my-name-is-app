@@ -56,10 +56,10 @@ function ParentGuide({ onClose }: { onClose: () => void }) {
           <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
             <h3 className="font-bold mb-2">Why I Made This App</h3>
             <p className="text-gray-600">
-              As a parent, I wanted my toddler to learn their name with our voices, not generic videos. 
-              Inspired by phonemes, I created this app to let parents record their voice and upload photos, 
-              helping toddlers connect letters to sounds in a fun, personal way! And there is nothing more 
-              personal than parents’ voices, after all they have been hearing them since they were in the womb.
+              As parents, we wanted our toddler to learn their own name with our voices sounding it out, not generic videos or cartoons. Inspired by phonics and early speech science, I created MyNameIsApp so parents can record their voices, helping toddlers connect the sounds in a fun, personal way. There is nothing more personal than parents'—after all, they have been hearing them since they were in the womb.
+            </p>
+            <p className="text-purple-600 text-sm font-medium">
+              💡 Pro tip upgrade - Recording together can be magical — you might catch them giggling, joining in with their own sounds like "buh" or "mmmm," or hearing their voice played back for the first time.
             </p>
           </div>
           
