@@ -202,20 +202,8 @@ const handleShare = async (platform: string) => {
         setIsExpanded(false);
 };
 
-// Try native sharing first on mobile
+// Always show custom sharing modal with close button
 const handleNativeShare = async () => {
-        if (navigator.share) {
-                try {
-                        await navigator.share({
-                                title: 'My Name Is - Phonics Learning App',
-                                text: shareText,
-                                url: shareUrl,
-                        });
-                        return;
-                } catch (err) {
-                        // User cancelled or share failed, fall through to custom sharing
-                }
-        }
         setIsExpanded(!isExpanded);
 };
 
