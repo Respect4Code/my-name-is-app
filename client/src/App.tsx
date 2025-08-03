@@ -330,13 +330,23 @@ function WelcomeScreen({ onNext, onGuide }: { onNext: (name: string) => void; on
         )}
         
         <button
-          onClick={() => name.length >= 1 && onNext(name.toUpperCase())}
+          onClick={() => {
+            if (name.length >= 1) {
+              onNext(name.toUpperCase());
+            }
+          }}
+          onTouchStart={() => {
+            if (name.length >= 1) {
+              onNext(name.toUpperCase());
+            }
+          }}
           disabled={name.length < 1}
-          className={`w-full py-4 rounded-xl font-bold text-xl transition-all flex items-center justify-center gap-2 ${
+          className={`w-full py-4 rounded-xl font-bold text-xl transition-all flex items-center justify-center gap-2 touch-manipulation ${
             name.length >= 1
-              ? 'bg-purple-500 text-white hover:bg-purple-600'
-              : 'bg-gray-300 text-gray-500'
+              ? 'bg-purple-500 text-white hover:bg-purple-600 active:bg-purple-700'
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
           }`}
+          style={{ WebkitTapHighlightColor: 'transparent' }}
         >
           Next <ChevronRight />
         </button>
