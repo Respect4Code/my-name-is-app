@@ -369,7 +369,7 @@ function RecordingScreen({
       instruction: `Record "What is your name?" - This is your KEY feature inspired by the train moment!`,
       icon: <BookOpen size={20} />
     },
-    ...letters.map((letter, i) => ({
+    ...letters.map((letter: string, i: number) => ({
       id: `letter-${i}`,
       label: `3️⃣ Letter Sound: "${letter}"`,
       key: `letter-${i}`,
