@@ -84,7 +84,7 @@ function WelcomeScreen({ onNext }: { onNext: (name: string) => void }) {
         />
         
         <button
-          onClick={() => name.length >= 2 && onNext(name)}
+          onClick={() => name.length >= 2 && onNext(name.toUpperCase())}
           disabled={name.length < 2}
           className={`w-full py-4 rounded-xl font-bold text-xl transition-all flex items-center justify-center gap-2 ${
             name.length >= 2
