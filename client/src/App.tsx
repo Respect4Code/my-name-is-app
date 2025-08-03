@@ -298,9 +298,6 @@ function WelcomeScreen({ onNext, onGuide }: { onNext: (name: string) => void; on
         </button>
         
         <h1 className="text-4xl font-bold text-gray-800 mb-2">My Name Is</h1>
-        <div className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded mb-2 inline-block">
-          ✅ SECURE VERSION - Mobile Issues Fixed
-        </div>
         <p className="text-gray-600 mb-2">Teach your child their name with YOUR voice</p>
         <p className="text-purple-600 text-sm font-medium mb-6">
           ⭐ Use YOUR voice for personal phonics—read our story!
@@ -330,23 +327,13 @@ function WelcomeScreen({ onNext, onGuide }: { onNext: (name: string) => void; on
         )}
         
         <button
-          onClick={() => {
-            if (name.length >= 1) {
-              onNext(name.toUpperCase());
-            }
-          }}
-          onTouchStart={() => {
-            if (name.length >= 1) {
-              onNext(name.toUpperCase());
-            }
-          }}
+          onClick={() => name.length >= 1 && onNext(name.toUpperCase())}
           disabled={name.length < 1}
-          className={`w-full py-4 rounded-xl font-bold text-xl transition-all flex items-center justify-center gap-2 touch-manipulation ${
+          className={`w-full py-4 rounded-xl font-bold text-xl transition-all flex items-center justify-center gap-2 ${
             name.length >= 1
-              ? 'bg-purple-500 text-white hover:bg-purple-600 active:bg-purple-700'
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              ? 'bg-purple-500 text-white hover:bg-purple-600'
+              : 'bg-gray-300 text-gray-500'
           }`}
-          style={{ WebkitTapHighlightColor: 'transparent' }}
         >
           Next <ChevronRight />
         </button>
