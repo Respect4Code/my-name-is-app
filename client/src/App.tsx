@@ -143,9 +143,8 @@ function WelcomeScreen({ onNext, onGuide }: { onNext: (name: string) => void; on
         
         {/* BoredMama Logo */}
         <div className="mb-6">
-          <div className="w-24 h-24 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex flex-col items-center justify-center shadow-lg">
-            <div className="text-4xl font-bold text-white">B</div>
-            <div className="text-red-500 text-2xl">👄</div>
+          <div className="bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg px-6 py-3 mx-auto w-fit shadow-lg">
+            <span className="text-white font-bold text-2xl">BoredMamaApp</span>
           </div>
         </div>
         
