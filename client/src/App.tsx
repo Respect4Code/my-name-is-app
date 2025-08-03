@@ -2,7 +2,7 @@ import React, { memo, useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import {
 Info, ChevronRight, ArrowLeft, Volume2, BookOpen, Moon, Music, Loader2, ArrowRight, ChevronLeft,
-CheckCircle, Mic, Square, RefreshCw, Play, Share2, HelpCircle
+CheckCircle, Mic, Square, RefreshCw, Play, Share2, HelpCircle, X
 } from 'lucide-react';
 import { openDB } from 'idb';
 // BoredMama colorful logo component that will definitely work
@@ -240,6 +240,13 @@ return (
 
                 {isExpanded && (
                         <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border-2 border-gray-100 p-4 z-50">
+                                <button 
+                                        onClick={() => setIsExpanded(false)}
+                                        className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                                        aria-label="Close sharing options"
+                                >
+                                        <X size={14} />
+                                </button>
                                 <div className="grid grid-cols-2 gap-3">
                                         <button
                                                 onClick={() => handleShare('whatsapp')}
