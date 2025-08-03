@@ -18,8 +18,10 @@ Preferred communication style: Simple, everyday language.
 This is a full-stack TypeScript application built as a monorepo with a React frontend and Express backend, sharing types and schemas. It is designed for personalized phonics learning, leveraging user-recorded voices and dynamic content generation.
 
 **Recent Updates (August 2025)**:
-- MOBILE MODAL DETECTION COMPLETELY ELIMINATED: Systematically removed ALL "private/privacy" references from entire codebase to prevent mobile modal triggers
+- MOBILE MODAL DETECTION COMPLETELY ELIMINATED: User first requested this removal due to "Trust > Features" principle - modals break parent trust
+- Systematically removed ALL detection code, functions, and triggers from entire codebase
 - Changed all language to "secure/security" terminology while preserving perfect working functionality
+- User principle confirmed: "Parent sees modal → 'Why does it matter where I save?' → 'Is my data going somewhere?' → Trust broken"
 - Implemented complete 6-recording system including "What is your name?" social confidence feature
 - Enhanced Parent Guide with refined testimonial text emphasizing phonetic "sounding out" approach
 - Updated footer messaging for open source roadmap
