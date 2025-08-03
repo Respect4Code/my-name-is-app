@@ -5,7 +5,7 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T)
     try {
       // Check if localStorage is available (fails in some browsers/environments)
       if (typeof window === 'undefined' || !window.localStorage) {
-        console.warn('localStorage not available, using initial value');
+        // localStorage not available - silent fallback to initial value
         return initialValue;
       }
       
@@ -25,7 +25,7 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T)
       if (typeof window !== 'undefined' && window.localStorage) {
         window.localStorage.setItem(key, JSON.stringify(value));
       } else {
-        console.warn('localStorage not available for writing');
+        // localStorage not available - silent fallback
       }
     } catch (error) {
       console.error(`Error setting localStorage key "${key}":`, error);

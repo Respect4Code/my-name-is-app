@@ -22,6 +22,8 @@ This is a full-stack TypeScript application built as a monorepo with a React fro
 - Enhanced Parent Guide with refined testimonial text emphasizing phonetic "sounding out" approach
 - Updated footer messaging for open source roadmap
 - Removed private browsing detection to maintain user trust and simplicity
+- Eliminated all browser capability warnings and alerts that could appear on mobile devices
+- Replaced intrusive alerts with silent fallbacks for better user experience
 
 **Frontend Architecture:**
 - **Framework**: React 18 with TypeScript

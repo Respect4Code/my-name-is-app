@@ -59,7 +59,7 @@ export default function RecordingSetup({ name, onRecordingsComplete, onCancel }:
       setIsRecording(true);
     } catch (error) {
       console.error('Error starting recording:', error);
-      alert('Unable to access microphone. Please check permissions.');
+      // Silent handling - user can retry if needed
     }
   };
 
