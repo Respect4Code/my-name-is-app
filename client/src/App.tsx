@@ -141,6 +141,14 @@ function WelcomeScreen({ onNext, onGuide }: { onNext: (name: string) => void; on
           <Info size={20} />
         </button>
         
+        {/* BoredMama Logo */}
+        <div className="mb-6">
+          <div className="w-24 h-24 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex flex-col items-center justify-center shadow-lg">
+            <div className="text-4xl font-bold text-white">B</div>
+            <div className="text-red-500 text-2xl">👄</div>
+          </div>
+        </div>
+        
         <h1 className="text-4xl font-bold text-gray-800 mb-2">My Name Is</h1>
         <p className="text-gray-600 mb-2">Teach your child their name with YOUR voice</p>
         <p className="text-purple-600 text-sm font-medium mb-6">
@@ -194,6 +202,10 @@ function WelcomeScreen({ onNext, onGuide }: { onNext: (name: string) => void; on
           Created with ❤️ by BoredMamaApp<br/>
           <span className="text-green-600 font-medium">✓ Auto-saves your work</span>
         </p>
+        
+        <footer className="mt-6 text-center text-xs text-gray-400">
+          <p>Revolutionising motherhood, one sound at a time</p>
+        </footer>
       </div>
     </div>
   );
