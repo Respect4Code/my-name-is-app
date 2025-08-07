@@ -66,6 +66,7 @@ Studies show children process speech more effectively when it comes from a famil
 * “My son lit up when he heard ‘Clive, let’s go for a walk!’”
 * “Even my mum could set this up — and she’s never used an app before. But she knows how to use her own voice.”
 * [@AltcoinTatsu](https://x.com/AltcoinTatsu): *“Love that it uses familiar voices to help kids learn, such a smart feature.”*
+* See more: https://mynameisapp.co.uk/community
 
 ## 📣 Messaging Angles
 
