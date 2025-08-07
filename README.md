@@ -99,8 +99,8 @@ You can set it up during nap time for a surprise — or turn it into a fun activ
 - 100% parent-controlled
 
 ## 📢 Community Feedback
-See what real families and supporters are saying in our [Community Feedback](./COMMUNITY_FEEDBACK.md) page.
----
+See what real families and supporters are saying in our  
+[🌍 Community Feedback](./COMMUNITY_FEEDBACK.md) page.
 
 ## 🚀 Getting Started (for Developers)
 
