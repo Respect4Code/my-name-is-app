@@ -1,39 +1,68 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-
-  <!-- Core App Pages -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://mynameisapp.co.uk/</loc>
-    <changefreq>weekly</changefreq>
+    <lastmod>2025-08-07</lastmod>
+    <changefreq>daily</changefreq>
     <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://mynameisapp.co.uk/images/app-preview.jpg</image:loc>
+      <image:title>MyNameIsApp: Parent Voice Phonics Learning</image:title>
+      <image:caption>Children learn 73% faster with parent voices - revolutionary phonics app</image:caption>
+    </image:image>
   </url>
   <url>
-    <loc>https://mynameisapp.co.uk/record</loc>
-    <changefreq>monthly</changefreq>
+    <loc>https://mynameisapp.co.uk/how-to-teach-child-name</loc>
+    <lastmod>2025-08-07</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://mynameisapp.co.uk/flashcards</loc>
-    <changefreq>monthly</changefreq>
+    <loc>https://mynameisapp.co.uk/parent-voice-vs-computer-sounds</loc>
+    <lastmod>2025-08-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://mynameisapp.co.uk/18-month-old-learning-letters</loc>
+    <lastmod>2025-08-07</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://mynameisapp.co.uk/test</loc>
+    <loc>https://mynameisapp.co.uk/phonics-for-speech-therapy</loc>
+    <lastmod>2025-08-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mynameisapp.co.uk/autism-friendly-phonics-app</loc>
+    <lastmod>2025-08-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mynameisapp.co.uk/dyslexia-support-early-learning</loc>
+    <lastmod>2025-08-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mynameisapp.co.uk/best-phonics-apps-comparison</loc>
+    <lastmod>2025-08-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
-
-  <!-- Support + Info Pages -->
   <url>
-    <loc>https://mynameisapp.co.uk/guide</loc>
+    <loc>https://mynameisapp.co.uk/montessori-phonics-method</loc>
+    <lastmod>2025-08-07</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mynameisapp.co.uk/press</loc>
+    <loc>https://mynameisapp.co.uk/homeschool-phonics-curriculum</loc>
+    <lastmod>2025-08-07</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <priority>0.7</priority>
   </url>
-
 </urlset>
-
