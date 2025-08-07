@@ -102,6 +102,10 @@ You can set it up during nap time for a surprise — or turn it into a fun activ
 See what real families and supporters are saying in our  
 [🌍 Community Feedback](./COMMUNITY_FEEDBACK.md) page.
 
+## 🗞️ Press & Media Kit
+For journalists, educators, and partners:  
+[📄 Press Kit](./PRESS_KIT.md)
+
 ## 🚀 Getting Started (for Developers)
 
 ```bash
