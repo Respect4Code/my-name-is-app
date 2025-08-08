@@ -19,7 +19,10 @@ Because the voice they hear most clearly… is yours.
 
 ---
 
-![Screenshot of MyNameIsApp showing name flashcards](docs/screenshot.png)
+<picture>
+  <source media="(max-width: 600px)" srcset="docs/screenshot-mobile.png">
+  <img src="docs/screenshot.png" alt="Screenshot of MyNameIsApp showing name flashcards">
+</picture>
 
 # MyNameIsApp – Parent Voice Phonics Platform
 
@@ -129,6 +132,8 @@ See what real families and supporters are saying in our
 For journalists, educators, and partners:  
 [📄 Press Kit](./PRESS_KIT.md)
 
+---
+
 ## 🚀 Getting Started (for Developers)
 
 ```bash
@@ -143,3 +148,4 @@ npm run dev
 
 # Build for production
 npm run build
+
