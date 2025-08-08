@@ -89,6 +89,14 @@ Tap the colourful flashcards to hear your voice. Watch their face light up!
 
 ---
 
+### See it in two moments
+
+| **Record together** | **Play together** |
+|---|---|
+| ![Parent recording voice while child is nearby](docs/recording-together.png) | ![Parent and child using flashcards together](docs/playing-together.png) |
+
+*Left: parent records their voice (setup). Right: parent and child use the flashcards (learning).*
+
 ### ⚠️ Important Notes
 
 - ✅ All recordings are stored privately and offline  
