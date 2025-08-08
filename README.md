@@ -91,11 +91,22 @@ Tap the colourful flashcards to hear your voice. Watch their face light up!
 
 ### See it in two moments
 
-| **Record together** | **Play together** |
-|---|---|
-| ![Parent recording voice while child is nearby](docs/recording-together.png) | ![Parent and child using flashcards together](docs/playing-together.png) |
-
-*Left: parent records their voice (setup). Right: parent and child use the flashcards (learning).*
+<table>
+  <tr>
+    <th align="center">Record together</th>
+    <th align="center">Play together</th>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="record-together.png" alt="Parent recording their voice in the app" width="420"><br/>
+      <sub>Parent records their voice (setup)</sub>
+    </td>
+    <td align="center">
+      <img src="play-together.png" alt="Parent and child using flashcards together" width="420"><br/>
+      <sub>Parent and child use the flashcards (learning)</sub>
+    </td>
+  </tr>
+</table>
 
 ### ⚠️ Important Notes
 
@@ -141,6 +152,13 @@ For journalists, educators, and partners:
 [📄 Press Kit](./PRESS_KIT.md)
 
 ---
+
+## 📚 Docs & Media
+
+- 📖 **Quick Parent Guide** → [docs/guide.md](docs/guide.md)
+- 🗞️ **Press & Media Kit** → [docs/press.md](docs/press.md)
+- 🎥 **Origin Story** → [docs/ORIGIN_STORY.md](docs/ORIGIN_STORY.md)
+
 
 ## 🚀 Getting Started (for Developers)
 
