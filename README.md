@@ -1,3 +1,26 @@
+# MyNameIsApp 🇬🇧  
+**Parent-voice phonics app helping toddlers learn to say their name — privacy-first & works offline.**  
+
+[![Live site](https://img.shields.io/badge/Try%20it%20now-mynameisapp.co.uk-2ea44f?style=for-the-badge)](https://mynameisapp.co.uk)  
+[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)  
+[![Made with ❤️ in the UK](https://img.shields.io/badge/Made%20with%20%E2%9D%A4%EF%B8%8F-UK-red)](#)  
+
+---
+
+**MyNameIsApp** lets parents record their own voice pronouncing their child’s name — then uses phonics-based flashcards to help toddlers recognise and say it.  
+Because the voice they hear most clearly… is yours.  
+
+- 🎯 **For toddlers** (ages 1–4)  
+- 🗣 **Five recording prompts** including “What is your name?”  
+- 📴 **Offline & privacy-first** (no cloud storage)  
+- 🦻 **Deaf-friendly visual mode** for letter sounds  
+
+[**▶ Try the app now**](https://mynameisapp.co.uk)  
+
+---
+
+![Screenshot of MyNameIsApp showing name flashcards](docs/screenshot.png)
+
 # MyNameIsApp – Parent Voice Phonics Platform
 
 Created with ❤️ by **BoredMamaApp**
