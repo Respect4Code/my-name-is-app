@@ -1,3 +1,31 @@
+# MyNameIsApp 🇬🇧  
+**Parent-voice phonics app helping toddlers learn to say their name — privacy-first & works offline.**
+
+[![Live site](https://img.shields.io/badge/Try%20it%20now-mynameisapp.co.uk-2ea44f?style=for-the-badge)](https://mynameisapp.co.uk)  
+[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)  
+[![Made with ❤️ in the UK](https://img.shields.io/badge/Made%20with%20%E2%9D%A4%EF%B8%8F-UK-red)](#)
+
+---
+
+**MyNameIsApp** lets parents record their own voice pronouncing their child’s name — then uses phonics-based flashcards to help toddlers recognise and say it.  
+Because the voice they hear most clearly… is yours.
+
+- 🎯 **For toddlers** (ages 1–4)  
+- 🗣 **Five recording prompts** including “What is your name?”  
+- 📴 **Offline & privacy-first** (no cloud storage)  
+- 🦻 **Deaf-friendly visual mode** for letter sounds
+
+[**▶ Try the app now**](https://mynameisapp.co.uk)
+
+---
+
+<picture>
+  <source media="(max-width: 600px)" srcset="docs/screenshot-mobile.png">
+  <img src="docs/screenshot.png" alt="Screenshot of MyNameIsApp showing name flashcards">
+</picture>
+
+---
+
 # MyNameIsApp – Parent Voice Phonics Platform
 
 Created with ❤️ by **BoredMamaApp**
@@ -14,10 +42,10 @@ Unlike generic phonics apps with robotic voices, *MyNameIsApp* lets **you** reco
 
 ## ✨ Core Features
 
-- 🎤 **Parent Voice Recording** – Record each sound in your child’s name
-- 🎯 **Name-Focused Learning** – Only shows the letters in their name
-- 💾 **100% Private** – All recordings stay on your device
-- 📱 **Works Everywhere** – Phone, tablet, computer – even offline
+- 🎤 **Parent Voice Recording** – Record each sound in your child’s name  
+- 🎯 **Name-Focused Learning** – Only shows the letters in their name  
+- 💾 **100% Private** – All recordings stay on your device  
+- 📱 **Works Everywhere** – Phone, tablet, computer – even offline  
 - 🔒 **No Account Needed** – Just open and start recording
 
 ---
@@ -25,7 +53,6 @@ Unlike generic phonics apps with robotic voices, *MyNameIsApp* lets **you** reco
 ## 👨‍👩‍👧 Quick Parent Guide
 
 ### 💡 Why I Made This App
-
 We wanted our toddler to learn their name with **our** voices, not from cartoons or strangers. Inspired by phonics and early speech science, *MyNameIsApp* helps toddlers connect sounds to their name in a personal, joyful way.
 
 There’s nothing more powerful than hearing your name spoken with love — and babies have heard their parent’s voices since the womb.
@@ -63,18 +90,33 @@ Tap the colourful flashcards to hear your voice. Watch their face light up!
 
 ---
 
+### See it in two moments
+
+<table>
+  <tr>
+    <th align="center">Record together</th>
+    <th align="center">Play together</th>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="docs/record-together.png" alt="Parent recording their voice in the app" width="420"><br/>
+      <sub>Parent records their voice (setup)</sub>
+    </td>
+    <td align="center">
+      <img src="docs/play-together.png" alt="Parent and child using flashcards together" width="420"><br/>
+      <sub>Parent and child use the flashcards (learning)</sub>
+    </td>
+  </tr>
+</table>
+
+---
+
 ### ⚠️ Important Notes
 
 - ✅ All recordings are stored privately and offline  
 - ❌ Avoid browser back button — use in-app navigation  
 - ⛔ Going back will clear recordings (with a warning)  
 - 📵 If sound doesn’t play: check silent mode, browser settings, and tap-to-play rules
-
----
-
-### 🎯 Pro Tip
-
-You can set it up during nap time for a surprise — or turn it into a fun activity together. Many toddlers will start copying your sounds, giggling at playback, or hearing their name said with warmth for the first time.
 
 ---
 
@@ -97,6 +139,14 @@ You can set it up during nap time for a surprise — or turn it into a fun activ
 - No server uploads — everything is local  
 - Works offline after first load  
 - 100% parent-controlled
+
+---
+
+## 📚 Docs & Media
+
+- 📖 **Quick Parent Guide** → [docs/guide.md](docs/guide.md)  
+- 🗞️ **Press & Media Kit** → [docs/press.md](docs/press.md)  
+- 🎥 **Origin Story** → [docs/ORIGIN_STORY.md](docs/ORIGIN_STORY.md)
 
 ---
 

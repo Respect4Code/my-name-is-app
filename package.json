@@ -1,8 +1,15 @@
 {
-  "name": "rest-express",
+  "name": "my-name-is-app",
   "version": "1.0.0",
   "type": "module",
   "license": "MIT",
+  "description": "Parent-voice phonics app helping toddlers learn their name (privacy-first, offline).",
+  "keywords": ["phonics", "toddlers", "early learning", "parent voice", "offline", "privacy"],
+  "homepage": "https://mynameisapp.co.uk",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Respect4Code/my-name-is-app.git"
+  },
   "scripts": {
     "dev": "NODE_ENV=development tsx server/index.ts",
     "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
@@ -103,8 +110,6 @@
   "optionalDependencies": {
     "bufferutil": "^4.0.8"
   },
-  "description": "Created with ❤️ by **BoredMamaApp**",
   "main": "postcss.config.js",
-  "keywords": [],
-  "author": ""
+  "author": "@_boredmama"
 }

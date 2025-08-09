@@ -1,39 +1,88 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover"
-    />
-    <title>MyNameIsApp — Learn Your Name</title>
-    <meta
-      name="description"
-      content="Teach your child to recognise and say their name using your voice. Private, offline-first phonics practice."
-    />
-    <meta name="theme-color" content="#8B5CF6" />
-    <link rel="manifest" href="/manifest.json" />
-    <link rel="canonical" href="https://mynameisapp.co.uk/" />
-    <!-- Optional: remove if your build already outputs CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      /* Prevent iOS zoom on inputs */
-      input,
-      button {
-        touch-action: manipulation;
-      }
-      /* Make sure the root exists for your app mount */
-      html,
-      body,
-      #root {
-        height: 100%;
-        margin: 0;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="root"></div>
-    <!-- Your bundled app script mounts to #root -->
-    <!-- <script type="module" src="/assets/index.js"></script> -->
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>MyNameIsApp – Learn Your Name, With Love</title>
+
+  <!-- SEO + Narrative Metadata -->
+  <meta name="author" content="BoredMama.xyz Team, led by parent-founder in the UK" />
+  <meta name="copyright" content="© 2025 MyNameIsApp. Creative Commons BY-NC-SA 4.0" />
+  <meta name="description" content="The original Social Readiness & Confidence Platform – built with a parent’s voice to teach their child their name. Originated in the UK." />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="MyNameIsApp – Parent Voice Powered Learning" />
+  <meta property="og:description" content="Built from a real UK train moment. Now a global phonics tool for 500M+ English learners. Creative Commons." />
+  <meta property="og:image" content="https://mynameisapp.co.uk/assets/og-cover.png" />
+  <meta property="og:url" content="https://mynameisapp.co.uk" />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="en_GB" />
+  <meta property="og:locale:alternate" content="en_PH" />
+  <meta property="og:locale:alternate" content="en_IN" />
+  <meta property="og:locale:alternate" content="en_NG" />
+  <meta property="og:locale:alternate" content="en_PK" />
+
+  <!-- Canonical + Hidden Remix Anchors -->
+  <link rel="canonical" href="https://mynameisapp.co.uk" />
+  <a style="display:none;" href="https://mynameisapp.co.uk">Original English phonics app: MyNameIsApp</a>
+  <a style="display:none;" href="https://boredmama.xyz">Parent-led AI project by BoredMama</a>
+
+  <!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="MyNameIsApp – Powered by Parent Voice" />
+<meta name="twitter:description" content="A child said their name on a UK train. That moment became this app. Built with ChatGPT, Claude, Grok and Replit." />
+<meta name="twitter:image" content="https://mynameisapp.co.uk/assets/twitter-card.png" />
+<meta name="twitter:site" content="@_boredmama" />
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Schema JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "MyNameIsApp",
+    "operatingSystem": "Web",
+    "applicationCategory": "EducationalApplication",
+    "author": {
+      "@type": "Organization",
+      "name": "BoredMama.xyz",
+      "url": "https://boredmama.xyz"
+    },
+    "datePublished": "2025-08-02",
+    "license": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+    "description": "The original Social Readiness & Confidence Platform. A phonics app built from a real UK train moment where a toddler spoke their name.",
+    "inLanguage": "en",
+    "educationalUse": "teaching",
+    "audience": {
+      "@type": "EducationalAudience",
+      "educationalRole": "parent"
+    }
+  }
+  </script>
+
+  <style>
+    input, button { touch-action: manipulation; }
+  </style>
+</head>
+
+<body>
+  <div id="root"></div>
+
+  <footer class="text-center p-4 text-sm text-gray-500">
+  <p>
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="underline hover:text-black" target="_blank">
+      CC BY-NC-SA 4.0
+    </a>
+  </p>
+  <p class="mt-2">&copy; 2025 MyNameIsApp — A Social Readiness Platform</p>
+</footer>
+
+</body>
+</html>
+
 </html>
