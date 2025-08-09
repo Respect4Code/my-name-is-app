@@ -1,5 +1,5 @@
 {
-  "name": "rest-express",
+  "name": "my-name-is-app",
   "version": "1.0.0",
   "type": "module",
   "license": "MIT",
@@ -103,8 +103,8 @@
   "optionalDependencies": {
     "bufferutil": "^4.0.8"
   },
-  "description": "Created with ❤️ by **BoredMamaApp**",
+  "description": "Parent-voice phonics app helping toddlers learn their name (privacy-f,
   "main": "postcss.config.js",
-  "keywords": [],
-  "author": ""
+  "keywords":  ["phonics","toddlers","early learning","parent voice","offline","privacy"]
+  "author": "@_boredmama"
 }
