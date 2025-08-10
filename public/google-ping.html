@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Google Sitemap Ping</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <h1>Sitemap Submitted to Google</h1>
+    <p>Your sitemap has been pinged to Google for faster indexing.</p>
+    <script>
+        // Auto-ping Google with sitemap
+        fetch('https://www.google.com/ping?sitemap=https://mynameisapp.co.uk/sitemap.xml')
+            .then(() => console.log('Sitemap pinged to Google'))
+            .catch(err => console.log('Ping failed:', err));
+    </script>
+</body>
+</html>
