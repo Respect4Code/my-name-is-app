@@ -1,11 +1,11 @@
 # Cloudflare Pages redirects and rewrites
 
-# Ensure sitemap and robots are served correctly
-/sitemap.xml /sitemap.xml 200
-/robots.txt /robots.txt 200
+# Serve sitemap and robots with correct headers
+/sitemap.xml /sitemap.xml 200!
+/robots.txt /robots.txt 200!
 
-# Redirect www to non-www
+# Redirect www to non-www  
 https://www.mynameisapp.co.uk/* https://mynameisapp.co.uk/:splat 301!
 
-# SPA fallback
+# SPA fallback - must be last
 /* /index.html 200
