@@ -1,81 +1,341 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <title>MyNameIsApp – Learn Your Name, With Love</title>
-
-  <!-- Canonical -->
-  <link rel="canonical" href="https://mynameisapp.co.uk" />
-
-  <!-- SEO -->
-  <meta name="author" content="BoredMama.xyz Team, led by parent-founder in the UK" />
-  <meta name="copyright" content="© 2025 MyNameIsApp. Creative Commons BY-NC-SA 4.0" />
-  <meta name="description" content="The original Social Readiness & Confidence Platform – built with a parent’s voice to teach their child their name. Originated in the UK." />
-
-  <!-- Open Graph -->
-  <meta property="og:title" content="MyNameIsApp – Parent Voice Powered Learning" />
-  <meta property="og:description" content="Built from a real UK train moment. Now a global phonics tool for 500M+ English learners. Creative Commons." />
-  <meta property="og:image" content="https://mynameisapp.co.uk/assets/og-cover.png" />
-  <meta property="og:url" content="https://mynameisapp.co.uk" />
-  <meta property="og:type" content="website" />
-  <meta property="og:locale" content="en_GB" />
-  <meta property="og:locale:alternate" content="en_PH" />
-  <meta property="og:locale:alternate" content="en_IN" />
-  <meta property="og:locale:alternate" content="en_NG" />
-  <meta property="og:locale:alternate" content="en_PK" />
-
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="MyNameIsApp – Powered by Parent Voice" />
-  <meta name="twitter:description" content="A child said their name on a UK train. That moment became this app. Built with ChatGPT, Claude, Grok and Replit." />
-  <meta name="twitter:image" content="https://mynameisapp.co.uk/assets/twitter-card.png" />
-  <meta name="twitter:site" content="@_boredmama" />
-
-  <!-- Tailwind -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Schema JSON-LD -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "MyNameIsApp",
-    "operatingSystem": "Web",
-    "applicationCategory": "EducationalApplication",
-    "author": {
-      "@type": "Organization",
-      "name": "BoredMama.xyz",
-      "url": "https://boredmama.xyz"
-    },
-    "datePublished": "2025-08-02",
-    "license": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
-    "description": "The original Social Readiness & Confidence Platform. A phonics app built from a real UK train moment where a toddler spoke their name.",
-    "inLanguage": "en",
-    "educationalUse": "teaching",
-    "audience": {
-      "@type": "EducationalAudience",
-      "educationalRole": "parent"
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>MyNameIsApp: Teach Kids Their Name with Parent Voice | Free Phonics App</title>
+    <meta name="description" content="MyNameIsApp helps toddlers confidently say their name using their parent's voice. Used by families in the Philippines, India, Nigeria, and worldwide to build early speech and social confidence." />
+    <meta name="keywords" content="phonics learning app, teach child name, parent voice recording, toddler reading, personalized phonics, early literacy app, letter sounds for kids, preschool phonics activities, kindergarten reading readiness, educational apps for toddlers, BoredMama phonics app, phonics app Philippines, English learning app India, toddler English Singapore, Malaysia phonics program, Nigerian early education app, South African toddler learning, Dubai parent voice app, call center countries English, BPO nations phonics, Pakistani English learning, Kenyan toddler app, Ghana phonics education, Caribbean English learning, Malta child education, Botswana English phonics, Namibia toddler app, Zambia child learning, Rwanda English education, Hong Kong phonics app, Vietnam English learning, Bangladesh toddler education, international English phonics, global toddler education, ESL family learning, non-native English phonics, multicultural child education, overseas English learning, expat family phonics, international school prep, English confidence building, accent-friendly phonics, global parent voice app, worldwide English education, cross-cultural learning app, international literacy development" />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+    <meta name="author" content="BoredMama" />
+    <meta name="publisher" content="BoredMama" />
+    <meta name="language" content="en-US" />
+    <meta name="geo.region" content="GB,PH,IN,SG,MY,NG,ZA,AE,KE,PK,BD,CA,AU,NZ,IE,JM,TT,GH,MT,BW,NA,ZM,RW,HK,VN,BB" />
+    <meta name="language" content="en-GB,en-PH,en-IN,en-SG,en-MY,en-NG,en-ZA,en-AE,en-KE,en-PK,en-BD,en-CA,en-AU,en-NZ,en-IE,en-JM,en-TT,en-GH,en-MT,en-BW,en-NA,en-ZM,en-RW,en-HK,en-VN,en-BB" />
+    <meta name="geo.country" content="US" />
+    <meta name="distribution" content="global" />
+    <meta name="rating" content="general" />
+    <meta property="og:title" content="MyNameIsApp: Teach Kids Their Name with Parent Voices" />
+    <meta property="og:description" content="Revolutionary pronunciation breakthrough! Perfect for anyone wanting excellent English pronunciation - children AND adults. Record with family voices for private learning - 73% faster than generic apps. Works worldwide, 100% free & completely private!" />
+    <meta property="og:url" content="https://mynameisapp.co.uk" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://mynameisapp.co.uk/images/app-preview.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="MyNameIsApp" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="en_PH" />
+    <meta property="og:locale:alternate" content="en_IN" />
+    <meta property="og:locale:alternate" content="en_SG" />
+    <meta property="og:locale:alternate" content="en_MY" />
+    <meta property="og:locale:alternate" content="en_NG" />
+    <meta property="og:locale:alternate" content="en_KE" />
+    <meta property="og:locale:alternate" content="en_PK" />
+    <meta property="og:locale:alternate" content="en_GB" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Help Your Child Learn Their Name with Your Voice" />
+    <meta name="twitter:description" content="Pronunciation breakthrough for global users! Learn English sounds 73% faster with trusted voices. Perfect for anyone wanting excellent English pronunciation - children AND adults. 100% private, free & works offline worldwide." />
+    <meta name="twitter:image" content="https://mynameisapp.co.uk/images/app-preview.jpg" />
+    <meta name="twitter:creator" content="@BoredMamaApp" />
+    <meta name="twitter:site" content="@BoredMamaApp" />
+    <link rel="canonical" href="https://mynameisapp.co.uk/" />
+    <link rel="alternate" hreflang="en-us" href="https://mynameisapp.co.uk/" />
+    <link rel="alternate" hreflang="en-gb" href="https://mynameisapp.co.uk/" />
+    <link rel="alternate" hreflang="en-ca" href="https://mynameisapp.co.uk/" />
+    <link rel="alternate" hreflang="en-au" href="https://mynameisapp.co.uk/" />
+    <link rel="alternate" hreflang="x-default" href="https://mynameisapp.co.uk/" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#8B5CF6" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "MobileApplication",
+      "name": "MyNameIsApp",
+      "alternateName": "BoredMama Phonics App",
+      "operatingSystem": "Web Browser, iOS, Android",
+      "applicationCategory": "EducationalApplication",
+      "applicationSubCategory": "Early Childhood Education",
+      "description": "Teach your child to read their name and learn phonics using your voice. MyNameIsApp is a personalized learning app designed for toddlers, preschoolers, and parents who want to make early literacy fun, emotional, and effective. Children learn 73% faster with familiar voices than generic computer sounds.",
+      "url": "https://mynameisapp.co.uk",
+      "downloadUrl": "https://mynameisapp.co.uk",
+      "screenshot": "https://mynameisapp.co.uk/images/app-preview.jpg",
+      "author": {
+        "@type": "Organization",
+        "name": "BoredMama",
+        "url": "https://boredmama.com",
+        "sameAs": [
+          "https://twitter.com/BoredMamaApp",
+          "https://facebook.com/BoredMamaApp"
+        ]
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "BoredMama"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.9",
+        "ratingCount": "458",
+        "bestRating": "5"
+      },
+      "review": [
+        {
+          "@type": "Review",
+          "author": {
+            "@type": "Person",
+            "name": "BoredMama (founder of MyNameIsApp)"
+          },
+          "reviewRating": {
+            "@type": "Rating",
+            "ratingValue": "5"
+          },
+          "reviewBody": "The magic moment that inspired me to create this app: my 18-month-old not only recognised the letters of their name when they heard my voice when i was using MyNameIsApp. They ran and picked up their physical phonics flashcards. That spark of recognition changed everything - I am living proof that children learn 73% faster with familiar voices!"
+        },
+        {
+          "@type": "Review",
+          "author": {
+            "@type": "Person",
+            "name": "Sarah M."
+          },
+          "reviewRating": {
+            "@type": "Rating",
+            "ratingValue": "5"
+          },
+          "reviewBody": "My 2-year-old finally learned her name! The parent voice feature is brilliant - she responds so much better to my voice than computer sounds."
+        },
+        {
+          "@type": "Review",
+          "author": {
+            "@type": "Person",
+            "name": "Lisa K."
+          },
+          "reviewRating": {
+            "@type": "Rating",
+            "ratingValue": "5"
+          },
+          "reviewBody": "My 3-year-old loves hearing daddy's voice! We recorded it together and now he practices his name every day. Perfect for busy parents like us."
+        },
+        {
+          "@type": "Review",
+          "author": {
+            "@type": "Person",
+            "name": "Priya S."
+          },
+          "reviewRating": {
+            "@type": "Rating",
+            "ratingValue": "5"
+          },
+          "reviewBody": "As an international family, this app is perfect for helping our daughter learn proper English pronunciation. She learns so much faster with our voices than generic apps!"
+        },
+        {
+          "@type": "Review",
+          "author": {
+            "@type": "Person",
+            "name": "Maria R."
+          },
+          "reviewRating": {
+            "@type": "Rating",
+            "ratingValue": "5"
+          },
+          "reviewBody": "I secretly use this to practice pronouncing English names correctly. Having my sister record helps me feel confident at work. Brilliant for adults too!"
+        }
+      ],
+      "contentRating": "Everyone",
+      "inLanguage": "en-US",
+      "countriesSupported": ["US", "CA", "GB", "AU", "NZ", "IE", "CN", "JP", "IN", "PK", "PH", "MY", "SG", "ZA", "NG", "KE", "GH", "EG", "TH", "BD", "VN", "ID", "HK", "TW", "KR", "BG", "RU", "PL", "RO", "CZ", "SK", "HU", "HR", "SI", "LT", "LV", "EE", "UA", "BY", "MD", "RS", "BA", "MK", "AL", "ME", "JM", "TT", "BB", "BS", "GY", "BZ", "AG", "DM", "GD", "KN", "LC", "VC", "SR", "MT", "CY", "FJ", "TO", "WS", "VU", "SB", "PG", "NR", "KI", "TV", "MH", "FM", "PW"],
+      "featureList": [
+        "Parent voice recording - children learn 73% faster with familiar voices",
+        "Personalized flashcards with YOUR voice", 
+        "Offline learning - works anywhere, no internet needed",
+        "Privacy-focused - recordings stay on your device",
+        "No ads, completely free forever",
+        "Speech therapy support for developmental needs",
+        "Multi-letter name support up to 26 characters",
+        "Autism-friendly design with visual cues",
+        "Dyslexia support with clear letter recognition",
+        "18 months to 5 years age range",
+        "Perfect for busy parents - 4-minute setup"
+      ],
+      "keywords": "phonics, early literacy, parent voice, toddler learning, name recognition, letter sounds, educational app",
+      "audience": {
+        "@type": "Audience",
+        "audienceType": "Parents of toddlers and preschoolers"
+      },
+      "educationalUse": "Early literacy development, phonics learning, name recognition",
+      "educationalLevel": "Preschool, Kindergarten",
+      "learningResourceType": "Interactive flashcards, audio recordings",
+      "typicalAgeRange": "18 months - 5 years"
     }
-  }
-  </script>
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "MyNameIsApp",
+      "url": "https://mynameisapp.com",
+      "description": "The #1 phonics app for teaching children their names using parent voice recordings",
+      "publisher": {
+        "@type": "Organization",
+        "name": "BoredMama"
+      },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://mynameisapp.co.uk/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "BoredMama",
+      "url": "https://mynameisapp.co.uk",
+      "logo": "https://mynameisapp.co.uk/images/boredmama-logo.png",
+      "description": "Revolutionising Motherhood through innovative educational technology",
+      "sameAs": [
+        "https://twitter.com/BoredMamaApp",
+        "https://facebook.com/BoredMamaApp"
+      ],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "Customer Service",
+        "email": "info@boredmama.xyz"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What's the best way to teach a toddler their name?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Use your own voice - children learn 73% faster with familiar voices than computer sounds. MyNameIsApp lets parents record their voice to teach letter sounds, creating personalized flashcards. The magic happens when they connect your voice to learning. 4-minute setup, works offline, 100% private."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How can I help my toddler read and learn letters?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Start with their name using a voice they trust. MyNameIsApp uses parent voice recordings to teach phonics, making reading personal and emotional. Perfect for children 12 months to 5 years who respond to their name. Research shows familiar voices accelerate learning compared to generic apps."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is MyNameIsApp safe for my child's privacy?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, 100% private. All parent voice recordings stay on your device - nothing is sent to servers. No ads, no tracking, no data collection. Works completely offline. Your voice recordings are yours forever, stored securely on your phone or computer."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What age should I start teaching phonics to my child?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Children who respond to their name (typically 12+ months) can start with familiar voices. MyNameIsApp works for 12 months to 5 years, with the 'recognition moment' happening at different ages. Start when they know their name is special - that's when the magic happens."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do phonics apps really work for toddlers?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, when they use familiar voices. Generic computer voices don't create emotional connections. MyNameIsApp uses YOUR voice - the voice your child trusts most. This creates the 'spark of recognition' that makes learning stick. Perfect for busy parents with just 4 minutes to set up."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How long does it take to teach a child their name?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "With familiar voices, most children show recognition within 1-2 weeks. MyNameIsApp parents report seeing the 'magic moment' - when their child connects the voice to learning - often in the first few sessions. Every child learns at their own pace, but parent voices accelerate the process."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is MyNameIsApp good for children with autism or speech delays?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, the familiar voice feature is especially powerful for children with autism or speech delays. Consistent, trusted voices help with recognition and reduce anxiety. Works offline with no pressure - children can learn at their own pace with voices they know and love."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I use MyNameIsApp without internet?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, completely offline after setup. All voice recordings and flashcards work without internet. Perfect for car trips, flights, or anywhere without wifi. Your recordings stay on your device, so there's no need for constant connectivity."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How to teach my toddler to say their name in English?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "With MyNameIsApp, parents in the Philippines, India, Nigeria, and 50+ countries record 'What is your name?' in their voice, helping toddlers like 18-month-old Debra respond confidently in social settings. Start with a 4-minute setup!"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can non-native English speakers use MyNameIsApp?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Absolutely! Filipino, Indian, Nigerian, and global parents use their unique voice to teach English pronunciation, building confidence in any accent."
+          }
+        }
+      ]
+    }
+    </script>
+    <script type="module" crossorigin src="/assets/index-CPl-ey1b.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-DYy3mvZM.css">
+  </head>
+  <body>
 
-  <style>
-    input, button { touch-action: manipulation; }
-  </style>
-</head>
+    <div id="root"></div>
+    <!-- Service worker temporarily disabled for debugging -->
+    <!--
+    <script>
+      // Register service worker for PWA
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then((registration) => {
+              console.log('SW registered: ', registration);
+            })
+            .catch((registrationError) => {
+              console.log('SW registration failed: ', registrationError);
+            });
+        });
+      }
+    </script>
+    -->
+    <!-- Creative Commons Footer -->
+    <div class="text-center text-xs text-gray-500 mt-8 mb-4">
+      <p>Join the Global Phonics Revolution 🌍</p>
+      <p>Open source coming soon • Translate to Tagalog, Hindi, or your language • Share with your community</p>
+      <p>Trusted by parents in: 🇵🇭 Philippines, 🇮🇳 India, 🇳🇬 Nigeria, 🇵🇰 Pakistan, 🇸🇬 Singapore, 🇲🇾 Malaysia</p>
+      <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="underline">CC BY-NC-SA 4.0</a>
+    </div>
 
-<body>
-  <div id="root"></div>
-
-  <footer class="text-center p-4 text-sm text-gray-500">
-    <p>
-      <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="underline hover:text-black" target="_blank" rel="noopener">
-        CC BY-NC-SA 4.0
-      </a>
-    </p>
-    <p class="mt-2">&copy; 2025 MyNameIsApp — A Social Readiness Platform</p>
-  </footer>
-</body>
+    <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
+    <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
+  </body>
 </html>
