@@ -5,3 +5,11 @@
 /robots.txt
   Content-Type: text/plain
   Cache-Control: public, max-age=86400
+
+/boredmama-logo.svg
+  Content-Type: image/svg+xml
+  Cache-Control: public, max-age=31536000
+
+/boredmama-logo.png
+  Content-Type: image/png
+  Cache-Control: public, max-age=31536000

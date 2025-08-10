@@ -1,6 +1,8 @@
 # Static files served directly
 /sitemap.xml /sitemap.xml 200
 /robots.txt /robots.txt 200
+/boredmama-logo.svg /boredmama-logo.svg 200
+/boredmama-logo.png /boredmama-logo.png 200
 
 # Force HTTPS and redirect www to non-www
 http://mynameisapp.co.uk/* https://mynameisapp.co.uk/:splat 301!
@@ -9,5 +11,7 @@ https://www.mynameisapp.co.uk/* https://mynameisapp.co.uk/:splat 301!
 
 # SPA fallback - must be last (excludes static files)
 !/sitemap.xml
-!/robots.txt
+!/robots.txt  
+!/boredmama-logo.svg
+!/boredmama-logo.png
 /* /index.html 200
