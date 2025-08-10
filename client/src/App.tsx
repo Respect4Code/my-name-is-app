@@ -5,13 +5,28 @@ Info, ChevronRight, ArrowLeft, Volume2, BookOpen, Moon, Music, Loader2, ArrowRig
 CheckCircle, Mic, Square, RefreshCw, Play, Share2, HelpCircle, X
 } from 'lucide-react';
 import { openDB } from 'idb';
-// BoredMama logo - using the actual branding logo that Replit created 
+// BoredMama logo - exact match from marketing materials
 const BoredMamaLogo = () => {
+        const [logoLoaded, setLogoLoaded] = useState(false);
+        const [logoError, setLogoError] = useState(false);
+        
         return (
                 <div className="flex items-center justify-center mb-2">
-                        <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full shadow-lg">
-                                <span className="text-white font-bold text-lg tracking-wide">BoredMama</span>
-                        </div>
+                        {!logoError && (
+                                <img 
+                                        src="/boredmama-logo.svg" 
+                                        alt="BoredMama - Revolutionising Motherhood" 
+                                        className="h-12 w-auto object-contain"
+                                        onLoad={() => setLogoLoaded(true)}
+                                        onError={() => setLogoError(true)}
+                                        style={{ display: logoLoaded ? 'block' : 'none' }}
+                                />
+                        )}
+                        {(logoError || !logoLoaded) && (
+                                <div className="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-fuchsia-400 to-violet-500 rounded-full shadow-lg">
+                                        <span className="text-white font-bold text-lg tracking-wide">BoredMama</span>
+                                </div>
+                        )}
                 </div>
         );
 };
