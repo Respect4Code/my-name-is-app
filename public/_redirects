@@ -1,5 +1,11 @@
+# Static files served directly
+/sitemap.xml /sitemap.xml 200
+/robots.txt /robots.txt 200
+
 # Redirect www to non-www  
 https://www.mynameisapp.co.uk/* https://mynameisapp.co.uk/:splat 301!
 
-# SPA fallback - must be last
+# SPA fallback - must be last (excludes static files)
+!/sitemap.xml
+!/robots.txt
 /* /index.html 200
