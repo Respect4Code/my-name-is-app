@@ -5,13 +5,28 @@ Info, ChevronRight, ArrowLeft, Volume2, BookOpen, Moon, Music, Loader2, ArrowRig
 CheckCircle, Mic, Square, RefreshCw, Play, Share2, HelpCircle, X
 } from 'lucide-react';
 import { openDB } from 'idb';
-// BoredMama logo - exact replica of the beautiful Replit-created version
+// BoredMama logo - exact replica from screenshot with perfect SVG version
 const BoredMamaLogo = () => {
+        const [svgLoaded, setSvgLoaded] = useState(false);
+        const [svgError, setSvgError] = useState(false);
+        
         return (
                 <div className="flex items-center justify-center mb-2">
-                        <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full shadow-lg">
-                                <span className="text-white font-bold text-lg tracking-wide">BoredMama</span>
-                        </div>
+                        {!svgError && (
+                                <img 
+                                        src="/boredmama-logo.svg" 
+                                        alt="BoredMama - Revolutionising Motherhood" 
+                                        className="h-12 w-auto object-contain"
+                                        onLoad={() => setSvgLoaded(true)}
+                                        onError={() => setSvgError(true)}
+                                        style={{ display: svgLoaded ? 'block' : 'none' }}
+                                />
+                        )}
+                        {(svgError || !svgLoaded) && (
+                                <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full shadow-lg">
+                                        <span className="text-white font-bold text-lg tracking-wide">BoredMama</span>
+                                </div>
+                        )}
                 </div>
         );
 };
