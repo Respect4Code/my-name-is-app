@@ -23,7 +23,7 @@ const BoredMamaLogo = () => {
                                 />
                         )}
                         {(logoError || !logoLoaded) && (
-                                <div className="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-fuchsia-400 to-violet-500 rounded-full shadow-lg">
+                                <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-pink-400 to-purple-600 rounded-2xl shadow-lg">
                                         <span className="text-white font-bold text-lg tracking-wide">BoredMama</span>
                                 </div>
                         )}
