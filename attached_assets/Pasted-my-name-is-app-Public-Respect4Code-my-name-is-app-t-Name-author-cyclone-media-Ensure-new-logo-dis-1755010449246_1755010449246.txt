@@ -1,0 +1,133 @@
+my-name-is-app
+Public
+Respect4Code/my-name-is-app
+
+t
+Name		
+author
+cyclone-media
+Ensure new logo displays correctly on the website interface
+07dbbaa
+ · 
+2 days ago
+assets
+Update the application's logo to match the original design
+2 days ago
+attached_assets
+Ensure new logo displays correctly on the website interface
+2 days ago
+client
+Assistant checkpoint: Updated logo fallback to match original design
+2 days ago
+docs
+social preview image (multi-device)
+4 days ago
+public
+Ensure new logo displays correctly on the website interface
+2 days ago
+server
+Checkpoint before assistant change: Create a new learning app to teac…
+last month
+shared
+Checkpoint before assistant change: Create a new learning app to teac…
+last month
+src
+Restored to 'bb8c4c9bdb077f1529b6003f24e9142ae1f34687'
+last week
+.gitignore
+Checkpoint before assistant change: Create a new learning app to teac…
+last month
+.replit
+Change the app to run on a server instead of serving static files
+last month
+COMMUNITY_FEEDBACK.md
+Create COMMUNITY_FEEDBACK.md
+5 days ago
+COMPLETE_APP.jsx
+Restored to 'bb8c4c9bdb077f1529b6003f24e9142ae1f34687'
+last week
+CONTRIBUTING.md
+Assistant checkpoint: Fixed critical bug & added complete BoredMamaAp…
+last month
+FINAL_DEPLOYMENT_BUNDLE.jsx
+Restored to 'bb8c4c9bdb077f1529b6003f24e9142ae1f34687'
+last week
+LICENSE.txt
+Update application branding and license details
+3 days ago
+PRESS_KIT.md
+Create PRESS_KIT.md
+5 days ago
+README.md
+Merge branch 'main' of https://github.com/Respect4Code/my-name-is-app
+3 days ago
+complete_app.tsx
+Restored to 'bb8c4c9bdb077f1529b6003f24e9142ae1f34687'
+last week
+components.json
+Checkpoint before assistant change: Create a new learning app to teac…
+last month
+conflicting files
+Merge branch 'main' of https://github.com/Respect4Code/my-name-is-app
+3 days ago
+drizzle.config.ts
+Checkpoint before assistant change: Create a new learning app to teac…
+last month
+final_app.tsx
+Restored to 'bb8c4c9bdb077f1529b6003f24e9142ae1f34687'
+last week
+index.html
+Update the application's logo to match the original design
+2 days ago
+logo.png
+Update project build configuration and assets for successful deployment
+2 days ago
+package-lock.json
+Checkpoint before assistant change: Improve parent guide, add local s…
+3 weeks ago
+package.json
+Update package.json
+4 days ago
+postcss.config.js
+Checkpoint before assistant change: Create a new learning app to teac…
+last month
+replit.md
+Update project documentation with recent August 2025 achievements and…
+2 days ago
+robots.txt
+Ensure sitemap and robots files are correctly served and updated
+2 days ago
+screenshot.png
+Rename docs/ChatGPT Image Aug 8, 2025 at 08_41_39 AM.png to screensho…
+4 days ago
+sitemap.xml
+Ensure sitemap and robots files are correctly served and updated
+2 days ago
+tailwind.config.ts
+Update project build configuration and assets for successful deployment
+2 days ago
+temp_app.tsx
+Restored to 'bb8c4c9bdb077f1529b6003f24e9142ae1f34687'
+last week
+test-logo.html
+Display the logo in the app for testing and verification
+2 weeks ago
+test-production-flow.html
+Add a production test page to ensure critical features function corre…
+2 weeks ago
+test-recording.html
+Enable in-app audio playback tests and recording debug mode for paren…
+last month
+transcribe_phonics.py
+Checkpoint before assistant change: Add audio transcription and visua…
+last month
+tsconfig.json
+Checkpoint before assistant change: Create a new learning app to teac…
+last month
+vite.config.ts
+Checkpoint before assistant change: Create a new learning app to teac…
+last month
+Repository files navigation
+README
+Contributing
+License
