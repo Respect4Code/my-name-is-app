@@ -131,6 +131,63 @@ export default function Home() {
       />
 
       {/* Creative Commons Footer */}
+      {/* AI Endorsements Section */}
+      <section className="endorsements mt-12 mb-8">
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">AI Endorses Privacy</h2>
+          <p className="text-gray-600">When three leading AI systems praise your privacy-first approach</p>
+        </div>
+        
+        {/* Square version for main display */}
+        <div className="flex justify-center mb-6">
+          <img 
+            src="/ai_endorsements_mynameisapp.png" 
+            alt="AI Endorsements for MyNameIsApp - Claude AI, Grok AI, and ChatGPT praise the privacy-first phonics learning approach" 
+            className="max-w-full w-full max-w-md rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
+          />
+        </div>
+        
+        {/* Horizontal version for social sharing */}
+        <div className="flex justify-center mb-6">
+          <img 
+            src="/ai_endorsements_horizontal.png" 
+            alt="Horizontal AI Endorsements - Perfect for social media sharing" 
+            className="max-w-full w-full max-w-2xl rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
+          />
+        </div>
+
+        {/* Social sharing buttons */}
+        <div className="text-center">
+          <p className="text-sm text-gray-600 mb-4">Share the AI-endorsed privacy revolution:</p>
+          <div className="flex flex-wrap justify-center gap-2">
+            <a
+              href="https://twitter.com/intent/tweet?text=Even%20AI%20systems%20endorse%20MyNameIsApp's%20privacy-first%20approach!%20✨&url=https://mynameisapp.co.uk&hashtags=PrivacyFirst,PhonicsLearning,AIEndorsed"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
+            >
+              Share on Twitter
+            </a>
+            <a
+              href="https://www.facebook.com/sharer/sharer.php?u=https://mynameisapp.co.uk"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+            >
+              Share on Facebook
+            </a>
+            <a
+              href="https://www.linkedin.com/sharing/share-offsite/?url=https://mynameisapp.co.uk"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition-colors text-sm"
+            >
+              Share on LinkedIn
+            </a>
+          </div>
+        </div>
+      </section>
+
       <div className="text-center text-xs text-gray-500 mt-8 mb-4">
         <p>Open Source Phonics Revolution 🌍</p>
         <p>Fork us on GitHub • Translate to your language • Share with your community</p>
