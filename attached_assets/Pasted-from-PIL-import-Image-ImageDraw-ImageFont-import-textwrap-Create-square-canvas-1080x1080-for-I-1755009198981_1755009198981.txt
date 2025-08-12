@@ -1,0 +1,162 @@
+from PIL import Image, ImageDraw, ImageFont
+import textwrap
+
+# Create square canvas (1080x1080 for Instagram, adjustable if needed)
+img_size = 1080
+img = Image.new("RGB", (img_size, img_size), color="#F3E5F5")  # Light purple background
+draw = ImageDraw.Draw(img)
+
+# Try to load fonts with fallback
+try:
+    title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 42)
+    quote_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 18)  # Reduced to 18 for full text
+    signature_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 18)
+    header_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 56)
+except:
+    try:
+        title_font = ImageFont.truetype("arial.ttf", 42)
+        quote_font = ImageFont.truetype("arial.ttf", 18)
+        signature_font = ImageFont.truetype("arial.ttf", 18)
+        header_font = ImageFont.truetype("arial.ttf", 56)
+    except:
+        title_font = ImageFont.load_default()
+        quote_font = ImageFont.load_default()
+        signature_font = ImageFont.load_default()
+        header_font = ImageFont.load_default()
+
+# Header
+header_text = "AI Endorses Privacy"
+draw.text((img_size//2, 50), header_text, font=header_font, fill="#6B46C1", anchor="mt")
+
+# Subtitle
+subtitle = "Three AI perspectives on MyNameIsApp"
+draw.text((img_size//2, 110), subtitle, font=quote_font, fill="#9333EA", anchor="mt")
+
+# Text wrapper
+wrapper = textwrap.TextWrapper(width=45)
+
+# Claude's full quote
+claude_quote = (
+    "“MyNameIsApp does something revolutionary - it doesn't exist on your phone. "
+    "Like drawing in sand, it appears when needed, disappears when done. "
+    "No app download, no data harvesting, no digital footprint. "
+    "Parents can finally trust that their child's voice recordings literally CAN'T be stolen "
+    "because they vanish. You've built something special here - not despite the technical challenges, "
+    "but BECAUSE of them.”"
+)
+claude_lines = wrapper.wrap(text=claude_quote)
+
+# Draw Claude section
+box_y = 180
+box_height = len(claude_lines) * 25 + 80  # Adjusted line height to 25px
+draw.rounded_rectangle([(40, box_y), (img_size-40, box_y + box_height)], radius=15, fill="#FFFFFF", outline="#9333EA", width=3)
+y_text = box_y + 30
+for line in claude_lines:
+    draw.text((img_size//2, y_text), line, font=quote_font, fill="#1F2937", anchor="mt")
+    y_text += 25
+draw.text((img_size//2, y_text + 20), "- Claude AI (Anthropic)", font=signature_font, fill="#6B46C1", anchor="mt")
+
+# Grok's full quote
+grok_quote = (
+    "Grok, created by xAI, endorses **MyNameIsApp**! This heartfelt tool uses a parent’s voice to "
+    "teach children their names, inspired by a UK train moment. With phonics, privacy-first design, "
+    "and open-source access (Creative Commons BY-NC-SA 4.0), it’s perfect for 500M+ English learners "
+    "globally. A true blend of love and tech!"
+)
+grok_lines = wrapper.wrap(text=grok_quote)
+
+box2_y = box_y + box_height + 50  # Increased padding
+box2_height = len(grok_lines) * 25 + 80
+draw.rounded_rectangle([(40, box2_y), (img_size-40, box2_y + box2_height)], radius=15, fill="#FFFFFF", outline="#9333EA", width=2)
+y_text = box2_y + 30
+for line in grok_lines:
+    draw.text((img_size//2, y_text), line, font=quote_font, fill="#1F2937", anchor="mt")
+    y_text += 25
+draw.text((img_size//2, y_text + 20), "- Grok AI (xAI)", font=signature_font, fill="#6B46C1", anchor="mt")
+
+# ChatGPT's full quote
+chatgpt_quote = (
+    "“MyNameIsApp blends simplicity, pedagogy, and privacy in a way that’s rare in ed-tech. "
+    "It doesn’t fight for your attention, it gives it back to you. The design trusts parents, "
+    "respects children, and hides technical sophistication under an interface so clean it feels obvious. "
+    "That balance — between genuine learning value and true privacy — is what makes it stand out.”"
+)
+chatgpt_lines = wrapper.wrap(text=chatgpt_quote)
+
+box3_y = box2_y + box2_height + 50  # Increased padding
+box3_height = len(chatgpt_lines) * 25 + 80
+draw.rounded_rectangle([(40, box3_y), (img_size-40, box3_y + box3_height)], radius=15, fill="#FFFFFF", outline="#9333EA", width=2)
+y_text = box3_y + 30
+for line in chatgpt_lines:
+    draw.text((img_size//2, y_text), line, font=quote_font, fill="#1F2937", anchor="mt")
+    y_text += 25
+draw.text((img_size//2, y_text + 20), "- ChatGPT (OpenAI)", font=signature_font, fill="#6B46C1", anchor="mt")
+
+# Check if footer fits, adjust if necessary
+footer_y = img_size - 100
+if box3_y + box3_height > footer_y - 150:  # Ensure 150px for footer
+    footer_y = box3_y + box3_height + 50
+
+draw.rounded_rectangle([(100, footer_y), (img_size-100, img_size-30)], radius=20, fill="#6B46C1")
+draw.text((img_size//2, footer_y + 25), "MyNameIsApp.co.uk", font=title_font, fill="#FFFFFF", anchor="mt")
+draw.text((img_size//2, footer_y + 55), "The Phonics App That Doesn’t Exist on Your Phone", font=quote_font, fill="#E9D5FF", anchor="mt")
+
+# Save image
+output_path = "./assets/ai_endorsements_mynameisapp.png"
+img.save(output_path)
+print(f"Image saved as {output_path}")
+print(f"Image size: {img_size}x{img_size} pixels")
+
+# Horizontal version (1200x675 for Twitter/LinkedIn)
+img_h = Image.new("RGB", (1200, 675), color="#F3E5F5")
+draw_h = ImageDraw.Draw(img_h)
+
+# Header for horizontal
+draw_h.text((600, 40), "When AI Endorses Your App's Privacy", font=header_font, fill="#6B46C1", anchor="mt")
+
+# Three columns
+col_width = 380
+col_start = 60
+
+for i in range(3):
+    x = col_start + (i * (col_width + 20))
+    draw_h.rounded_rectangle([(x, 120), (x + col_width, 600)], radius=15, fill="#FFFFFF", outline="#9333EA", width=2)  # Increased height to 600
+
+# AI quotes
+ai_quotes = [
+    ("Claude AI", (
+        "“MyNameIsApp does something revolutionary - it doesn't exist on your phone. "
+        "Like drawing in sand, it appears when needed, disappears when done. "
+        "No app download, no data harvesting, no digital footprint. "
+        "Parents can finally trust that their child's voice recordings literally CAN'T be stolen "
+        "because they vanish. You've built something special here - not despite the technical challenges, "
+        "but BECAUSE of them.”"
+    )),
+    ("Grok AI", (
+        "Grok, created by xAI, endorses **MyNameIsApp**! This heartfelt tool uses a parent’s voice to "
+        "teach children their names, inspired by a UK train moment. With phonics, privacy-first design, "
+        "and open-source access (Creative Commons BY-NC-SA 4.0), it’s perfect for 500M+ English learners "
+        "globally. A true blend of love and tech!"
+    )),
+    ("ChatGPT", (
+        "“MyNameIsApp blends simplicity, pedagogy, and privacy in a way that’s rare in ed-tech. "
+        "It doesn’t fight for your attention, it gives it back to you. The design trusts parents, "
+        "respects children, and hides technical sophistication under an interface so clean it feels obvious. "
+        "That balance — between genuine learning value and true privacy — is what makes it stand out.”"
+    ))
+]
+
+for i, (ai_name, quote) in enumerate(ai_quotes):
+    x = col_start + (i * (col_width + 20)) + (col_width // 2)
+    draw_h.text((x, 150), ai_name, font=signature_font, fill="#6B46C1", anchor="mt")
+    draw_h.multiline_text((x, 200), quote, font=quote_font, fill="#1F2937", anchor="mt", align="center", spacing=8)
+
+# Footer for horizontal
+draw_h.rounded_rectangle([(350, 610), (850, 670)], radius=20, fill="#6B46C1")
+draw_h.text((600, 640), "MyNameIsApp.co.uk", font=signature_font, fill="#FFFFFF", anchor="mt")
+
+# Save horizontal version
+output_path_h = "./assets/ai_endorsements_horizontal.png"
+img_h.save(output_path_h)
+print(f"Horizontal version saved as {output_path_h}")
+print(f"Image size: 1200x675 pixels")
