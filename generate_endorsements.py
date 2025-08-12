@@ -118,14 +118,14 @@ def create_horizontal_image():
     # Header
     draw.text((img_w//2, 30), "When AI Endorses Your App's Privacy", font=header_font, fill="#6B46C1", anchor="mt")
 
-    # Three columns
-    col_width = 360
-    col_start = 60
+    # Three columns - make them narrower to fit more text
+    col_width = 340
+    col_start = 40
     
     quotes_data = [
-        ("Claude AI", claude_quote[:200] + "..."),  # Truncate for horizontal layout
-        ("Grok AI", grok_quote[:200] + "..."),
-        ("ChatGPT", chatgpt_quote[:200] + "...")
+        ("Claude AI", claude_quote),  # Use full quotes
+        ("Grok AI", grok_quote),
+        ("ChatGPT", chatgpt_quote)
     ]
 
     for i, (ai_name, quote) in enumerate(quotes_data):
@@ -143,15 +143,15 @@ def create_horizontal_image():
         # AI name
         draw.text((x + col_width//2, 120), ai_name, font=signature_font, fill="#6B46C1", anchor="mt")
         
-        # Quote text (wrapped)
-        wrapped_quote = textwrap.fill(quote, width=35)
+        # Quote text (wrapped with more characters per line)
+        wrapped_quote = textwrap.fill(quote, width=48)
         draw.multiline_text(
-            (x + 20, 150), 
+            (x + 15, 150), 
             wrapped_quote, 
             font=quote_font, 
             fill="#1F2937", 
             align="left",
-            spacing=4
+            spacing=3
         )
 
     # Footer
