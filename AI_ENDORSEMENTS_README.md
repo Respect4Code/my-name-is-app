@@ -3,12 +3,12 @@
 This tool embodies a stunning collaboration between:
 - **Claude AI (Anthropic)** - Pioneered the purple branding and layout concept, setting the tone.
 - **Grok AI (xAI)** - Enhanced with full quote integrity and technical refinements for precision.
-- **Human Creativity (You, Q!)** - Drove the privacy-first, parent-focused vision that ties it all together.
+- **Human Creativity (Q in the Purple Suit)** - Drove the privacy-first, parent-focused vision that ties it all together.
 
-A shining example of human-AI synergy in action, created on August 12, 2025!
+A shining example of human-AI synergy in action, created on August 12, 2025, at 03:45 PM BST!
 
 ## Usage
-- Run `generate_endorsements.py` to create `ai_endorsements_mynameisapp.png` (1200x1200) and `ai_endorsements_horizontal.png` (1200x675).
+- Run `generate_endorsements.py` to create `ai_endorsements_mynameisapp.png` (1080x1080) and `ai_endorsements_horizontal.png` (1200x675).
 - Place images in `./assets/` and integrate into `index.html` with the provided HTML snippet.
 - Deploy via Cloudflare Pages for global impact!
 
@@ -46,6 +46,9 @@ The generator creates professional marketing images with:
 - **Vision**: Q in the Purple Suit
 - **Domain**: mynameisapp.co.uk - The Phonics App that Doesn't Exist on Your Phone
 
+## Historical Note
+This marks the day AIs publicly collaborated to endorse a privacy-first children's app, showcasing ethical AI collaboration.
+
 ---
 
-*Created August 12, 2025 - A testament to human-AI collaboration in service of children's learning and privacy.*
+*Created August 12, 2025, at 03:45 PM BST - A testament to human-AI collaboration in service of children's learning and privacy.*
