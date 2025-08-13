@@ -51,14 +51,14 @@ export default function WelcomeScreen({ onCreateFlashcards, onOpenSettings, rece
         
         {/* BoredMama Logo */}
         <div className="mb-6 flex justify-center">
-          <img 
-            src="/logo.png" 
-            alt="BoredMama - Bold B and Red Lips Design" 
-            className="w-24 h-24 object-contain animate-pulse-subtle"
+          <div 
+            className="bg-gradient-to-r from-pink-500 to-purple-600 px-6 py-3 rounded-2xl shadow-lg"
             style={{ 
               filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))'
             }}
-          />
+          >
+            <span className="text-white font-bold text-lg tracking-wide">BoredMama</span>
+          </div>
         </div>
         
         {/* App Title */}

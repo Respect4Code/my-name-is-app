@@ -19,7 +19,7 @@ This is a full-stack TypeScript application built as a monorepo with a React fro
 **Recent Updates (August 2025)**:
 - Successfully deployed live phonics app to mynameisapp.co.uk domain
 - Resolved React build and deployment issues with proper Vite configuration
-- Fixed BoredMama branding with correct purple gradient logo display
+- **August 13**: Restored proper BoredMama branding with pink-to-purple gradient logo matching marketing materials
 - Implemented complete 6-recording system including "What is your name?" social confidence feature
 - Enhanced Parent Guide with refined testimonial text emphasizing phonetic "sounding out" approach
 - Updated footer messaging for open source roadmap
