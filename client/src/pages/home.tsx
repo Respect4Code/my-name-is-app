@@ -189,10 +189,30 @@ export default function Home() {
       </section>
 
       <div className="text-center text-xs text-gray-500 mt-8 mb-4">
-        <p>Open Source Phonics Revolution 🌍</p>
-        <p>Fork us on GitHub • Translate to your language • Share with your community</p>
-        <p>Built with AI (ChatGPT, Claude, Grok, Replit) • Already adapted for: 🇵🇭 🇮🇳 🇸🇬 🇲🇾 🇳🇬 🇿🇦</p>
-        <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" className="underline">CC BY-NC-SA 4.0</a>
+        <p>Join the Global Phonics Revolution 🌍</p>
+        <p>
+          Open Source view on{' '}
+          <a 
+            href="https://github.com/Respect4Code/my-name-is-app" 
+            target="_blank" 
+            rel="noopener" 
+            className="text-blue-600 hover:text-blue-400 underline hover:no-underline transition-colors"
+          >
+            GitHub
+          </a>{' '}
+          • Translate to Tagalog, Hindi, or your language • Share with your community
+        </p>
+        <p>Trusted by parents in: 🇵🇭 Philippines, 🇮🇳 India, 🇳🇬 Nigeria, 🇵🇰 Pakistan, 🇸🇬 Singapore, 🇲🇾 Malaysia</p>
+        <p>
+          <a 
+            href="https://creativecommons.org/licenses/by-nc-sa/4.0/" 
+            target="_blank"
+            rel="noopener"
+            className="text-blue-600 hover:text-blue-400 underline hover:no-underline transition-colors"
+          >
+            CC BY-NC-SA 4.0
+          </a>
+        </p>
         <p className="text-[10px] mt-1">© {new Date().getFullYear()} MyNameIsApp • Made with love in the UK</p>
         <p className="text-[10px] text-gray-400">v1.0.2 — Global SEO Launch Edition</p>
       </div>
