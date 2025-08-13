@@ -194,39 +194,33 @@ export default function Home() {
           fontSize: "0.9rem",
           marginTop: "2rem",
           color: "#333",
+          padding: "16px 12px",
+          borderTop: "1px solid #eee",
         }}
         aria-label="Global phonics open-source footer"
       >
-        <p>
-          Join the Global Phonics Revolution 🌍
-          <br />
-          Open Source{" "}
+        <p style={{ margin: "6px 0" }}>Join the Global Phonics Revolution 🌍</p>
+
+        <p style={{ margin: "6px 0" }}>
+          Open Source view on{" "}
           <a
             href="https://github.com/Respect4Code/my-name-is-app"
-            style={{ color: "#007BFF", textDecoration: "none" }}
             target="_blank"
             rel="noopener noreferrer"
-            onMouseOver={(e) =>
-              ((e.target as HTMLAnchorElement).style.color = "#66B0FF")
-            }
-            onMouseOut={(e) =>
-              ((e.target as HTMLAnchorElement).style.color = "#007BFF")
-            }
+            style={{ color: "#007BFF", textDecoration: "underline" }}
+            onMouseOver={(e) => (e.currentTarget.style.color = "#66B0FF")}
+            onMouseOut={(e) => (e.currentTarget.style.color = "#007BFF")}
           >
-            view on GitHub
+            GitHub
           </a>{" "}
-          • Translate to Tagalog, Hindi, or your language • Share with your
-          community
+          • Translate to Tagalog, Hindi, or your language • Share with your community
         </p>
 
-        <p>
-          Trusted by parents in: 🇵🇭 Philippines, 🇮🇳 India, 🇳🇬 Nigeria, 🇵🇰
-          Pakistan, 🇸🇬 Singapore, 🇲🇾 Malaysia
+        <p style={{ margin: "6px 0" }}>
+          Trusted by parents in: 🇵🇭 Philippines, 🇮🇳 India, 🇳🇬 Nigeria, 🇵🇰 Pakistan, 🇸🇬 Singapore, 🇲🇾 Malaysia
         </p>
 
-        <p>
-          <span style={{ color: "#007BFF" }}>CC BY-NC-SA 4.0</span>
-        </p>
+        <p style={{ margin: "6px 0", color: "#007BFF" }}>CC BY-NC-SA 4.0</p>
         
         <p style={{ fontSize: "0.7rem", marginTop: "0.5rem" }}>
           © {new Date().getFullYear()} MyNameIsApp • Made with love in the UK
