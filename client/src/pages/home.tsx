@@ -188,34 +188,53 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="text-center text-xs text-gray-500 mt-8 mb-4">
-        <p>Join the Global Phonics Revolution 🌍</p>
+      <footer
+        style={{
+          textAlign: "center",
+          fontSize: "0.9rem",
+          marginTop: "2rem",
+          color: "#333",
+        }}
+        aria-label="Global phonics open-source footer"
+      >
         <p>
-          Open Source view on{' '}
-          <a 
-            href="https://github.com/Respect4Code/my-name-is-app" 
-            target="_blank" 
-            rel="noopener" 
-            className="text-blue-600 hover:text-blue-400 underline hover:no-underline transition-colors"
-          >
-            GitHub
-          </a>{' '}
-          • Translate to Tagalog, Hindi, or your language • Share with your community
-        </p>
-        <p>Trusted by parents in: 🇵🇭 Philippines, 🇮🇳 India, 🇳🇬 Nigeria, 🇵🇰 Pakistan, 🇸🇬 Singapore, 🇲🇾 Malaysia</p>
-        <p>
-          <a 
-            href="https://creativecommons.org/licenses/by-nc-sa/4.0/" 
+          Join the Global Phonics Revolution 🌍
+          <br />
+          Open Source{" "}
+          <a
+            href="https://github.com/Respect4Code/my-name-is-app"
+            style={{ color: "#007BFF", textDecoration: "none" }}
             target="_blank"
-            rel="noopener"
-            className="text-blue-600 hover:text-blue-400 underline hover:no-underline transition-colors"
+            rel="noopener noreferrer"
+            onMouseOver={(e) =>
+              ((e.target as HTMLAnchorElement).style.color = "#66B0FF")
+            }
+            onMouseOut={(e) =>
+              ((e.target as HTMLAnchorElement).style.color = "#007BFF")
+            }
           >
-            CC BY-NC-SA 4.0
-          </a>
+            view on GitHub
+          </a>{" "}
+          • Translate to Tagalog, Hindi, or your language • Share with your
+          community
         </p>
-        <p className="text-[10px] mt-1">© {new Date().getFullYear()} MyNameIsApp • Made with love in the UK</p>
-        <p className="text-[10px] text-gray-400">v1.0.2 — Global SEO Launch Edition</p>
-      </div>
+
+        <p>
+          Trusted by parents in: 🇵🇭 Philippines, 🇮🇳 India, 🇳🇬 Nigeria, 🇵🇰
+          Pakistan, 🇸🇬 Singapore, 🇲🇾 Malaysia
+        </p>
+
+        <p>
+          <span style={{ color: "#007BFF" }}>CC BY-NC-SA 4.0</span>
+        </p>
+        
+        <p style={{ fontSize: "0.7rem", marginTop: "0.5rem" }}>
+          © {new Date().getFullYear()} MyNameIsApp • Made with love in the UK
+        </p>
+        <p style={{ fontSize: "0.7rem", color: "#999" }}>
+          v1.0.2 — Global SEO Launch Edition
+        </p>
+      </footer>
     </div>
   );
 }
