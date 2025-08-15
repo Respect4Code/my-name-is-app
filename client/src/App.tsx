@@ -1,4 +1,3 @@
-
 import React, { memo, useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import {
@@ -6,7 +5,6 @@ Info, ChevronRight, ArrowLeft, Volume2, BookOpen, Moon, Music, Loader2, ArrowRig
 CheckCircle, Mic, Square, RefreshCw, Play, Share2, HelpCircle, X
 } from 'lucide-react';
 import { openDB } from 'idb';
-
 // BoredMama logo - exact match from marketing materials
 const BoredMamaLogo = () => {
         const [logoLoaded, setLogoLoaded] = useState(false);
@@ -285,7 +283,7 @@ const [showGitHubModal, setShowGitHubModal] = useState(false);
 const [showLicenseModal, setShowLicenseModal] = useState(false);
 
 const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-if (e.key === 'Enter' && name.length >= 2) {
+if (e.key === 'Enter' && name.length >= 2 && name.length <= 12) {
 onNext(name.toUpperCase());
 }
 };
@@ -310,6 +308,8 @@ aria-label="Open parent guide"
 ⭐ "My 18-month-old learned all letters phonetically!" - Real parent
 </p>
 
+
+
 <input
 type="text"
 value={name}
@@ -317,22 +317,22 @@ onChange={(e) => setName(e.target.value.replace(/[^a-zA-Z]/g, ''))}
 onKeyPress={handleKeyPress}
 placeholder="Enter your child's name"
 className="w-full p-4 text-2xl text-center border-2 border-purple-200 rounded-xl text-gray-800 mb-6"
-maxLength={26}
+maxLength={12}
 autoFocus
 aria-label="Child's name"
 />
 
-{name.length >= 20 && (
+{name.length >= 10 && (
 <p className="text-xs text-orange-600 -mt-4 mb-4 text-center">
-{26 - name.length} characters left
+{12 - name.length} characters left
 </p>
 )}
 
 <button
-onClick={() => name.length >= 2 && onNext(name.toUpperCase())}
-disabled={name.length < 2}
+onClick={() => name.length >= 2 && name.length <= 12 && onNext(name.toUpperCase())}
+disabled={name.length < 2 || name.length > 12}
 className={`w-full py-4 rounded-xl font-bold text-xl transition-all flex items-center justify-center gap-2 ${
-name.length >= 2
+name.length >= 2 && name.length <= 12
 ? 'bg-purple-500 text-white hover:bg-purple-600'
 : 'bg-gray-300 text-gray-500'
 }`}
@@ -350,38 +350,6 @@ Need help? Read 4-minute guide
 </button>
 
 <ShareButton className="mt-6" />
-
-<div className="text-center text-xs mt-6 mb-4 p-4 border-t-2 border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg">
-  <div className="mb-3">
-    <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent font-bold text-sm">
-      🏆 HISTORIC ACHIEVEMENT 🏆
-    </span>
-  </div>
-  <p className="mb-2 font-semibold text-gray-700">First Multi-AI Public Endorsement in History</p>
-  <p className="mb-2 text-green-700 font-medium">
-    Validated by Claude AI • Grok AI • ChatGPT • Replit AI
-  </p>
-  <p className="mb-2 text-gray-600">
-    <button onClick={() => setShowGitHubModal(true)} className="text-blue-600 underline hover:text-blue-800">
-      Open Source
-    </button> • Privacy-First • Revolutionary
-  </p>
-  <p className="mb-2 text-gray-600">Trusted by parents worldwide 🌍</p>
-  <p className="mb-2">
-    <button onClick={() => setShowLicenseModal(true)} className="text-blue-600 underline hover:text-blue-800 font-medium">
-      CC BY-NC-SA 4.0
-    </button>
-  </p>
-  <div className="pt-2 border-t border-gray-200">
-    <span className="text-xs text-gray-500 italic">
-      "The app that doesn't exist on your phone" - AI History • August 2025
-    </span>
-  </div>
-  <p className="mt-2">
-    <span className="text-pink-600 font-semibold">Created with ❤️ by BoredMama</span>
-  </p>
-  <p className="text-purple-600 font-medium text-xs">Revolutionising Motherhood</p>
-</div>
 
 {/* GitHub Modal */}
 {showGitHubModal && (
@@ -770,11 +738,57 @@ const nextUnrecordedStage = stages.findIndex(stage => !recordings[stage.key]);
 console.log(`Progress: ${Object.keys(recordings).length}/${stages.length} recordings complete`);
 console.log('Available recording stages:', stages.map(s => s.label));
 
+const startRecordingForStage = async (stageIndex: number) => {
+setCurrentStage(stageIndex);
+const stage = stages[stageIndex];
+try {
+const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+const possibleTypes = [
+'audio/webm;codecs=opus',
+'audio/webm',
+'audio/mp4',
+'audio/mpeg',
+'audio/ogg;codecs=opus',
+];
+const mimeType = possibleTypes.find(type => MediaRecorder.isTypeSupported(type)) || 'audio/webm';
+const mediaRecorder = new MediaRecorder(stream, { mimeType });
+const audioChunks: Blob[] = [];
+
+mediaRecorder.ondataavailable = (e) => {
+if (e.data.size > 0) {
+audioChunks.push(e.data);
+}
+};
+
+mediaRecorder.onstop = () => {
+stream.getTracks().forEach(track => track.stop());
+const audioBlob = new Blob(audioChunks, { type: mimeType });
+const reader = new FileReader();
+reader.onload = () => {
+setRecordings(prev => ({
+...prev,
+[stage.key]: reader.result as string
+}));
+};
+reader.readAsDataURL(audioBlob);
+};
+
+setTimeout(() => {
+mediaRecorder.start();
+}, 1000);
+} catch (err) {
+console.error('Recording failed:', err);
+alert('Please allow microphone access to record your voice');
+}
+};
+
 const handleBack = () => {
 if (window.confirm('Going back will clear all recordings and the name. Are you sure?')) {
 onBack();
 }
 };
+
+
 
 return (
 <div className="min-h-screen p-4 flex items-center justify-center">
@@ -788,6 +802,8 @@ id="back-button"
 >
 <ArrowLeft size={20} aria-hidden="true" />
 </button>
+
+
 </div>
 
 <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
@@ -815,6 +831,8 @@ Record Your Voice for {name}
 <li>Recording auto-saves after 2 seconds - no need to click SAVE!</li>
 <li><strong>To re-record: Tap the BLUE refresh icon</strong></li>
 </ol>
+
+
 </div>
 
 <div className="mb-4">
@@ -868,6 +886,7 @@ setCurrentStage(index);
 }}
 recordings={recordings}
 />
+
 </div>
 ))}
 </div>
@@ -939,7 +958,7 @@ aria-label="Flashcard navigation"
 className="text-9xl font-bold text-purple-600 animate-pulse"
 aria-label={`Current letter: ${letters[currentLetterIndex]}`}
 >
-{letters[currentLetterIndex]}
+{ letters[currentLetterIndex]}
 </span>
 </div>
 
@@ -1030,6 +1049,8 @@ aria-label="Start over and clear all data"
 Start Over
 </button>
 
+
+
 <ShareButton />
 </div>
 </div>
@@ -1038,14 +1059,18 @@ Start Over
 
 // App Component
 const App = () => {
+
 const [step, setStep] = useState<'welcome' | 'recording' | 'flashcards'>('welcome');
 const [name, setName] = useState<string | null>(null);
 const [recordings, setRecordings] = useState<Record<string, string>>({});
 const [showGuide, setShowGuide] = useState(false);
+const [showGitHubModal, setShowGitHubModal] = useState(false);
+const [showLicenseModal, setShowLicenseModal] = useState(false);
 
 useEffect(() => {
 const loadData = async () => {
 try {
+
 // Try IndexedDB first, fallback to localStorage
 let loadedRecordings: Record<string, string> = {};
 
@@ -1077,9 +1102,24 @@ loadedRecordings = {};
 setRecordings(loadedRecordings);
 
 const savedName = localStorage.getItem('childName');
-if (savedName && Object.keys(loadedRecordings).length > 0) {
+// Validate saved name length (max 12 characters)
+if (savedName && savedName.length <= 12 && Object.keys(loadedRecordings).length > 0) {
 setName(savedName);
 setStep('flashcards');
+} else if (savedName && savedName.length > 12) {
+// Clear invalid data
+localStorage.removeItem('childName');
+setRecordings({});
+// Clear IndexedDB as well
+try {
+const db = await openDB('MyNameIsDB', 1);
+const tx = db.transaction('recordings', 'readwrite');
+await tx.objectStore('recordings').clear();
+await tx.done;
+console.log('Cleared invalid data from storage');
+} catch (error) {
+console.log('Cleanup completed');
+}
 }
 } catch (err) {
 console.error('Failed to load data:', err);
@@ -1185,6 +1225,140 @@ name={name}
 recordings={recordings}
 onReset={handleReset}
 />
+)}
+
+{/* Historic AI Endorsement Footer */}
+<footer className="text-center text-xs mt-8 mb-4" style={{padding:"20px 16px", borderTop:"2px solid #8B5CF6", background:"linear-gradient(135deg, #f8f4ff 0%, #fdf2f8 100%)", color:"#374151"}}>
+  <div style={{marginBottom:"12px"}}>
+    <span style={{background:"linear-gradient(135deg, #8B5CF6, #EC4899)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", fontWeight:"bold", fontSize:"0.85rem"}}>
+      🏆 FIRST MULTI-AI PUBLIC ENDORSEMENT IN HISTORY 🏆
+    </span>
+  </div>
+  <p style={{margin:"8px 0", fontWeight:"600", color:"#4B5563"}}>Join the Global Phonics Revolution 🌍</p>
+  <p style={{margin:"8px 0", fontWeight:"600", color:"#059669"}}>
+    Historic Achievement: Validated by Claude AI • Grok AI • ChatGPT • Replit AI
+  </p>
+  <p style={{margin:"6px 0", color:"#6B7280"}}>
+    <button onClick={() => setShowGitHubModal(true)} style={{color:"#007BFF", textDecoration:"underline", border:"none", background:"none", cursor:"pointer", fontSize:"inherit", fontFamily:"inherit"}}>
+      Open Source
+    </button> Revolution • Translate to 65+ Countries • Privacy-First Pioneer
+  </p>
+  <p style={{margin:"6px 0", color:"#6B7280"}}>Trusted by parents in: 🇵🇭 Philippines, 🇮🇳 India, 🇳🇬 Nigeria, 🇵🇰 Pakistan, 🇸🇬 Singapore, 🇲🇾 Malaysia</p>
+  <p style={{margin:"8px 0"}}>
+    <span style={{color:"#8B5CF6", fontWeight:"600"}}>100% Private • Works Offline • Revolutionary</span> • 
+    <button onClick={() => setShowLicenseModal(true)} style={{color:"#1D4ED8", textDecoration:"underline", border:"none", background:"none", cursor:"pointer", fontSize:"inherit", fontFamily:"inherit", fontWeight:"500"}}>
+      CC BY-NC-SA 4.0
+    </button>
+  </p>
+  <div style={{marginTop:"12px", paddingTop:"8px", borderTop:"1px solid #E5E7EB"}}>
+    <span style={{fontSize:"0.7rem", color:"#9CA3AF", fontStyle:"italic"}}>
+      "The app that doesn't exist on your phone" - Featured in AI History • August 2025
+    </span>
+  </div>
+  <p style={{margin:"8px 0"}}>
+    <span style={{color:"#EC4899", fontWeight:"600"}}>Created with ❤️ by BoredMamaApp</span>
+  </p>
+  <p style={{margin:"4px 0"}}>
+    <span style={{color:"#8B5CF6", fontWeight:"500", fontSize:"0.8rem"}}>Revolutionising Motherhood</span>
+  </p>
+</footer>
+
+{/* GitHub Modal */}
+{showGitHubModal && (
+  <div 
+    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+    onClick={() => setShowGitHubModal(false)}
+  >
+    <div 
+      className="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-2xl"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <span className="text-white text-sm font-bold">🔗</span>
+            </div>
+            <h2 className="text-xl font-bold text-gray-900">Open Source</h2>
+          </div>
+          <button
+            onClick={() => setShowGitHubModal(false)}
+            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+      
+      <div className="p-6 space-y-4">
+        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4">
+          <h3 className="font-semibold text-gray-900 mb-2">MyNameIsApp on GitHub</h3>
+          <p className="text-gray-700 text-sm mb-4">
+            Explore the complete source code, contribute features, or learn how we built this privacy-first app.
+          </p>
+          <a
+            href="https://github.com/Respect4Code/my-name-is-app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
+          >
+            <span className="mr-2">🔗</span>
+            Visit GitHub Repository
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
+{/* License Modal */}
+{showLicenseModal && (
+  <div 
+    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+    onClick={() => setShowLicenseModal(false)}
+  >
+    <div 
+      className="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-2xl"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <span className="text-white text-sm font-bold">⚖️</span>
+            </div>
+            <h2 className="text-xl font-bold text-gray-900">License</h2>
+          </div>
+          <button
+            onClick={() => setShowLicenseModal(false)}
+            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+      
+      <div className="p-6 space-y-4">
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4">
+          <h3 className="font-semibold text-gray-900 mb-2">Creative Commons BY-NC-SA 4.0</h3>
+          <p className="text-gray-700 text-sm mb-4">
+            This app is licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0.
+          </p>
+          <a
+            href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+          >
+            <span className="mr-2">🔗</span>
+            Read Full License
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
 )}
 </div>
 );
