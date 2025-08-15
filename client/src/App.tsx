@@ -349,40 +349,13 @@ Need help? Read 4-minute guide
 
 <ShareButton className="mt-6" />
 
-<div className="text-center text-xs mt-8 mb-4" style={{padding:"20px 16px", borderTop:"2px solid #8B5CF6", background:"linear-gradient(135deg, #f8f4ff 0%, #fdf2f8 100%)", color:"#374151"}}>
-  <div style={{marginBottom:"12px"}}>
-    <span style={{background:"linear-gradient(135deg, #8B5CF6, #EC4899)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", fontWeight:"bold", fontSize:"0.85rem"}}>
-      🏆 FIRST MULTI-AI PUBLIC ENDORSEMENT IN HISTORY 🏆
-    </span>
-  </div>
-  <p style={{margin:"8px 0", fontWeight:"600", color:"#4B5563"}}>Join the Global Phonics Revolution 🌍</p>
-  <p style={{margin:"8px 0", fontWeight:"600", color:"#059669"}}>
-    Historic Achievement: Validated by Claude AI • Grok AI • ChatGPT • Replit AI
-  </p>
-  <p style={{margin:"6px 0", color:"#6B7280"}}>
-    <button onClick={() => window.open('https://github.com/Respect4Code/my-name-is-app', '_blank')} style={{color:"#007BFF", textDecoration:"underline", border:"none", background:"none", cursor:"pointer", fontSize:"inherit", fontFamily:"inherit"}}>
-      Open Source
-    </button> Revolution • Translate to 65+ Countries • Privacy-First Pioneer
-  </p>
-  <p style={{margin:"6px 0", color:"#6B7280"}}>Trusted by parents in: 🇵🇭 Philippines, 🇮🇳 India, 🇳🇬 Nigeria, 🇵🇰 Pakistan, 🇸🇬 Singapore, 🇲🇾 Malaysia</p>
-  <p style={{margin:"8px 0"}}>
-    <span style={{color:"#8B5CF6", fontWeight:"600"}}>100% Private • Works Offline • Revolutionary</span> • 
-    <button onClick={() => window.open('https://creativecommons.org/licenses/by-nc-sa/4.0/', '_blank')} style={{color:"#1D4ED8", textDecoration:"underline", border:"none", background:"none", cursor:"pointer", fontSize:"inherit", fontFamily:"inherit", fontWeight:"500"}}>
-      CC BY-NC-SA 4.0
-    </button>
-  </p>
-  <div style={{marginTop:"12px", paddingTop:"8px", borderTop:"1px solid #E5E7EB"}}>
-    <span style={{fontSize:"0.7rem", color:"#9CA3AF", fontStyle:"italic"}}>
-      "The app that doesn't exist on your phone" - Featured in AI History • August 2025
-    </span>
-  </div>
-  <p style={{margin:"8px 0"}}>
-    <span style={{color:"#EC4899", fontWeight:"600"}}>Created with ❤️ by BoredMamaApp</span>
-  </p>
-  <p style={{margin:"4px 0"}}>
-    <span style={{color:"#8B5CF6", fontWeight:"500", fontSize:"0.8rem"}}>Revolutionising Motherhood</span>
-  </p>
-</div>
+<p className="text-xs text-gray-500 mt-6 text-center">
+100% Private • Works Offline • CC BY-NC-SA 4.0<br/>
+Created with ❤️ by BoredMamaApp
+</p>
+<p className="text-center mt-3">
+<span className="text-purple-600 font-medium text-sm">Revolutionising Motherhood</span>
+</p>
 </div>
 </div>
 );
