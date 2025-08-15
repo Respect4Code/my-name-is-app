@@ -7,6 +7,15 @@ This page is updated as feedback comes in — because our community is part of t
 
 ## 🐦 From X (Twitter)
 
+### Historic AI Endorsement Community Response
+
+**[柚柚 $M (@youyou8178)](https://x.com/youyou8178/status/1956253943266468307)** - August 15, 2025  
+> "历史性的时刻 为孩子们骄傲"  
+> Translation: "Historic moment, proud for the children"  
+> *Chinese community celebrating the first multi-AI endorsement for children's privacy*
+
+### Early Community Support
+
 **[@AltcoinTatsu](https://x.com/AltcoinTatsu/status/1952472915133538621)**  
 > "Love that it uses familiar voices to help kids learn, such a smart feature."
 
