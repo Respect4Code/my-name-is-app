@@ -5,28 +5,13 @@ Info, ChevronRight, ArrowLeft, Volume2, BookOpen, Moon, Music, Loader2, ArrowRig
 CheckCircle, Mic, Square, RefreshCw, Play, Share2, HelpCircle, X
 } from 'lucide-react';
 import { openDB } from 'idb';
-// BoredMama logo - exact match from marketing materials
+// BoredMama logo - correct pink-to-purple gradient
 const BoredMamaLogo = () => {
-        const [logoLoaded, setLogoLoaded] = useState(false);
-        const [logoError, setLogoError] = useState(false);
-        
         return (
                 <div className="flex items-center justify-center mb-2">
-                        {!logoError && (
-                                <img 
-                                        src="/boredmama-logo.svg" 
-                                        alt="BoredMama - Revolutionising Motherhood" 
-                                        className="h-12 w-auto object-contain"
-                                        onLoad={() => setLogoLoaded(true)}
-                                        onError={() => setLogoError(true)}
-                                        style={{ display: logoLoaded ? 'block' : 'none' }}
-                                />
-                        )}
-                        {(logoError || !logoLoaded) && (
-                                <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-pink-400 to-purple-600 rounded-2xl shadow-lg">
-                                        <span className="text-white font-bold text-lg tracking-wide">BoredMama</span>
-                                </div>
-                        )}
+                        <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 rounded-2xl shadow-lg">
+                                <span className="text-white font-bold text-lg tracking-wide">BoredMama</span>
+                        </div>
                 </div>
         );
 };
@@ -1227,40 +1212,22 @@ onReset={handleReset}
 />
 )}
 
-{/* Historic AI Endorsement Footer */}
-<footer className="text-center text-xs mt-8 mb-4" style={{padding:"20px 16px", borderTop:"2px solid #8B5CF6", background:"linear-gradient(135deg, #f8f4ff 0%, #fdf2f8 100%)", color:"#374151"}}>
-  <div style={{marginBottom:"12px"}}>
-    <span style={{background:"linear-gradient(135deg, #8B5CF6, #EC4899)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", fontWeight:"bold", fontSize:"0.85rem"}}>
-      🏆 FIRST MULTI-AI PUBLIC ENDORSEMENT IN HISTORY 🏆
-    </span>
+{/* Compact Footer */}
+<footer className="text-center text-xs mt-6 mb-2 px-4">
+  <div style={{fontSize:"0.7rem", color:"#9CA3AF", marginBottom:"4px"}}>
+    🏆 First Multi-AI Public Endorsement • Historic Achievement: Claude AI • Grok AI • ChatGPT • Replit AI
   </div>
-  <p style={{margin:"8px 0", fontWeight:"600", color:"#4B5563"}}>Join the Global Phonics Revolution 🌍</p>
-  <p style={{margin:"8px 0", fontWeight:"600", color:"#059669"}}>
-    Historic Achievement: Validated by Claude AI • Grok AI • ChatGPT • Replit AI
-  </p>
-  <p style={{margin:"6px 0", color:"#6B7280"}}>
+  <div style={{fontSize:"0.65rem", color:"#6B7280", marginBottom:"4px"}}>
     <button onClick={() => setShowGitHubModal(true)} style={{color:"#007BFF", textDecoration:"underline", border:"none", background:"none", cursor:"pointer", fontSize:"inherit", fontFamily:"inherit"}}>
       Open Source
-    </button> Revolution • Translate to 65+ Countries • Privacy-First Pioneer
-  </p>
-  <p style={{margin:"6px 0", color:"#6B7280"}}>Trusted by parents in: 🇵🇭 Philippines, 🇮🇳 India, 🇳🇬 Nigeria, 🇵🇰 Pakistan, 🇸🇬 Singapore, 🇲🇾 Malaysia</p>
-  <p style={{margin:"8px 0"}}>
-    <span style={{color:"#8B5CF6", fontWeight:"600"}}>100% Private • Works Offline • Revolutionary</span> • 
-    <button onClick={() => setShowLicenseModal(true)} style={{color:"#1D4ED8", textDecoration:"underline", border:"none", background:"none", cursor:"pointer", fontSize:"inherit", fontFamily:"inherit", fontWeight:"500"}}>
+    </button> • 
+    <button onClick={() => setShowLicenseModal(true)} style={{color:"#1D4ED8", textDecoration:"underline", border:"none", background:"none", cursor:"pointer", fontSize:"inherit", fontFamily:"inherit"}}>
       CC BY-NC-SA 4.0
     </button>
-  </p>
-  <div style={{marginTop:"12px", paddingTop:"8px", borderTop:"1px solid #E5E7EB"}}>
-    <span style={{fontSize:"0.7rem", color:"#9CA3AF", fontStyle:"italic"}}>
-      "The app that doesn't exist on your phone" - Featured in AI History • August 2025
-    </span>
   </div>
-  <p style={{margin:"8px 0"}}>
-    <span style={{color:"#EC4899", fontWeight:"600"}}>Created with ❤️ by BoredMama</span>
-  </p>
-  <p style={{margin:"4px 0"}}>
-    <span style={{color:"#8B5CF6", fontWeight:"500", fontSize:"0.8rem"}}>Revolutionising Motherhood</span>
-  </p>
+  <div style={{fontSize:"0.6rem", color:"#9CA3AF"}}>
+    "The app that doesn't exist on your phone" - Featured in AI History • August 2025
+  </div>
 </footer>
 
 {/* GitHub Modal */}
