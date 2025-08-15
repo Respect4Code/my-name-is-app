@@ -279,6 +279,8 @@ return (
 // WelcomeScreen Component
 const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) => {
 const [name, setName] = useState('');
+const [showGitHubModal, setShowGitHubModal] = useState(false);
+const [showLicenseModal, setShowLicenseModal] = useState(false);
 
 const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
 if (e.key === 'Enter' && name.length >= 2) {
@@ -349,13 +351,138 @@ Need help? Read 4-minute guide
 
 <ShareButton className="mt-6" />
 
-<p className="text-xs text-gray-500 mt-6 text-center">
-100% Private • Works Offline • CC BY-NC-SA 4.0<br/>
-Created with ❤️ by BoredMamaApp
-</p>
-<p className="text-center mt-3">
-<span className="text-purple-600 font-medium text-sm">Revolutionising Motherhood</span>
-</p>
+<div className="text-center text-xs mt-8 mb-4" style={{padding:"20px 16px", borderTop:"2px solid #8B5CF6", background:"linear-gradient(135deg, #f8f4ff 0%, #fdf2f8 100%)", color:"#374151"}}>
+  <div style={{marginBottom:"12px"}}>
+    <span style={{background:"linear-gradient(135deg, #8B5CF6, #EC4899)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", fontWeight:"bold", fontSize:"0.85rem"}}>
+      🏆 FIRST MULTI-AI PUBLIC ENDORSEMENT IN HISTORY 🏆
+    </span>
+  </div>
+  <p style={{margin:"8px 0", fontWeight:"600", color:"#4B5563"}}>Join the Global Phonics Revolution 🌍</p>
+  <p style={{margin:"8px 0", fontWeight:"600", color:"#059669"}}>
+    Historic Achievement: Validated by Claude AI • Grok AI • ChatGPT • Replit AI
+  </p>
+  <p style={{margin:"6px 0", color:"#6B7280"}}>
+    <button onClick={() => setShowGitHubModal(true)} style={{color:"#007BFF", textDecoration:"underline", border:"none", background:"none", cursor:"pointer", fontSize:"inherit", fontFamily:"inherit"}}>
+      Open Source
+    </button> Revolution • Translate to 65+ Countries • Privacy-First Pioneer
+  </p>
+  <p style={{margin:"6px 0", color:"#6B7280"}}>Trusted by parents in: 🇵🇭 Philippines, 🇮🇳 India, 🇳🇬 Nigeria, 🇵🇰 Pakistan, 🇸🇬 Singapore, 🇲🇾 Malaysia</p>
+  <p style={{margin:"8px 0"}}>
+    <span style={{color:"#8B5CF6", fontWeight:"600"}}>100% Private • Works Offline • Revolutionary</span> • 
+    <button onClick={() => setShowLicenseModal(true)} style={{color:"#1D4ED8", textDecoration:"underline", border:"none", background:"none", cursor:"pointer", fontSize:"inherit", fontFamily:"inherit", fontWeight:"500"}}>
+      CC BY-NC-SA 4.0
+    </button>
+  </p>
+  <div style={{marginTop:"12px", paddingTop:"8px", borderTop:"1px solid #E5E7EB"}}>
+    <span style={{fontSize:"0.7rem", color:"#9CA3AF", fontStyle:"italic"}}>
+      "The app that doesn't exist on your phone" - Featured in AI History • August 2025
+    </span>
+  </div>
+  <p style={{margin:"8px 0"}}>
+    <span style={{color:"#EC4899", fontWeight:"600"}}>Created with ❤️ by BoredMamaApp</span>
+  </p>
+  <p style={{margin:"4px 0"}}>
+    <span style={{color:"#8B5CF6", fontWeight:"500", fontSize:"0.8rem"}}>Revolutionising Motherhood</span>
+  </p>
+</div>
+
+{/* GitHub Modal */}
+{showGitHubModal && (
+  <div 
+    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+    onClick={() => setShowGitHubModal(false)}
+  >
+    <div 
+      className="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-2xl"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <span className="text-white text-sm font-bold">🔗</span>
+            </div>
+            <h2 className="text-xl font-bold text-gray-900">Open Source</h2>
+          </div>
+          <button
+            onClick={() => setShowGitHubModal(false)}
+            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+      
+      <div className="p-6 space-y-4">
+        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4">
+          <h3 className="font-semibold text-gray-900 mb-2">MyNameIsApp on GitHub</h3>
+          <p className="text-gray-700 text-sm mb-4">
+            Explore the complete source code, contribute features, or learn how we built this privacy-first app.
+          </p>
+          <a
+            href="https://github.com/Respect4Code/my-name-is-app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
+          >
+            <span className="mr-2">🔗</span>
+            Visit GitHub Repository
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
+{/* License Modal */}
+{showLicenseModal && (
+  <div 
+    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+    onClick={() => setShowLicenseModal(false)}
+  >
+    <div 
+      className="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-2xl"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <span className="text-white text-sm font-bold">⚖️</span>
+            </div>
+            <h2 className="text-xl font-bold text-gray-900">License</h2>
+          </div>
+          <button
+            onClick={() => setShowLicenseModal(false)}
+            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+      
+      <div className="p-6 space-y-4">
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4">
+          <h3 className="font-semibold text-gray-900 mb-2">Creative Commons BY-NC-SA 4.0</h3>
+          <p className="text-gray-700 text-sm mb-4">
+            This app is licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0.
+          </p>
+          <a
+            href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+          >
+            <span className="mr-2">🔗</span>
+            Read Full License
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 </div>
 </div>
 );
