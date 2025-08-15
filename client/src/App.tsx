@@ -283,7 +283,7 @@ const [showGitHubModal, setShowGitHubModal] = useState(false);
 const [showLicenseModal, setShowLicenseModal] = useState(false);
 
 const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-if (e.key === 'Enter' && name.length >= 2) {
+if (e.key === 'Enter' && name.length >= 2 && name.length <= 12) {
 onNext(name.toUpperCase());
 }
 };
@@ -317,22 +317,22 @@ onChange={(e) => setName(e.target.value.replace(/[^a-zA-Z]/g, ''))}
 onKeyPress={handleKeyPress}
 placeholder="Enter your child's name"
 className="w-full p-4 text-2xl text-center border-2 border-purple-200 rounded-xl text-gray-800 mb-6"
-maxLength={26}
+maxLength={12}
 autoFocus
 aria-label="Child's name"
 />
 
-{name.length >= 20 && (
+{name.length >= 10 && (
 <p className="text-xs text-orange-600 -mt-4 mb-4 text-center">
-{26 - name.length} characters left
+{12 - name.length} characters left
 </p>
 )}
 
 <button
-onClick={() => name.length >= 2 && onNext(name.toUpperCase())}
-disabled={name.length < 2}
+onClick={() => name.length >= 2 && name.length <= 12 && onNext(name.toUpperCase())}
+disabled={name.length < 2 || name.length > 12}
 className={`w-full py-4 rounded-xl font-bold text-xl transition-all flex items-center justify-center gap-2 ${
-name.length >= 2
+name.length >= 2 && name.length <= 12
 ? 'bg-purple-500 text-white hover:bg-purple-600'
 : 'bg-gray-300 text-gray-500'
 }`}
@@ -1135,9 +1135,24 @@ loadedRecordings = {};
 setRecordings(loadedRecordings);
 
 const savedName = localStorage.getItem('childName');
-if (savedName && Object.keys(loadedRecordings).length > 0) {
+// Validate saved name length (max 12 characters)
+if (savedName && savedName.length <= 12 && Object.keys(loadedRecordings).length > 0) {
 setName(savedName);
 setStep('flashcards');
+} else if (savedName && savedName.length > 12) {
+// Clear invalid data
+localStorage.removeItem('childName');
+setRecordings({});
+// Clear IndexedDB as well
+try {
+const db = await openDB('MyNameIsDB', 1);
+const tx = db.transaction('recordings', 'readwrite');
+await tx.objectStore('recordings').clear();
+await tx.done;
+console.log('Cleared invalid data from storage');
+} catch (error) {
+console.log('Cleanup completed');
+}
 }
 } catch (err) {
 console.error('Failed to load data:', err);
