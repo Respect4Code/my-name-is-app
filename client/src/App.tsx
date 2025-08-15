@@ -1256,7 +1256,7 @@ onReset={handleReset}
     </span>
   </div>
   <p style={{margin:"8px 0"}}>
-    <span style={{color:"#EC4899", fontWeight:"600"}}>Created with ❤️ by BoredMamaApp</span>
+    <span style={{color:"#EC4899", fontWeight:"600"}}>Created with ❤️ by BoredMama</span>
   </p>
   <p style={{margin:"4px 0"}}>
     <span style={{color:"#8B5CF6", fontWeight:"500", fontSize:"0.8rem"}}>Revolutionising Motherhood</span>
