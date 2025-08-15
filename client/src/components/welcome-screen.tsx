@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Settings, Mic } from "lucide-react";
+import { Settings, Mic, X, ExternalLink } from "lucide-react";
 import { useParentRecordings } from "@/hooks/use-parent-recordings";
 import TestRecording from "./test-recording";
 
@@ -14,6 +14,8 @@ interface WelcomeScreenProps {
 export default function WelcomeScreen({ onCreateFlashcards, onOpenSettings, recentNames }: WelcomeScreenProps) {
   console.log('👋 WelcomeScreen component initializing...');
   const [nameInput, setNameInput] = useState("");
+  const [showGitHubModal, setShowGitHubModal] = useState(false);
+  const [showLicenseModal, setShowLicenseModal] = useState(false);
   
   console.log('👋 About to initialize useParentRecordings hook...');
   const { getCompletionStatus } = useParentRecordings();
