@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Settings, Mic, X, ExternalLink } from "lucide-react";
 import { useParentRecordings } from "@/hooks/use-parent-recordings";
 import TestRecording from "./test-recording";
+import BoredMamaLogo from "@/components/bored-mama-logo"; // Assuming BoredMamaLogo is correctly imported
 
 interface WelcomeScreenProps {
   onCreateFlashcards: (name: string) => void;
@@ -16,7 +17,7 @@ export default function WelcomeScreen({ onCreateFlashcards, onOpenSettings, rece
   const [nameInput, setNameInput] = useState("");
   const [showGitHubModal, setShowGitHubModal] = useState(false);
   const [showLicenseModal, setShowLicenseModal] = useState(false);
-  
+
   console.log('👋 About to initialize useParentRecordings hook...');
   const { getCompletionStatus } = useParentRecordings();
   console.log('👋 useParentRecordings hook initialized successfully');
@@ -50,29 +51,22 @@ export default function WelcomeScreen({ onCreateFlashcards, onOpenSettings, rece
         >
           Skip to main content
         </a>
-        
+
         {/* BoredMama Logo */}
         <div className="mb-6 flex justify-center">
-          <div 
-            className="bg-gradient-to-r from-pink-500 to-purple-600 px-6 py-3 rounded-2xl shadow-lg"
-            style={{ 
-              filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))'
-            }}
-          >
-            <span className="text-white font-bold text-lg tracking-wide">BoredMama</span>
-          </div>
+          <BoredMamaLogo />
         </div>
-        
+
         {/* App Title */}
         <h1 className="text-4xl font-bold text-gray-800 mb-4 tracking-tight">
           My Name Is
         </h1>
-        
+
         {/* App Description */}
         <p className="text-gray-600 mb-8 text-lg leading-relaxed">
           Create personalized phonics flashcards from any name! Perfect for learning letter sounds and building reading skills.
         </p>
-        
+
         {/* Name Input Form */}
         <form onSubmit={handleSubmit} className="mb-6">
           <div className="relative mb-6">
@@ -90,7 +84,7 @@ export default function WelcomeScreen({ onCreateFlashcards, onOpenSettings, rece
               {nameInput.length}/12
             </div>
           </div>
-          
+
           <Button
             type="submit"
             className="w-full py-4 rounded-xl font-bold text-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 focus:outline-none focus:ring-4 focus:ring-purple-300 disabled:from-gray-300 disabled:to-gray-400 disabled:text-gray-500 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg"
@@ -100,7 +94,7 @@ export default function WelcomeScreen({ onCreateFlashcards, onOpenSettings, rece
             Create Flashcards! 🚀
           </Button>
         </form>
-        
+
         {/* Recent Names Section */}
         {recentNames.length > 0 && (
           <div className="mb-6">
@@ -128,7 +122,7 @@ export default function WelcomeScreen({ onCreateFlashcards, onOpenSettings, rece
             </div>
           </div>
         )}
-        
+
         {/* Example Names Section */}
         <div className="mb-8">
           <div className="text-sm text-gray-500 mb-3">Try these examples:</div>
@@ -145,7 +139,7 @@ export default function WelcomeScreen({ onCreateFlashcards, onOpenSettings, rece
             ))}
           </div>
         </div>
-        
+
         {/* Settings Access */}
         <Button
           variant="ghost"
@@ -156,7 +150,7 @@ export default function WelcomeScreen({ onCreateFlashcards, onOpenSettings, rece
           <Settings className="w-5 h-5" />
           <span className="text-sm">Accessibility Settings</span>
         </Button>
-        
+
         {/* Test Recording Component for debugging */}
         <div className="mt-8 p-4 bg-gray-50 rounded-lg">
           <h3 className="text-lg font-semibold mb-2">Test Recording (Debug Mode)</h3>

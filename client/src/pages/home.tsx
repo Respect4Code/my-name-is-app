@@ -133,8 +133,8 @@ export default function Home() {
       />
 
       {/* Compact Footer */}
-      <footer className="text-center text-xs mt-6 mb-2 px-4">
-        <div style={{fontSize:"0.65rem", color:"#6B7280", marginBottom:"6px"}}>
+      <footer className="text-center text-xs mt-4 mb-2 px-4">
+        <div style={{fontSize:"0.65rem", color:"#6B7280"}}>
           <button
             onClick={() => setShowGitHubModal(true)}
             style={{ 
@@ -163,9 +163,6 @@ export default function Home() {
           >
             CC BY-NC-SA 4.0
           </button>
-        </div>
-        <div style={{fontSize:"0.6rem", color:"#9CA3AF"}}>
-          100% Private • Works Offline • Revolutionary
         </div>
       </footer>
 
