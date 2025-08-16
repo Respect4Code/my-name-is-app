@@ -132,41 +132,40 @@ export default function Home() {
         onSettingsChange={handleSettingsChange}
       />
 
-      {/* Creative Commons Footer */}
       {/* AI Endorsements Section */}
-      <section className="endorsements mt-12 mb-8">
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">AI Endorses Privacy</h2>
-          <p className="text-gray-600">When three leading AI systems praise your privacy-first approach</p>
+      <section className="endorsements mt-8 mb-6 px-4">
+        <div className="text-center mb-4">
+          <h2 className="text-lg font-bold text-gray-800 mb-1">AI Endorses Privacy</h2>
+          <p className="text-sm text-gray-600">When three leading AI systems praise your privacy-first approach</p>
         </div>
         
         {/* Square version for main display */}
-        <div className="flex justify-center mb-6">
+        <div className="flex justify-center mb-4">
           <img 
             src="/ai_endorsements_mynameisapp.png" 
             alt="AI Endorsements for MyNameIsApp - Claude AI, Grok AI, and ChatGPT praise the privacy-first phonics learning approach" 
-            className="max-w-full w-full max-w-md rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
+            className="max-w-full w-full max-w-sm rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
           />
         </div>
         
         {/* Horizontal version for social sharing */}
-        <div className="flex justify-center mb-6">
+        <div className="flex justify-center mb-4">
           <img 
             src="/ai_endorsements_horizontal.png" 
             alt="Horizontal AI Endorsements - Perfect for social media sharing" 
-            className="max-w-full w-full max-w-2xl rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
+            className="max-w-full w-full max-w-lg rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
           />
         </div>
 
         {/* Social sharing buttons */}
         <div className="text-center">
-          <p className="text-sm text-gray-600 mb-4">Share the AI-endorsed privacy revolution:</p>
+          <p className="text-xs text-gray-600 mb-3">Share the AI-endorsed privacy revolution:</p>
           <div className="flex flex-wrap justify-center gap-2">
             <a
               href="https://twitter.com/intent/tweet?text=Even%20AI%20systems%20endorse%20MyNameIsApp's%20privacy-first%20approach!%20✨&url=https://mynameisapp.co.uk&hashtags=PrivacyFirst,PhonicsLearning,AIEndorsed"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
+              className="inline-flex items-center px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-xs"
             >
               Share on Twitter
             </a>
@@ -174,7 +173,7 @@ export default function Home() {
               href="https://www.facebook.com/sharer/sharer.php?u=https://mynameisapp.co.uk"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+              className="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs"
             >
               Share on Facebook
             </a>
@@ -182,7 +181,7 @@ export default function Home() {
               href="https://www.linkedin.com/sharing/share-offsite/?url=https://mynameisapp.co.uk"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition-colors text-sm"
+              className="inline-flex items-center px-3 py-1.5 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition-colors text-xs"
             >
               Share on LinkedIn
             </a>
@@ -190,39 +189,36 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Compact Footer */}
       <footer
         style={{
           textAlign: "center",
-          fontSize: "0.75rem",
-          marginTop: "2rem",
-          padding: "20px 16px",
-          borderTop: "2px solid #8B5CF6",
+          fontSize: "0.65rem",
+          marginTop: "1rem",
+          padding: "12px 16px",
+          borderTop: "1px solid #E5E7EB",
           background: "linear-gradient(135deg, #f8f4ff 0%, #fdf2f8 100%)",
-          color: "#374151"
+          color: "#6B7280"
         }}
-        aria-label="Historic AI endorsement footer"
+        aria-label="App footer"
       >
-        <div style={{ marginBottom: "12px" }}>
+        <div style={{ marginBottom: "6px" }}>
           <span style={{
             background: "linear-gradient(135deg, #8B5CF6, #EC4899)",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
-            fontWeight: "bold",
-            fontSize: "0.85rem"
+            fontWeight: "600",
+            fontSize: "0.7rem"
           }}>
             🏆 FIRST MULTI-AI PUBLIC ENDORSEMENT IN HISTORY 🏆
           </span>
         </div>
         
-        <p style={{ margin: "8px 0", fontWeight: "600", color: "#4B5563" }}>
-          Join the Global Phonics Revolution 🌍
-        </p>
-        
-        <p style={{ margin: "8px 0", fontWeight: "600", color: "#059669" }}>
+        <p style={{ margin: "4px 0", fontWeight: "500", color: "#059669", fontSize: "0.6rem" }}>
           Historic Achievement: Validated by Claude AI • Grok AI • ChatGPT • Replit AI
         </p>
         
-        <p style={{ margin: "6px 0", color: "#6B7280" }}>
+        <p style={{ margin: "4px 0", color: "#6B7280", fontSize: "0.6rem" }}>
           <button
             onClick={() => setShowGitHubModal(true)}
             style={{ 
@@ -236,15 +232,7 @@ export default function Home() {
             }}
           >
             Open Source
-          </button> Revolution • Translate to 65+ Countries • Privacy-First Pioneer
-        </p>
-        
-        <p style={{ margin: "6px 0", color: "#6B7280" }}>
-          Trusted by parents in: 🇵🇭 Philippines, 🇮🇳 India, 🇳🇬 Nigeria, 🇵🇰 Pakistan, 🇸🇬 Singapore, 🇲🇾 Malaysia
-        </p>
-        
-        <p style={{ margin: "8px 0" }}>
-          <span style={{ color: "#8B5CF6", fontWeight: "600" }}>100% Private • Works Offline • Revolutionary</span> • 
+          </button> • 
           <button
             onClick={() => setShowLicenseModal(true)}
             style={{ 
@@ -254,27 +242,22 @@ export default function Home() {
               background: "none", 
               cursor: "pointer", 
               fontSize: "inherit",
-              fontFamily: "inherit",
-              fontWeight: "500"
+              fontFamily: "inherit"
             }}
           >
             CC BY-NC-SA 4.0
           </button>
         </p>
         
-        <div style={{ marginTop: "12px", paddingTop: "8px", borderTop: "1px solid #E5E7EB" }}>
-          <span style={{ fontSize: "0.7rem", color: "#9CA3AF", fontStyle: "italic" }}>
+        <p style={{ margin: "4px 0", fontSize: "0.55rem", color: "#9CA3AF" }}>
+          Trusted by parents worldwide • 100% Private • Works Offline
+        </p>
+        
+        <div style={{ marginTop: "6px", paddingTop: "4px", borderTop: "1px solid #E5E7EB" }}>
+          <span style={{ fontSize: "0.55rem", color: "#9CA3AF", fontStyle: "italic" }}>
             "The app that doesn't exist on your phone" - Featured in AI History • August 2025
           </span>
         </div>
-        
-        <p style={{ margin: "8px 0" }}>
-          <span style={{ color: "#EC4899", fontWeight: "600" }}>Created with ❤️ by BoredMamaApp</span>
-        </p>
-        
-        <p style={{ margin: "4px 0" }}>
-          <span style={{ color: "#8B5CF6", fontWeight: "500", fontSize: "0.8rem" }}>Revolutionising Motherhood</span>
-        </p>
       </footer>
 
       {/* GitHub Modal */}
@@ -386,7 +369,7 @@ export default function Home() {
                   <span className="mr-2">🔗</span>
                   Read Full License
                 </a>
-              </div>
+                </div>
               
               <div className="space-y-3 text-sm text-gray-600">
                 <div>

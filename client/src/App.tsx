@@ -5,13 +5,25 @@ Info, ChevronRight, ArrowLeft, Volume2, BookOpen, Moon, Music, Loader2, ArrowRig
 CheckCircle, Mic, Square, RefreshCw, Play, Share2, HelpCircle, X
 } from 'lucide-react';
 import { openDB } from 'idb';
-// BoredMama logo - correct pink-to-purple gradient
+// BoredMama logo - loads SVG with fallback
 const BoredMamaLogo = () => {
+        const [logoError, setLogoError] = useState(false);
+        
         return (
                 <div className="flex items-center justify-center mb-2">
-                        <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 rounded-2xl shadow-lg">
-                                <span className="text-white font-bold text-lg tracking-wide">BoredMama</span>
-                        </div>
+                        {!logoError ? (
+                                <img 
+                                        src="/boredmama-logo.svg" 
+                                        alt="BoredMama Logo"
+                                        className="h-12 w-auto"
+                                        onError={() => setLogoError(true)}
+                                        onLoad={() => console.log('BoredMama logo loaded successfully')}
+                                />
+                        ) : (
+                                <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 rounded-2xl shadow-lg">
+                                        <span className="text-white font-bold text-lg tracking-wide">BoredMama</span>
+                                </div>
+                        )}
                 </div>
         );
 };
