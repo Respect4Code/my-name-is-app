@@ -1166,7 +1166,7 @@ const App = () => {
   };
 
   return (
-    <div className={`min-h-screen transition-all duration-500 ${getModeBackground()}`}</div>
+    <div className={`min-h-screen transition-all duration-500 ${getModeBackground()}`}>
       {showGuide && <ParentGuide onClose={() => setShowGuide(false)} />}
 
       {step === 'welcome' && (
