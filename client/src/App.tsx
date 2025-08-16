@@ -278,12 +278,85 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
     <div className="flex items-center justify-center min-h-screen p-4">
       <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-2xl relative">
         <button
-          onClick={onGuide}
-          className="absolute top-4 right-4 p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-all"
+          onClick={() => !showSecretMenu && onGuide()}
+          onMouseDown={handleInfoMouseDown}
+          onMouseUp={handleInfoMouseUp}
+          onTouchStart={handleInfoTouchStart}
+          onTouchEnd={handleInfoTouchEnd}
+          className={`absolute top-4 right-4 p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-all ${infoPressing ? 'bg-purple-500 text-white' : ''}`}
           aria-label="Open parent guide"
         >
           <Info size={20} aria-hidden="true" />
         </button>
+
+        {/* Secret Dropdown Menu */}
+        {showSecretMenu && (
+          <div className="absolute top-16 right-4 bg-white rounded-xl shadow-xl border-2 border-gray-100 p-4 z-50 min-w-[260px]">
+            <div className="space-y-2">
+              <div className="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-3">Secret Features</div>
+              
+              <button
+                onClick={() => handleModeChange('actions')}
+                className={`w-full text-left p-2 rounded-lg hover:bg-purple-50 flex items-center gap-2 ${currentMode === 'actions' ? 'bg-purple-100 text-purple-700' : ''}`}
+              >
+                🎬 Action Words Mode
+                {currentMode === 'actions' && <span className="ml-auto text-xs bg-purple-500 text-white px-2 py-1 rounded">ACTIVE</span>}
+              </button>
+              
+              <button
+                onClick={() => handleModeChange('alphabet')}
+                className={`w-full text-left p-2 rounded-lg hover:bg-blue-50 flex items-center gap-2 ${currentMode === 'alphabet' ? 'bg-blue-100 text-blue-700' : ''}`}
+              >
+                🔤 Alphabet Mode
+                {currentMode === 'alphabet' && <span className="ml-auto text-xs bg-blue-500 text-white px-2 py-1 rounded">ACTIVE</span>}
+              </button>
+              
+              <button
+                onClick={() => handleModeChange('numbers')}
+                className={`w-full text-left p-2 rounded-lg hover:bg-orange-50 flex items-center gap-2 ${currentMode === 'numbers' ? 'bg-orange-100 text-orange-700' : ''}`}
+              >
+                🔢 Numbers Mode
+                {currentMode === 'numbers' && <span className="ml-auto text-xs bg-orange-500 text-white px-2 py-1 rounded">ACTIVE</span>}
+              </button>
+              
+              <button
+                onClick={() => handleModeChange('grandparent')}
+                className={`w-full text-left p-2 rounded-lg hover:bg-yellow-50 flex items-center gap-2 ${currentMode === 'grandparent' ? 'bg-yellow-100 text-yellow-700' : ''}`}
+              >
+                👴 Grandparent Mode
+                {currentMode === 'grandparent' && <span className="ml-auto text-xs bg-yellow-500 text-white px-2 py-1 rounded">ACTIVE</span>}
+              </button>
+              
+              <button
+                onClick={() => handleModeChange('vip')}
+                className={`w-full text-left p-2 rounded-lg hover:bg-gray-50 flex items-center gap-2 ${currentMode === 'vip' ? 'bg-gray-100 text-gray-700' : ''}`}
+              >
+                🔒 VIP Mode
+                {currentMode === 'vip' && <span className="ml-auto text-xs bg-gray-500 text-white px-2 py-1 rounded">ACTIVE</span>}
+              </button>
+              
+              <div className="border-t pt-2 mt-3">
+                <button
+                  onClick={() => {
+                    setShowSecretMenu(false);
+                    setCurrentMode('standard');
+                    showToastNotification('🏠 Standard Mode Restored');
+                  }}
+                  className="w-full text-left p-2 rounded-lg hover:bg-gray-50 text-gray-600 text-sm"
+                >
+                  🏠 Back to Standard
+                </button>
+              </div>
+            </div>
+            
+            <button
+              onClick={() => setShowSecretMenu(false)}
+              className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600 rounded-full"
+            >
+              ×
+            </button>
+          </div>
+        )}
 
         <div className="mb-6">
           <BoredMamaLogo />
@@ -888,8 +961,100 @@ const App = () => {
   // Toast state
   const [toast, setToast] = useState({ message: '', type: 'info', show: false });
 
-  
+  // Secret sauce features
+  const [currentMode, setCurrentMode] = useState<'standard' | 'alphabet' | 'numbers' | 'actions' | 'grandparent' | 'vip'>('standard');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [magicBuffer, setMagicBuffer] = useState('');
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const longPressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const longPressRef = useRef(false);
+  const [infoPressing, setInfoPressing] = useState(false);
+  const [infoPressTimer, setInfoPressTimer] = useState<NodeJS.Timeout | null>(null);
+  const [showSecretMenu, setShowSecretMenu] = useState(false);
 
+  // Toast notification
+  const showToastNotification = (message: string) => {
+    setToastMessage(message);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
+
+  // Info button handlers for secret menu
+  const handleInfoMouseDown = () => {
+    setInfoPressing(true);
+    const timer = setTimeout(() => {
+      setShowSecretMenu(true);
+      setInfoPressing(false);
+      showToastNotification('🎯 Secret menu activated!');
+    }, 600);
+    setInfoPressTimer(timer);
+  };
+
+  const handleInfoMouseUp = () => {
+    setInfoPressing(false);
+    if (infoPressTimer) {
+      clearTimeout(infoPressTimer);
+      setInfoPressTimer(null);
+    }
+    if (!longPressRef.current && !showSecretMenu) {
+      setShowGuide(true);
+    }
+  };
+
+  const handleInfoTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
+    handleInfoMouseDown();
+  };
+
+  const handleInfoTouchEnd = (e: React.TouchEvent) => {
+    e.preventDefault();
+    handleInfoMouseUp();
+  };
+
+  const handleModeChange = (mode: typeof currentMode) => {
+    setCurrentMode(mode);
+    setShowDropdown(false);
+    showToastNotification(`✨ ${mode.toUpperCase()} Mode Activated!`);
+  };
+
+  // Magic words detection
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const newBuffer = (magicBuffer + e.key.toUpperCase()).slice(-3);
+      setMagicBuffer(newBuffer);
+
+      const magicWords = {
+        'ING': 'actions',
+        'ALP': 'alphabet',
+        'NUM': 'numbers',
+        'VIP': 'vip',
+        'GRA': 'grandparent'
+      };
+
+      if (magicWords[newBuffer as keyof typeof magicWords]) {
+        const newMode = magicWords[newBuffer as keyof typeof magicWords] as typeof currentMode;
+        setCurrentMode(newMode);
+        showToastNotification(`✨ ${newMode.toUpperCase()} Mode Activated!`);
+        setMagicBuffer('');
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [magicBuffer, currentMode]);
+
+  // Mode-specific background classes
+  const getModeBackground = () => {
+    switch (currentMode) {
+      case 'alphabet': return 'bg-gradient-to-br from-blue-400 via-cyan-500 to-blue-600';
+      case 'numbers': return 'bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500';
+      case 'actions': return 'bg-gradient-to-br from-pink-400 via-purple-500 to-pink-600';
+      case 'grandparent': return 'bg-gradient-to-br from-yellow-200 via-gray-200 to-yellow-300';
+      case 'vip': return 'bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-500';
+      default: return 'bg-gradient-to-b from-purple-100 to-pink-100';
+    }
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -1001,7 +1166,7 @@ const App = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-100 to-pink-100">
+    <div className={`min-h-screen transition-all duration-500 ${getModeBackground()}`}</div>
       {showGuide && <ParentGuide onClose={() => setShowGuide(false)} />}
 
       {step === 'welcome' && (
@@ -1035,9 +1200,22 @@ const App = () => {
         />
       )}
 
-      
+      {/* Toast Notification */}
+      {showToast && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-white rounded-xl shadow-lg border-2 border-purple-200 px-6 py-3 z-50 animate-bounce">
+          <div className="text-sm font-medium text-gray-800">{toastMessage}</div>
+        </div>
+      )}
 
-      <footer className="text-center text-xs text-gray-500 py-6 px-4 mt-8">
+      {/* Global click handler to close dropdown */}
+      {showSecretMenu && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setShowSecretMenu(false)}
+        />
+      )}
+
+      <footer className="text-center text-xs text-gray-500 py-6 px-4 mt-8"></footer>
         <div className="space-y-3">
           <div>
             <p className="text-gray-700 text-sm">The phonics app that doesn't exist on your phone</p>
