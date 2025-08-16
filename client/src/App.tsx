@@ -1,7 +1,7 @@
 import React, { memo, useState, useEffect, useRef } from 'react';
 import {
   Info, ChevronRight, ArrowLeft, Volume2, BookOpen, Moon, Music, Loader2, ArrowRight, ChevronLeft,
-  CheckCircle, Mic, Square, RefreshCw, Play, Share2, HelpCircle, X
+  CheckCircle, Mic, Square, RefreshCw, Play, Share2, HelpCircle, X, ChevronDown
 } from 'lucide-react';
 import { openDB } from 'idb';
 
@@ -277,13 +277,82 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
   return (
     <div className="flex items-center justify-center min-h-screen p-4">
       <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-2xl relative">
-        <button
-          onClick={onGuide}
-          className="absolute top-4 right-4 p-2 text-gray-500 hover:bg-gray-100 rounded-full"
-          aria-label="Open parent guide"
-        >
-          <Info size={20} aria-hidden="true" />
-        </button>
+        <div className="absolute top-4 right-4">
+          <button
+            onMouseDown={handleInfoMouseDown}
+            onMouseUp={handleInfoMouseUp}
+            onTouchStart={handleInfoTouchStart}
+            onTouchEnd={handleInfoTouchEnd}
+            className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-all"
+            aria-label="Open parent guide (hold for secret menu)"
+          >
+            <Info size={20} aria-hidden="true" />
+          </button>
+          
+          {/* Secret Dropdown Menu */}
+          {showDropdown && (
+            <div className="absolute top-full right-0 mt-2 bg-white rounded-xl shadow-xl border-2 border-gray-100 p-3 z-50 min-w-48">
+              <div className="text-xs text-gray-600 mb-2 font-medium">🎯 Secret Modes</div>
+              <div className="space-y-1">
+                <button
+                  onClick={() => handleModeChange('standard')}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                    currentMode === 'standard' ? 'bg-purple-100 text-purple-700' : 'hover:bg-gray-100'
+                  }`}
+                >
+                  📚 Standard Mode
+                </button>
+                <button
+                  onClick={() => handleModeChange('alphabet')}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                    currentMode === 'alphabet' ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'
+                  }`}
+                >
+                  🔤 Alphabet Mode (ALP)
+                </button>
+                <button
+                  onClick={() => handleModeChange('numbers')}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                    currentMode === 'numbers' ? 'bg-yellow-100 text-yellow-700' : 'hover:bg-gray-100'
+                  }`}
+                >
+                  🔢 Numbers Mode (NUM)
+                </button>
+                <button
+                  onClick={() => handleModeChange('actions')}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                    currentMode === 'actions' ? 'bg-pink-100 text-pink-700' : 'hover:bg-gray-100'
+                  }`}
+                >
+                  ⚡ Action Words (ING)
+                </button>
+                <button
+                  onClick={() => handleModeChange('grandparent')}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                    currentMode === 'grandparent' ? 'bg-gray-100 text-gray-700' : 'hover:bg-gray-100'
+                  }`}
+                >
+                  👴 Grandparent Mode (GRA)
+                </button>
+                <button
+                  onClick={() => handleModeChange('vip')}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                    currentMode === 'vip' ? 'bg-amber-100 text-amber-700' : 'hover:bg-gray-100'
+                  }`}
+                >
+                  ⭐ VIP Mode (VIP)
+                </button>
+              </div>
+              <button
+                onClick={() => setShowDropdown(false)}
+                className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+                aria-label="Close menu"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          )}
+        </div>
 
         <div className="mb-6">
           <BoredMamaLogo />
@@ -884,7 +953,47 @@ const App = () => {
   const [showGuide, setShowGuide] = useState(false);
   const [showGitHubModal, setShowGitHubModal] = useState(false);
   const [showLicenseModal, setShowLicenseModal] = useState(false);
+  
+  // Secret sauce features
+  const [currentMode, setCurrentMode] = useState<'standard' | 'alphabet' | 'numbers' | 'actions' | 'grandparent' | 'vip'>('standard');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [magicBuffer, setMagicBuffer] = useState('');
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const longPressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const longPressRef = useRef(false);
 
+
+  // Magic words detection
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      const newBuffer = (magicBuffer + e.key.toUpperCase()).slice(-3);
+      setMagicBuffer(newBuffer);
+      
+      const magicWords = {
+        'ING': 'actions',
+        'ALP': 'alphabet', 
+        'NUM': 'numbers',
+        'VIP': 'vip',
+        'GRA': 'grandparent'
+      };
+      
+      if (magicWords[newBuffer as keyof typeof magicWords]) {
+        const newMode = magicWords[newBuffer as keyof typeof magicWords] as typeof currentMode;
+        setCurrentMode(newMode);
+        showToastNotification(`✨ ${newMode.toUpperCase()} Mode Activated!`);
+        setMagicBuffer('');
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyPress);
+    return () => document.removeEventListener('keydown', handleKeyPress);
+  }, [magicBuffer, currentMode]);
+
+  // Mode switching effect
+  useEffect(() => {
+    document.documentElement.setAttribute('data-mode', currentMode);
+  }, [currentMode]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -968,6 +1077,48 @@ const App = () => {
     saveRecordings();
   }, [recordings]);
 
+  // Toast notification
+  const showToastNotification = (message: string) => {
+    setToastMessage(message);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
+
+  // Long press handlers for info button
+  const handleInfoMouseDown = () => {
+    longPressRef.current = false;
+    longPressTimeoutRef.current = setTimeout(() => {
+      longPressRef.current = true;
+      setShowDropdown(true);
+      showToastNotification('🎯 Secret menu activated!');
+    }, 600);
+  };
+
+  const handleInfoMouseUp = () => {
+    if (longPressTimeoutRef.current) {
+      clearTimeout(longPressTimeoutRef.current);
+    }
+    if (!longPressRef.current) {
+      setShowGuide(true);
+    }
+  };
+
+  const handleInfoTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
+    handleInfoMouseDown();
+  };
+
+  const handleInfoTouchEnd = (e: React.TouchEvent) => {
+    e.preventDefault();
+    handleInfoMouseUp();
+  };
+
+  const handleModeChange = (mode: typeof currentMode) => {
+    setCurrentMode(mode);
+    setShowDropdown(false);
+    showToastNotification(`✨ ${mode.toUpperCase()} Mode Activated!`);
+  };
+
   const handleReset = async () => {
     if (window.confirm('This will clear all recordings and data. Are you sure?')) {
       try {
@@ -994,8 +1145,20 @@ const App = () => {
     }
   };
 
+  // Mode-specific background classes
+  const getModeBackground = () => {
+    switch (currentMode) {
+      case 'alphabet': return 'bg-gradient-to-br from-blue-400 via-cyan-500 to-blue-600';
+      case 'numbers': return 'bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500';
+      case 'actions': return 'bg-gradient-to-br from-pink-400 via-purple-500 to-pink-600';
+      case 'grandparent': return 'bg-gradient-to-br from-yellow-200 via-gray-200 to-yellow-300';
+      case 'vip': return 'bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-500';
+      default: return 'bg-gradient-to-b from-purple-100 to-pink-100';
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-100 to-pink-100">
+    <div className={`min-h-screen transition-all duration-500 ${getModeBackground()}`}>
       {showGuide && <ParentGuide onClose={() => setShowGuide(false)} />}
 
       {step === 'welcome' && (
@@ -1026,6 +1189,21 @@ const App = () => {
           name={name}
           recordings={recordings}
           onReset={handleReset}
+        />
+      )}
+
+      {/* Toast Notification */}
+      {showToast && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-white rounded-xl shadow-lg border-2 border-purple-200 px-6 py-3 z-50 animate-bounce">
+          <div className="text-sm font-medium text-gray-800">{toastMessage}</div>
+        </div>
+      )}
+
+      {/* Global click handler to close dropdown */}
+      {showDropdown && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={() => setShowDropdown(false)}
         />
       )}
 
