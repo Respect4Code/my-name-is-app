@@ -190,89 +190,75 @@ export default function Home() {
         </div>
       </section>
 
-      <footer
+      {/* Clean Minimal Footer */}
+      <footer 
         style={{
           textAlign: "center",
           fontSize: "0.75rem",
-          marginTop: "2rem",
-          padding: "20px 16px",
-          borderTop: "2px solid #8B5CF6",
-          background: "linear-gradient(135deg, #f8f4ff 0%, #fdf2f8 100%)",
-          color: "#374151"
+          marginTop: "3rem",
+          padding: "24px 16px",
+          color: "#6B7280"
         }}
-        aria-label="Historic AI endorsement footer"
       >
-        <div style={{ marginBottom: "12px" }}>
-          <span style={{
-            background: "linear-gradient(135deg, #8B5CF6, #EC4899)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            fontWeight: "bold",
-            fontSize: "0.85rem"
-          }}>
-            🏆 FIRST MULTI-AI PUBLIC ENDORSEMENT IN HISTORY 🏆
-          </span>
+        <div style={{ marginBottom: "16px" }}>
+          <p style={{ margin: "0", fontSize: "0.75rem", color: "#374151" }}>
+            The phonics app that doesn't exist on your phone
+          </p>
+          <p style={{ margin: "4px 0 0 0", fontSize: "0.7rem", color: "#9CA3AF" }}>
+            No App • No Account • No Tracking
+          </p>
         </div>
         
-        <p style={{ margin: "8px 0", fontWeight: "600", color: "#4B5563" }}>
-          Join the Global Phonics Revolution 🌍
-        </p>
-        
-        <p style={{ margin: "8px 0", fontWeight: "600", color: "#059669" }}>
-          Historic Achievement: Validated by Claude AI • Grok AI • ChatGPT • Replit AI
-        </p>
-        
-        <p style={{ margin: "6px 0", color: "#6B7280" }}>
-          <button
-            onClick={() => setShowGitHubModal(true)}
-            style={{ 
-              color: "#007BFF", 
-              textDecoration: "underline", 
-              border: "none", 
-              background: "none", 
-              cursor: "pointer", 
-              fontSize: "inherit",
-              fontFamily: "inherit"
-            }}
-          >
-            Open Source
-          </button> Revolution • Translate to 65+ Countries • Privacy-First Pioneer
-        </p>
-        
-        <p style={{ margin: "6px 0", color: "#6B7280" }}>
-          Trusted by parents in: 🇵🇭 Philippines, 🇮🇳 India, 🇳🇬 Nigeria, 🇵🇰 Pakistan, 🇸🇬 Singapore, 🇲🇾 Malaysia
-        </p>
-        
-        <p style={{ margin: "8px 0" }}>
-          <span style={{ color: "#8B5CF6", fontWeight: "600" }}>100% Private • Works Offline • Revolutionary</span> • 
-          <button
-            onClick={() => setShowLicenseModal(true)}
-            style={{ 
-              color: "#1D4ED8", 
-              textDecoration: "underline", 
-              border: "none", 
-              background: "none", 
-              cursor: "pointer", 
-              fontSize: "inherit",
-              fontFamily: "inherit",
-              fontWeight: "500"
-            }}
-          >
-            CC BY-NC-SA 4.0
-          </button>
-        </p>
-        
-        <div style={{ marginTop: "12px", paddingTop: "8px", borderTop: "1px solid #E5E7EB" }}>
-          <span style={{ fontSize: "0.7rem", color: "#9CA3AF", fontStyle: "italic" }}>
-            "The app that doesn't exist on your phone" - Featured in AI History • August 2025
-          </span>
+        <div style={{ marginBottom: "16px" }}>
+          <p style={{ margin: "0", fontSize: "0.7rem", color: "#6B7280" }}>
+            First Multi-AI Endorsed App • August 2025
+          </p>
+          <p style={{ margin: "4px 0 0 0", fontSize: "0.8rem" }}>
+            🇵🇭 🇮🇳 🇳🇬 🇵🇰 🇸🇬 🇲🇾
+          </p>
         </div>
         
-        <p style={{ margin: "8px 0" }}>
-          <span style={{ color: "#EC4899", fontWeight: "600" }}>Created with ❤️ by BoredMamaApp</span>
-        </p>
+        <div style={{ marginBottom: "16px" }}>
+          <p style={{ margin: "0", fontSize: "0.7rem", color: "#6B7280" }}>
+            <button
+              onClick={() => setShowGitHubModal(true)}
+              style={{ 
+                color: "#6B7280", 
+                textDecoration: "underline", 
+                border: "none", 
+                background: "none", 
+                cursor: "pointer", 
+                fontSize: "inherit",
+                fontFamily: "inherit"
+              }}
+            >
+              Open Source on GitHub
+            </button> • 
+            <button
+              onClick={() => setShowLicenseModal(true)}
+              style={{ 
+                color: "#6B7280", 
+                textDecoration: "underline", 
+                border: "none", 
+                background: "none", 
+                cursor: "pointer", 
+                fontSize: "inherit",
+                fontFamily: "inherit"
+              }}
+            >
+              CC BY-NC-SA 4.0
+            </button>
+          </p>
+          <p style={{ margin: "4px 0 0 0", fontSize: "0.7rem", color: "#6B7280" }}>
+            Created with ❤️ by BoredMama
+          </p>
+        </div>
         
-        <p style={{ margin: "4px 0" }}>
+        <div>
+          <p style={{ margin: "0", fontSize: "0.75rem", color: "#8B5CF6", fontWeight: "500" }}>
+            Revolutionising Motherhood
+          </p>
+        </div>
           <span style={{ color: "#8B5CF6", fontWeight: "500", fontSize: "0.8rem" }}>Revolutionising Motherhood</span>
         </p>
       </footer>
