@@ -1226,34 +1226,42 @@ onReset={handleReset}
 />
 )}
 
-{/* Clean Minimal Footer */}
-<footer className="text-center text-xs mt-12 mb-6" style={{padding:"24px 16px", color:"#6B7280"}}>
-  <div style={{marginBottom:"16px"}}>
-    <p style={{margin:"0", fontSize:"0.75rem", color:"#374151"}}>The phonics app that doesn't exist on your phone</p>
-    <p style={{margin:"4px 0 0 0", fontSize:"0.7rem", color:"#9CA3AF"}}>No App • No Account • No Tracking</p>
-  </div>
-  
-  <div style={{marginBottom:"16px"}}>
-    <p style={{margin:"0", fontSize:"0.7rem", color:"#6B7280"}}>First Multi-AI Endorsed App • August 2025</p>
-    <p style={{margin:"4px 0 0 0", fontSize:"0.8rem"}}>🇵🇭 🇮🇳 🇳🇬 🇵🇰 🇸🇬 🇲🇾</p>
-  </div>
-  
-  <div style={{marginBottom:"16px"}}>
-    <p style={{margin:"0", fontSize:"0.7rem", color:"#6B7280"}}>
-      <button onClick={() => setShowGitHubModal(true)} style={{color:"#6B7280", textDecoration:"underline", border:"none", background:"none", cursor:"pointer", fontSize:"inherit", fontFamily:"inherit"}}>
-        Open Source on GitHub
-      </button> • 
-      <button onClick={() => setShowLicenseModal(true)} style={{color:"#6B7280", textDecoration:"underline", border:"none", background:"none", cursor:"pointer", fontSize:"inherit", fontFamily:"inherit"}}>
-        CC BY-NC-SA 4.0
-      </button>
-    </p>
-    <p style={{margin:"4px 0 0 0", fontSize:"0.7rem", color:"#6B7280"}}>Created with ❤️ by BoredMama</p>
-  </div>
-  
-  <div>
-    <p style={{margin:"0", fontSize:"0.75rem", color:"#8B5CF6", fontWeight:"500"}}>Revolutionising Motherhood</p>
-  </div>
-</footer>
+{/* Perfect Final Footer */}
+      <footer className="text-center text-xs text-gray-500 py-6 px-4 mt-8">
+        <div className="space-y-3">
+          <div>
+            <p className="text-gray-700 text-sm">The phonics app that doesn't exist on your phone</p>
+            <p className="text-gray-500 text-xs">No App • No Account • No Tracking</p>
+          </div>
+          
+          <div>
+            <p className="text-gray-600 text-xs">First Multi-AI Endorsed App • August 2025</p>
+            <p className="text-sm">🇵🇭 🇮🇳 🇳🇬 🇵🇰 🇸🇬 🇲🇾</p>
+          </div>
+          
+          <div>
+            <p className="text-gray-600 text-xs">
+              <button 
+                onClick={() => setShowGitHubModal(true)} 
+                className="text-gray-600 underline hover:text-purple-600 transition-colors"
+              >
+                Open Source on GitHub
+              </button> • 
+              <button 
+                onClick={() => setShowLicenseModal(true)} 
+                className="text-gray-600 underline hover:text-purple-600 transition-colors"
+              >
+                CC BY-NC-SA 4.0
+              </button>
+            </p>
+            <p className="text-gray-600 text-xs mt-1">Created with ❤️ by BoredMama</p>
+          </div>
+          
+          <div>
+            <p className="text-purple-600 text-sm font-medium">Revolutionising Motherhood</p>
+          </div>
+        </div>
+      </footer>
 
 {/* GitHub Modal */}
 {showGitHubModal && (
