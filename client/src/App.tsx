@@ -13,9 +13,9 @@ const BoredMamaLogo = () => {
   return (
     <div className="flex items-center justify-center mb-2">
       {!logoError && (
-        <img 
-          src="/boredmama-logo.svg" 
-          alt="BoredMama - Revolutionising Motherhood" 
+        <img
+          src="/boredmama-logo.svg"
+          alt="BoredMama - Revolutionising Motherhood"
           className="h-12 w-auto object-contain"
           onLoad={() => setLogoLoaded(true)}
           onError={() => setLogoError(true)}
@@ -200,20 +200,20 @@ const ShareButton: React.FC<ShareButtonProps> = memo(({ className = "" }) => {
         onMouseLeave={() => setIsHovered(false)}
         className={`
           w-full py-3 px-6 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2
-          ${isHovered 
-            ? 'bg-orange-400 text-white shadow-lg transform scale-105' 
+          ${isHovered
+            ? 'bg-orange-400 text-white shadow-lg transform scale-105'
             : 'bg-transparent text-purple-600 border-2 border-purple-200 hover:border-purple-300'
           }
         `}
         aria-label="Share this app with friends and family"
       >
-        {isHovered ? 'SHARE THIS APP' : 'Share with friends & family'} 
+        {isHovered ? 'SHARE THIS APP' : 'Share with friends & family'}
         <Share2 size={16} />
       </button>
 
       {isExpanded && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border-2 border-gray-100 p-4 z-50">
-          <button 
+          <button
             onClick={() => setIsExpanded(false)}
             className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
             aria-label="Close sharing options"
@@ -288,7 +288,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
           >
             <Info size={20} aria-hidden="true" />
           </button>
-          
+
           {/* Secret Dropdown Menu */}
           {showDropdown && (
             <div className="absolute top-full right-0 mt-2 bg-white rounded-xl shadow-xl border-2 border-gray-100 p-3 z-50 min-w-48">
@@ -642,16 +642,16 @@ const RecordingScreen: React.FC<RecordingScreenProps> = memo(({ name, recordings
   const letters = name.split('');
 
   const stages: Stage[] = [
-    { 
-      id: 'fullname', 
-      label: `Full Name: "${name}"`, 
+    {
+      id: 'fullname',
+      label: `Full Name: "${name}"`,
       key: 'fullname',
       instruction: `Say their name clearly: "${name}"`,
       icon: <Volume2 size={20} />
     },
-    { 
-      id: 'question', 
-      label: 'Name Question', 
+    {
+      id: 'question',
+      label: 'Name Question',
       key: 'question',
       instruction: `Ask: "What is your name?" (pause for response)`,
       icon: <Volume2 size={20} />
@@ -663,16 +663,16 @@ const RecordingScreen: React.FC<RecordingScreenProps> = memo(({ name, recordings
       instruction: `Say the SOUND of "${letter}" (not the letter name)\nExample: B = "buh" not "bee"`,
       icon: <BookOpen size={20} />
     })),
-    { 
-      id: 'sentence', 
-      label: 'Say a sentence with name', 
+    {
+      id: 'sentence',
+      label: 'Say a sentence with name',
       key: 'sentence',
       instruction: `Say a sentence using "${name}" - be creative!`,
       icon: <Moon size={20} />
     },
-    { 
-      id: 'rhyme', 
-      label: `Say a fun rhyme with name`, 
+    {
+      id: 'rhyme',
+      label: `Say a fun rhyme with name`,
       key: 'rhyme',
       instruction: `Make a fun rhyme with "${name}"\nExample: "${name} is sweet, from head to feet!"`,
       icon: <Music size={20} />
@@ -953,7 +953,10 @@ const App = () => {
   const [showGuide, setShowGuide] = useState(false);
   const [showGitHubModal, setShowGitHubModal] = useState(false);
   const [showLicenseModal, setShowLicenseModal] = useState(false);
-  
+
+  // Toast state
+  const [toast, setToast] = useState({ message: '', type: 'info', show: false });
+
   // Secret sauce features
   const [currentMode, setCurrentMode] = useState<'standard' | 'alphabet' | 'numbers' | 'actions' | 'grandparent' | 'vip'>('standard');
   const [showDropdown, setShowDropdown] = useState(false);
@@ -962,22 +965,71 @@ const App = () => {
   const [toastMessage, setToastMessage] = useState('');
   const longPressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const longPressRef = useRef(false);
+  const [infoPressing, setInfoPressing] = useState(false);
+  const [infoPressTimer, setInfoPressTimer] = useState<NodeJS.Timeout | null>(null);
+  const [showSecretMenu, setShowSecretMenu] = useState(false);
+
+
+  // Toast notification
+  const showToastNotification = (message: string) => {
+    setToastMessage(message);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
+
+  // Info button handlers for secret menu
+  const handleInfoMouseDown = () => {
+    setInfoPressing(true);
+    const timer = setTimeout(() => {
+      setShowSecretMenu(true);
+      setInfoPressing(false);
+      showToastNotification('🎯 Secret menu activated!');
+    }, 600);
+    setInfoPressTimer(timer);
+  };
+
+  const handleInfoMouseUp = () => {
+    setInfoPressing(false);
+    if (infoPressTimer) {
+      clearTimeout(infoPressTimer);
+      setInfoPressTimer(null);
+    }
+    if (!longPressRef.current && !showSecretMenu) { // Only open guide if secret menu wasn't activated
+      setShowGuide(true);
+    }
+  };
+
+  const handleInfoTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
+    handleInfoMouseDown();
+  };
+
+  const handleInfoTouchEnd = (e: React.TouchEvent) => {
+    e.preventDefault();
+    handleInfoMouseUp();
+  };
+
+  const handleModeChange = (mode: typeof currentMode) => {
+    setCurrentMode(mode);
+    setShowDropdown(false);
+    showToastNotification(`✨ ${mode.toUpperCase()} Mode Activated!`);
+  };
 
 
   // Magic words detection
   useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       const newBuffer = (magicBuffer + e.key.toUpperCase()).slice(-3);
       setMagicBuffer(newBuffer);
-      
+
       const magicWords = {
         'ING': 'actions',
-        'ALP': 'alphabet', 
+        'ALP': 'alphabet',
         'NUM': 'numbers',
         'VIP': 'vip',
         'GRA': 'grandparent'
       };
-      
+
       if (magicWords[newBuffer as keyof typeof magicWords]) {
         const newMode = magicWords[newBuffer as keyof typeof magicWords] as typeof currentMode;
         setCurrentMode(newMode);
@@ -986,14 +1038,22 @@ const App = () => {
       }
     };
 
-    document.addEventListener('keydown', handleKeyPress);
-    return () => document.removeEventListener('keydown', handleKeyPress);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, [magicBuffer, currentMode]);
 
-  // Mode switching effect
-  useEffect(() => {
-    document.documentElement.setAttribute('data-mode', currentMode);
-  }, [currentMode]);
+  // Mode-specific background classes
+  const getModeBackground = () => {
+    switch (currentMode) {
+      case 'alphabet': return 'bg-gradient-to-br from-blue-400 via-cyan-500 to-blue-600';
+      case 'numbers': return 'bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500';
+      case 'actions': return 'bg-gradient-to-br from-pink-400 via-purple-500 to-pink-600';
+      case 'grandparent': return 'bg-gradient-to-br from-yellow-200 via-gray-200 to-yellow-300';
+      case 'vip': return 'bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-500';
+      default: return 'bg-gradient-to-b from-purple-100 to-pink-100';
+    }
+  };
+
 
   useEffect(() => {
     const loadData = async () => {
@@ -1077,47 +1137,6 @@ const App = () => {
     saveRecordings();
   }, [recordings]);
 
-  // Toast notification
-  const showToastNotification = (message: string) => {
-    setToastMessage(message);
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000);
-  };
-
-  // Long press handlers for info button
-  const handleInfoMouseDown = () => {
-    longPressRef.current = false;
-    longPressTimeoutRef.current = setTimeout(() => {
-      longPressRef.current = true;
-      setShowDropdown(true);
-      showToastNotification('🎯 Secret menu activated!');
-    }, 600);
-  };
-
-  const handleInfoMouseUp = () => {
-    if (longPressTimeoutRef.current) {
-      clearTimeout(longPressTimeoutRef.current);
-    }
-    if (!longPressRef.current) {
-      setShowGuide(true);
-    }
-  };
-
-  const handleInfoTouchStart = (e: React.TouchEvent) => {
-    e.preventDefault();
-    handleInfoMouseDown();
-  };
-
-  const handleInfoTouchEnd = (e: React.TouchEvent) => {
-    e.preventDefault();
-    handleInfoMouseUp();
-  };
-
-  const handleModeChange = (mode: typeof currentMode) => {
-    setCurrentMode(mode);
-    setShowDropdown(false);
-    showToastNotification(`✨ ${mode.toUpperCase()} Mode Activated!`);
-  };
 
   const handleReset = async () => {
     if (window.confirm('This will clear all recordings and data. Are you sure?')) {
@@ -1142,18 +1161,6 @@ const App = () => {
         setName(null);
         setStep('welcome');
       }
-    }
-  };
-
-  // Mode-specific background classes
-  const getModeBackground = () => {
-    switch (currentMode) {
-      case 'alphabet': return 'bg-gradient-to-br from-blue-400 via-cyan-500 to-blue-600';
-      case 'numbers': return 'bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500';
-      case 'actions': return 'bg-gradient-to-br from-pink-400 via-purple-500 to-pink-600';
-      case 'grandparent': return 'bg-gradient-to-br from-yellow-200 via-gray-200 to-yellow-300';
-      case 'vip': return 'bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-500';
-      default: return 'bg-gradient-to-b from-purple-100 to-pink-100';
     }
   };
 
@@ -1201,8 +1208,8 @@ const App = () => {
 
       {/* Global click handler to close dropdown */}
       {showDropdown && (
-        <div 
-          className="fixed inset-0 z-40" 
+        <div
+          className="fixed inset-0 z-40"
           onClick={() => setShowDropdown(false)}
         />
       )}
@@ -1221,14 +1228,14 @@ const App = () => {
 
           <div>
             <p className="text-gray-600 text-xs">
-              <button 
-                onClick={() => setShowGitHubModal(true)} 
+              <button
+                onClick={() => setShowGitHubModal(true)}
                 className="text-gray-600 underline hover:text-purple-600 transition-colors"
               >
                 Open Source on GitHub
-              </button> • 
-              <button 
-                onClick={() => setShowLicenseModal(true)} 
+              </button> •
+              <button
+                onClick={() => setShowLicenseModal(true)}
                 className="text-gray-600 underline hover:text-purple-600 transition-colors"
               >
                 CC BY-NC-SA 4.0
@@ -1244,11 +1251,11 @@ const App = () => {
       </footer>
 
       {showGitHubModal && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
           onClick={() => setShowGitHubModal(false)}
         >
-          <div 
+          <div
             className="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
@@ -1269,7 +1276,7 @@ const App = () => {
                 </button>
               </div>
             </div>
-            
+
             <div className="p-6 space-y-4">
               <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4">
                 <h3 className="font-semibold text-gray-900 mb-2">MyNameIsApp on GitHub</h3>
@@ -1292,11 +1299,11 @@ const App = () => {
       )}
 
       {showLicenseModal && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
           onClick={() => setShowLicenseModal(false)}
         >
-          <div 
+          <div
             className="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
@@ -1317,7 +1324,7 @@ const App = () => {
                 </button>
               </div>
             </div>
-            
+
             <div className="p-6 space-y-4">
               <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4">
                 <h3 className="font-semibold text-gray-900 mb-2">Creative Commons BY-NC-SA 4.0</h3>
