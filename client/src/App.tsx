@@ -1361,43 +1361,6 @@ onReset={handleReset}
   </div>
 )}
 
-{/* Footer */}
-      <footer className="text-center text-xs text-gray-500 py-6 px-4 mt-8">
-        <div className="space-y-3">
-          <div>
-            <p className="text-gray-700 text-sm">The phonics app that doesn't exist on your phone</p>
-            <p className="text-gray-500 text-xs">No App • No Account • No Tracking</p>
-          </div>
-          
-          <div>
-            <p className="text-gray-600 text-xs">First Multi-AI Endorsed App • August 2025</p>
-            <p className="text-sm">🇵🇭 🇮🇳 🇳🇬 🇵🇰 🇸🇬 🇲🇾</p>
-          </div>
-          
-          <div>
-            <p className="text-gray-600 text-xs">
-              <button 
-                onClick={() => setShowGitHubModal(true)} 
-                className="text-gray-600 underline hover:text-purple-600 transition-colors"
-              >
-                Open Source on GitHub
-              </button> • 
-              <button 
-                onClick={() => setShowLicenseModal(true)} 
-                className="text-gray-600 underline hover:text-purple-600 transition-colors"
-              >
-                CC BY-NC-SA 4.0
-              </button>
-            </p>
-            <p className="text-gray-600 text-xs mt-1">Created with ❤️ by BoredMama</p>
-          </div>
-          
-          <div>
-            <p className="text-purple-600 text-sm font-medium">Revolutionising Motherhood</p>
-          </div>
-        </div>
-      </footer>
-
 </div>
 );
 };
