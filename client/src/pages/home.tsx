@@ -132,9 +132,97 @@ export default function Home() {
         onSettingsChange={handleSettingsChange}
       />
 
-      {/* Compact Footer */}
-      <footer className="text-center text-xs mt-4 mb-2 px-4">
-        <div style={{fontSize:"0.65rem", color:"#6B7280"}}>
+      {/* Creative Commons Footer */}
+      {/* AI Endorsements Section */}
+      <section className="endorsements mt-12 mb-8">
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">AI Endorses Privacy</h2>
+          <p className="text-gray-600">When three leading AI systems praise your privacy-first approach</p>
+        </div>
+        
+        {/* Square version for main display */}
+        <div className="flex justify-center mb-6">
+          <img 
+            src="/ai_endorsements_mynameisapp.png" 
+            alt="AI Endorsements for MyNameIsApp - Claude AI, Grok AI, and ChatGPT praise the privacy-first phonics learning approach" 
+            className="max-w-full w-full max-w-md rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
+          />
+        </div>
+        
+        {/* Horizontal version for social sharing */}
+        <div className="flex justify-center mb-6">
+          <img 
+            src="/ai_endorsements_horizontal.png" 
+            alt="Horizontal AI Endorsements - Perfect for social media sharing" 
+            className="max-w-full w-full max-w-2xl rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
+          />
+        </div>
+
+        {/* Social sharing buttons */}
+        <div className="text-center">
+          <p className="text-sm text-gray-600 mb-4">Share the AI-endorsed privacy revolution:</p>
+          <div className="flex flex-wrap justify-center gap-2">
+            <a
+              href="https://twitter.com/intent/tweet?text=Even%20AI%20systems%20endorse%20MyNameIsApp's%20privacy-first%20approach!%20✨&url=https://mynameisapp.co.uk&hashtags=PrivacyFirst,PhonicsLearning,AIEndorsed"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
+            >
+              Share on Twitter
+            </a>
+            <a
+              href="https://www.facebook.com/sharer/sharer.php?u=https://mynameisapp.co.uk"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+            >
+              Share on Facebook
+            </a>
+            <a
+              href="https://www.linkedin.com/sharing/share-offsite/?url=https://mynameisapp.co.uk"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition-colors text-sm"
+            >
+              Share on LinkedIn
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <footer
+        style={{
+          textAlign: "center",
+          fontSize: "0.75rem",
+          marginTop: "2rem",
+          padding: "20px 16px",
+          borderTop: "2px solid #8B5CF6",
+          background: "linear-gradient(135deg, #f8f4ff 0%, #fdf2f8 100%)",
+          color: "#374151"
+        }}
+        aria-label="Historic AI endorsement footer"
+      >
+        <div style={{ marginBottom: "12px" }}>
+          <span style={{
+            background: "linear-gradient(135deg, #8B5CF6, #EC4899)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            fontWeight: "bold",
+            fontSize: "0.85rem"
+          }}>
+            🏆 FIRST MULTI-AI PUBLIC ENDORSEMENT IN HISTORY 🏆
+          </span>
+        </div>
+        
+        <p style={{ margin: "8px 0", fontWeight: "600", color: "#4B5563" }}>
+          Join the Global Phonics Revolution 🌍
+        </p>
+        
+        <p style={{ margin: "8px 0", fontWeight: "600", color: "#059669" }}>
+          Historic Achievement: Validated by Claude AI • Grok AI • ChatGPT • Replit AI
+        </p>
+        
+        <p style={{ margin: "6px 0", color: "#6B7280" }}>
           <button
             onClick={() => setShowGitHubModal(true)}
             style={{ 
@@ -148,7 +236,15 @@ export default function Home() {
             }}
           >
             Open Source
-          </button> • 
+          </button> Revolution • Translate to 65+ Countries • Privacy-First Pioneer
+        </p>
+        
+        <p style={{ margin: "6px 0", color: "#6B7280" }}>
+          Trusted by parents in: 🇵🇭 Philippines, 🇮🇳 India, 🇳🇬 Nigeria, 🇵🇰 Pakistan, 🇸🇬 Singapore, 🇲🇾 Malaysia
+        </p>
+        
+        <p style={{ margin: "8px 0" }}>
+          <span style={{ color: "#8B5CF6", fontWeight: "600" }}>100% Private • Works Offline • Revolutionary</span> • 
           <button
             onClick={() => setShowLicenseModal(true)}
             style={{ 
@@ -158,12 +254,27 @@ export default function Home() {
               background: "none", 
               cursor: "pointer", 
               fontSize: "inherit",
-              fontFamily: "inherit"
+              fontFamily: "inherit",
+              fontWeight: "500"
             }}
           >
             CC BY-NC-SA 4.0
           </button>
+        </p>
+        
+        <div style={{ marginTop: "12px", paddingTop: "8px", borderTop: "1px solid #E5E7EB" }}>
+          <span style={{ fontSize: "0.7rem", color: "#9CA3AF", fontStyle: "italic" }}>
+            "The app that doesn't exist on your phone" - Featured in AI History • August 2025
+          </span>
         </div>
+        
+        <p style={{ margin: "8px 0" }}>
+          <span style={{ color: "#EC4899", fontWeight: "600" }}>Created with ❤️ by BoredMamaApp</span>
+        </p>
+        
+        <p style={{ margin: "4px 0" }}>
+          <span style={{ color: "#8B5CF6", fontWeight: "500", fontSize: "0.8rem" }}>Revolutionising Motherhood</span>
+        </p>
       </footer>
 
       {/* GitHub Modal */}
@@ -275,7 +386,7 @@ export default function Home() {
                   <span className="mr-2">🔗</span>
                   Read Full License
                 </a>
-                </div>
+              </div>
               
               <div className="space-y-3 text-sm text-gray-600">
                 <div>

@@ -1,1267 +1,1367 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Camera, Mic, Play, Check, ChevronRight, ChevronLeft, 
-  RefreshCw, Home, Volume2, Square, ArrowLeft, Info,
-  Music, BookOpen, Footprints, X, CheckCircle
+import React, { memo, useState, useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom/client';
+import {
+Info, ChevronRight, ArrowLeft, Volume2, BookOpen, Moon, Music, Loader2, ArrowRight, ChevronLeft,
+CheckCircle, Mic, Square, RefreshCw, Play, Share2, HelpCircle, X
 } from 'lucide-react';
+import { openDB } from 'idb';
+// BoredMama logo - exact match from marketing materials
+const BoredMamaLogo = () => {
+        const [logoLoaded, setLogoLoaded] = useState(false);
+        const [logoError, setLogoError] = useState(false);
+        
+        return (
+                <div className="flex items-center justify-center mb-2">
+                        {!logoError && (
+                                <img 
+                                        src="/boredmama-logo.svg" 
+                                        alt="BoredMama - Revolutionising Motherhood" 
+                                        className="h-12 w-auto object-contain"
+                                        onLoad={() => setLogoLoaded(true)}
+                                        onError={() => setLogoError(true)}
+                                        style={{ display: logoLoaded ? 'block' : 'none' }}
+                                />
+                        )}
+                        {(logoError || !logoLoaded) && (
+                                <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-pink-400 to-purple-600 rounded-2xl shadow-lg">
+                                        <span className="text-white font-bold text-lg tracking-wide">BoredMama</span>
+                                </div>
+                        )}
+                </div>
+        );
+};
 
-// ====== DATABASE HELPER ======
-const dbPromise = typeof window !== 'undefined' && 'indexedDB' in window
-  ? import('idb').then(({ openDB }) => 
-      openDB('MyNameIsDB', 1, {
-        upgrade(db) {
-          if (!db.objectStoreNames.contains('recordings')) {
-            db.createObjectStore('recordings');
-          }
-        },
-      })
-    )
-  : null;
+// Get vibrant colors for letters matching the BoredMama brand
+const getLetterColor = (index: number) => {
+        const colors = [
+                'text-yellow-500', 'text-green-500', 'text-blue-400', 'text-pink-500', 
+                'text-red-500', 'text-purple-600', 'text-orange-500', 'text-teal-500',
+                'text-indigo-500', 'text-rose-500'
+        ];
+        return colors[index % colors.length];
+};
 
-async function saveToIndexedDB(key: string, value: string) {
-  if (!dbPromise) {
-    localStorage.setItem(key, value);
-    return;
-  }
-  try {
-    const db = await dbPromise;
-    await db.put('recordings', value, key);
-  } catch (err) {
-    console.error('IndexedDB save failed, falling back to localStorage:', err);
-    localStorage.setItem(key, value);
-  }
+// TypeScript interfaces
+interface Stage {
+id: string;
+label: string;
+key: string;
+instruction: string;
+icon: React.ReactNode;
 }
 
-async function loadFromIndexedDB(key: string) {
-  if (!dbPromise) {
-    return localStorage.getItem(key);
-  }
-  try {
-    const db = await dbPromise;
-    const value = await db.get('recordings', key);
-    return value || localStorage.getItem(key);
-  } catch (err) {
-    console.error('IndexedDB load failed, falling back to localStorage:', err);
-    return localStorage.getItem(key);
-  }
+interface ParentGuideProps {
+onClose: () => void;
 }
 
-// ====== PARENT GUIDE COMPONENT ======
-function ParentGuide({ onClose }: { onClose: () => void }) {
-  return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" role="dialog" aria-labelledby="parent-guide-title">
-      <div className="bg-white rounded-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <h2 id="parent-guide-title" className="text-2xl font-bold mb-4">Quick Parent Guide</h2>
-        <div className="space-y-4 text-sm">
-          <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-            <h3 className="font-bold mb-2">Why I Made This App</h3>
-            <p className="text-gray-600">
-              As a parent, I wanted my toddler to learn their name with our voices, not generic videos. 
-              Inspired by phonemes, I created this app to let parents record their voice and upload photos, 
-              helping toddlers connect letters to sounds in a fun, personal way! And there is nothing more 
-              personal than parents’ voices, after all they have been hearing them since they were in the womb.
-            </p>
-          </div>
-          
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <h3 className="font-bold mb-2">⏱️ Total Setup Time: 5 minutes</h3>
-            <p>We respect your time. Here's exactly what to do:</p>
-          </div>
-          
-          <div className="space-y-3">
-            <div>
-              <h4 className="font-bold">1️⃣ Enter Name (10 seconds)</h4>
-              <p className="text-gray-600">Type your child's name. That's it.</p>
-            </div>
-            
-            <div>
-              <h4 className="font-bold">2️⃣ Add Photo (20 seconds)</h4>
-              <p className="text-gray-600">
-                Upload a photo of your child (under 2MB). It’s automatically resized to 300x300 pixels, 
-                then drag to reposition and confirm with the green checkmark. Cancel with the red X if needed. 
-                Stays private on your device, with smaller file sizes (~100KB).
-              </p>
-            </div>
-            
-            <div>
-              <h4 className="font-bold">3️⃣ Record Sounds (3-4 minutes)</h4>
-              <p className="text-gray-600">Record 4 types of sounds:</p>
-              <ul className="ml-4 mt-1 text-gray-600">
-                <li>• Their full name</li>
-                <li>• Each letter SOUND (not name!)</li>
-                <li>• Walking sentence</li>
-                <li>• Fun rhyme</li>
-              </ul>
-              <p className="text-gray-600 mt-1"><strong>To re-record:</strong> Just tap any item again!</p>
-            </div>
-            
-            <div>
-              <h4 className="font-bold">4️⃣ Done! Give to child</h4>
-              <p className="text-gray-600">They tap the GIANT letters and hear YOUR voice.</p>
-            </div>
-          </div>
-          
-          <div className="bg-green-50 p-4 rounded-lg">
-            <h3 className="font-bold mb-1">💡 Recording Tips:</h3>
-            <ul className="text-gray-700 space-y-1">
-              <li>• Red mic = recording</li>
-              <li>• Tap once to start, tap again to stop</li>
-              <li>• Green check = saved</li>
-              <li>• Orange mic = re-recording</li>
-              <li>• Record letter SOUNDS not names (B = "buh" not "bee")</li>
-            </ul>
-          </div>
-          
-          <div className="bg-yellow-50 p-4 rounded-lg">
-            <h3 className="font-bold mb-1">⚠️ Important:</h3>
-            <ul className="text-gray-700 space-y-1">
-              <li>• <strong>Your work is auto-saved!</strong></li>
-              <li>• Use back buttons (not browser back)</li>
-              <li>• Works best without toddler present 😅</li>
-              <li>• If audio doesn't play, check volume/silent mode</li>
-              <li>• <strong>First audio requires a tap</strong> (mobile safety)</li>
-              <li>• No storage limits with new system!</li>
-            </ul>
-          </div>
-        </div>
-        
-        <button
-          onClick={onClose}
-          className="w-full mt-6 py-3 bg-purple-500 text-white rounded-xl font-bold hover:bg-purple-600"
-        >
-          Got it! Let's start
-        </button>
-      </div>
-    </div>
-  );
+interface WelcomeScreenProps {
+onNext: (name: string) => void;
+onGuide: () => void;
 }
 
-// ====== MAIN APP COMPONENT ======
-export default function App() {
-  const [currentStep, setCurrentStep] = useState('welcome');
-  const [childName, setChildName] = useState('');
-  const [childPhoto, setChildPhoto] = useState('');
-  const [recordings, setRecordings] = useState({});
-  const [currentFlashcard, setCurrentFlashcard] = useState(0);
-  const [showGuide, setShowGuide] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const savedName = localStorage.getItem('childName');
-        const savedPhoto = localStorage.getItem('childPhoto');
-        
-        if (savedName && savedPhoto) {
-          setChildName(savedName);
-          setChildPhoto(savedPhoto);
-          
-          const recordingKeys = ['fullname', 'sentence', 'rhyme'];
-          const letterKeys = savedName.split('').map((_, i) => `letter-${i}`);
-          const allKeys = [...recordingKeys, ...letterKeys];
-          
-          const loadedRecordings = {};
-          for (const key of allKeys) {
-            const value = await loadFromIndexedDB(key);
-            if (value) loadedRecordings[key] = value;
-          }
-          
-          if (Object.keys(loadedRecordings).length > 0) {
-            setRecordings(loadedRecordings);
-            setCurrentStep('menu');
-          }
-        }
-      } catch (err) {
-        console.error('Error loading saved data:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadData();
-  }, []);
-
-  const saveRecording = async (key: string, value: string) => {
-    await saveToIndexedDB(key, value);
-    setRecordings(prev => ({ ...prev, [key]: value }));
-  };
-
-  const resetApp = async () => {
-    if (confirm('Delete everything and start over?')) {
-      localStorage.clear();
-      if (dbPromise) {
-        try {
-          const db = await dbPromise;
-          const tx = db.transaction('recordings', 'readwrite');
-          await tx.objectStore('recordings').clear();
-        } catch (err) {
-          console.error('Error clearing IndexedDB:', err);
-        }
-      }
-      setChildName('');
-      setChildPhoto('');
-      setRecordings({});
-      setCurrentStep('welcome');
-      setCurrentFlashcard(0);
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-        <div className="text-white text-2xl">Loading...</div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-500 to-pink-500 text-white">
-      {showGuide && <ParentGuide onClose={() => setShowGuide(false)} />}
-      
-      {currentStep === 'welcome' && (
-        <WelcomeScreen 
-          onNext={(name: string) => {
-            setChildName(name);
-            localStorage.setItem('childName', name);
-            setCurrentStep('photo');
-          }}
-          onGuide={() => setShowGuide(true)}
-        />
-      )}
-      
-      {currentStep === 'photo' && (
-        <PhotoScreen 
-          name={childName} 
-          onNext={(photo: string) => {
-            setChildPhoto(photo);
-            localStorage.setItem('childPhoto', photo);
-            setCurrentStep('record');
-          }}
-          onBack={() => setCurrentStep('welcome')}
-        />
-      )}
-      
-      {currentStep === 'record' && (
-        <RecordingScreen 
-          name={childName}
-          recordings={recordings}
-          saveRecording={saveRecording}
-          onComplete={() => setCurrentStep('menu')}
-          onBack={() => setCurrentStep('photo')}
-        />
-      )}
-      
-      {currentStep === 'menu' && (
-        <MenuScreen 
-          name={childName}
-          onPlay={() => {
-            setCurrentFlashcard(0);
-            setCurrentStep('flashcards');
-          }}
-          onRecord={() => setCurrentStep('record')}
-          onReset={resetApp}
-        />
-      )}
-      
-      {currentStep === 'flashcards' && (
-        <FlashcardScreen 
-          name={childName}
-          photo={childPhoto}
-          recordings={recordings}
-          current={currentFlashcard}
-          setCurrent={setCurrentFlashcard}
-          onHome={() => setCurrentStep('menu')}
-        />
-      )}
-    </div>
-  );
+interface ShareButtonProps {
+className?: string;
 }
 
-// ====== WELCOME SCREEN ======
-function WelcomeScreen({ onNext, onGuide }: { onNext: (name: string) => void; onGuide: () => void }) {
-  const [name, setName] = useState('');
-  
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && name.length >= 1) {
-      e.preventDefault();
-      onNext(name.toUpperCase());
-    }
-  };
-  
-  return (
-    <div className="flex items-center justify-center min-h-screen p-4">
-      <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-2xl relative">
-        <button
-          onClick={onGuide}
-          className="absolute top-4 right-4 p-2 text-gray-500 hover:bg-gray-100 rounded-full"
-          aria-label="Open parent guide"
-        >
-          <Info size={20} />
-        </button>
-        
-        <h1 className="text-4xl font-bold text-gray-800 mb-2">My Name Is</h1>
-        <p className="text-gray-600 mb-2">Teach your child their name with YOUR voice</p>
-        <p className="text-purple-600 text-sm font-medium mb-6">
-          ⭐ Use YOUR voice for personal phonics—read our story!
-        </p>
-        
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value.replace(/[^a-zA-Z]/g, ''))}
-          onKeyDown={handleKeyDown}
-          placeholder="Enter your child's name"
-          className="w-full p-4 text-2xl text-center border-2 border-purple-200 rounded-xl text-gray-800 mb-6"
-          maxLength={20}
-          autoFocus
-        />
-        
-        {name.length === 1 && (
-          <p className="text-xs text-blue-600 -mt-4 mb-4 text-center">
-            💡 Tip: Single letter names work too!
-          </p>
-        )}
-        
-        {name.length >= 15 && (
-          <p className="text-xs text-orange-600 -mt-4 mb-4 text-center">
-            {20 - name.length} characters left
-          </p>
-        )}
-        
-        <button
-          onClick={() => name.length >= 1 && onNext(name.toUpperCase())}
-          disabled={name.length < 1}
-          className={`w-full py-4 rounded-xl font-bold text-xl transition-all flex items-center justify-center gap-2 ${
-            name.length >= 1
-              ? 'bg-purple-500 text-white hover:bg-purple-600'
-              : 'bg-gray-300 text-gray-500'
-          }`}
-        >
-          Next <ChevronRight />
-        </button>
-        
-        <button
-          onClick={onGuide}
-          className="mt-4 text-purple-600 underline text-sm"
-        >
-          Need help? Read 5-minute guide
-        </button>
-        
-        <p className="text-xs text-gray-500 mt-8">
-          100% Private • Works Offline • CC BY-NC-SA 4.0<br/>
-          Created with ❤️ by BoredMamaApp<br/>
-          <span className="text-green-600 font-medium">✓ Auto-saves your work</span>
-        </p>
-      </div>
-    </div>
-  );
+interface RecordingScreenProps {
+name: string;
+recordings: Record<string, string>;
+setRecordings: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+onComplete: () => void;
+onBack: () => void;
 }
 
-// ====== PHOTO SCREEN ======
-function PhotoScreen({ name, onNext, onBack }: { name: string; onNext: (photo: string) => void; onBack: () => void }) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [photoPreview, setPhotoPreview] = useState('');
-  const [tempImage, setTempImage] = useState<string | null>(null);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const imageRef = useRef<HTMLImageElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+interface FlashcardScreenProps {
+name: string;
+recordings: Record<string, string>;
+onReset: () => void;
+}
 
-  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && file.type.startsWith('image/')) {
-      if (file.size > 2 * 1024 * 1024) {
-        alert('Photo is too large. Please choose a smaller image (under 2MB).');
-        return;
-      }
-      
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.src = e.target?.result as string;
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d')!;
-          const maxSize = 300;
-          
-          let width = img.width;
-          let height = img.height;
-          
-          if (width > height) {
-            if (width > maxSize) {
-              height = Math.round((height * maxSize) / width);
-              width = maxSize;
-            }
-          } else {
-            if (height > maxSize) {
-              width = Math.round((width * maxSize) / height);
-              height = maxSize;
-            }
-          }
-          
-          canvas.width = width;
-          canvas.height = height;
-          ctx.drawImage(img, 0, 0, width, height);
-          
-          const resizedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
-          setTempImage(resizedDataUrl);
-          setPosition({ x: 0, y: 0 });
+interface RecordingStageProps {
+stage: Stage;
+isActive: boolean;
+isComplete: boolean;
+isNext: boolean;
+onRecord: (audioData: string) => void;
+onClick: () => void;
+onReRecord: () => void;
+recordings: { [key: string]: string };
+}
+
+// ParentGuide Component
+const ParentGuide: React.FC<ParentGuideProps> = memo(({ onClose }) => {
+return (
+<div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" role="dialog" aria-labelledby="parent-guide-title">
+<div className="bg-white rounded-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+<h2 id="parent-guide-title" className="text-2xl font-bold mb-4">Quick Parent Guide</h2>
+
+<div className="space-y-4 text-sm">
+<div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+<h3 className="font-bold mb-2">💡 Why I Made This App</h3>
+<p className="text-gray-600">
+As parents, we wanted our toddler to learn their own name with our voices sounding it out, not generic videos or cartoons. Inspired by phonics and early speech science, I created <em>MyNameIsApp</em> so parents can record their voices, helping toddlers connect the sounds in a fun, personal way. There is nothing more personal than parents' voices—after all, they have been hearing them since they were in the womb.
+</p>
+</div>
+
+<div className="bg-blue-50 p-4 rounded-lg">
+<h3 className="font-bold mb-2">⏱️ Total Setup Time: 4 minutes</h3>
+</div>
+
+<div className="space-y-3">
+<div>
+<h4 className="font-bold">1️⃣ Enter Their Name (~15 seconds)</h4>
+<p className="text-gray-600">Type your child's name (up to 26 letters).</p>
+</div>
+
+<div>
+<h4 className="font-bold">2️⃣ Record Sounds (~3–4 minutes)</h4>
+<p className="text-gray-600 mb-2">You'll be prompted to record:</p>
+<ul className="ml-4 mt-1 text-gray-600 list-disc">
+<li>Their full name</li>
+<li><strong>"What is your name?"</strong> ✨ <em>(New feature!)</em></li>
+<li>Each phoneme (letter sound) — A = "ahh", B = "buh" <em>(not "ay" or "bee")</em></li>
+<li>Sentence with name</li>
+<li>Rhyme with name</li>
+</ul>
+<p className="text-gray-600 mt-1">📢 <strong>Recordings auto-save instantly!</strong></p>
+<p className="text-gray-600 mt-1"><strong>Don't like it?</strong> Tap the blue refresh icon to re-record any item</p>
+</div>
+
+<div>
+<h4 className="font-bold">3️⃣ Done! Time to Play Together</h4>
+<p className="text-gray-600">Tap the colourful flashcards together to hear your voice. Watch their face light up!</p>
+</div>
+</div>
+
+<div className="bg-green-50 p-4 rounded-lg">
+<h3 className="font-bold mb-2">🎙️ Recording Tips</h3>
+<ul className="text-gray-700 space-y-1 list-disc ml-4">
+<li>🔴 Red mic = Start/stop recording</li>
+<li>▶️ Play button = Listen to what you just recorded</li>
+<li>✅ Recordings save automatically</li>
+<li>🔄 Blue refresh = Re-record if needed</li>
+<li>Record <strong>phoneme</strong> sounds, not alphabet names</li>
+<li><em>(e.g. B = "buh", not "bee")</em></li>
+
+</ul>
+</div>
+
+<div className="bg-yellow-50 p-4 rounded-lg">
+<h3 className="font-bold mb-2">⚠️ Important Notes</h3>
+<ul className="text-gray-700 space-y-1 list-disc ml-4">
+<li>✅ All recordings auto-save instantly (no save button needed!)</li>
+<li>❌ Avoid using your browser's back button (use in-app navigation)</li>
+<li>⛔ Going back clears recordings — you'll be asked to confirm</li>
+<li>📵 If sound doesn't play: check volume, silent mode, and permissions</li>
+<li><em>(Most browsers require user interaction before audio plays)</em></li>
+</ul>
+</div>
+
+<div className="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+<h3 className="font-bold mb-2">🎯 Pro Tip</h3>
+<p className="text-gray-700">
+🎯 Set up solo while your toddler naps — quick and quiet.<br/>
+<strong>Or make it playtime!</strong> Recording together can be magical — you might catch them giggling, joining in with their own sounds like "buh" or "mmmm," or hearing their voice played back for the first time.<br/><br/>
+Whether you do it solo or as a team, keep it light and playful — that's how they learn best. 😄
+</p>
+</div>
+</div>
+
+<button
+onClick={onClose}
+className="w-full mt-6 py-3 bg-purple-500 text-white rounded-xl font-bold hover:bg-purple-600"
+aria-label="Close parent guide and start setup"
+>
+Got it! Let's start
+</button>
+</div>
+</div>
+);
+});
+
+// ShareButton Component
+const ShareButton: React.FC<ShareButtonProps> = memo(({ className = "" }) => {
+const [isExpanded, setIsExpanded] = useState(false);
+const [isHovered, setIsHovered] = useState(false);
+
+const shareUrl = window.location.href;
+const shareText = "Check out this amazing phonics app! Help your child learn letters with your own voice 🎵";
+
+const handleShare = async (platform: string) => {
+        const urls = {
+                whatsapp: `https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`,
+                facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
+                twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
+                snapchat: `https://www.snapchat.com/scan?attachmentUrl=${encodeURIComponent(shareUrl)}`
         };
-      };
-      reader.readAsDataURL(file);
-    }
-  };
 
-  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-    setDragStart({ x: clientX, y: clientY });
-  };
+        window.open(urls[platform as keyof typeof urls], '_blank', 'width=600,height=400');
+        setIsExpanded(false);
+};
 
-  const handleDragMove = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!isDragging || !imageRef.current || !containerRef.current) return;
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-    const deltaX = clientX - dragStart.x;
-    const deltaY = clientY - dragStart.y;
-    
-    const container = containerRef.current.getBoundingClientRect();
-    const img = imageRef.current.getBoundingClientRect();
-    const maxX = Math.max(0, (img.width - container.width) / 2);
-    const maxY = Math.max(0, (img.height - container.height) / 2);
-    
-    const newX = Math.max(-maxX, Math.min(maxX, position.x + deltaX));
-    const newY = Math.max(-maxY, Math.min(maxY, position.y + deltaY));
-    
-    setPosition({ x: newX, y: newY });
-    setDragStart({ x: clientX, y: clientY });
-  };
+// Always show custom sharing modal with close button
+const handleNativeShare = async () => {
+        setIsExpanded(!isExpanded);
+};
 
-  const handleDragEnd = () => {
-    setIsDragging(false);
-  };
-
-  const handleConfirmCrop = () => {
-    if (!tempImage || !imageRef.current || !containerRef.current) return;
-    
-    const img = imageRef.current;
-    const container = containerRef.current.getBoundingClientRect();
-    const canvas = document.createElement('canvas');
-    canvas.width = 192;
-    canvas.height = 192;
-    const ctx = canvas.getContext('2d')!;
-    
-    const scale = img.naturalWidth / img.width;
-    const sourceWidth = container.width * scale;
-    const sourceHeight = container.height * scale;
-    const sourceX = (img.naturalWidth - sourceWidth) / 2 - position.x * scale;
-    const sourceY = (img.naturalHeight - sourceHeight) / 2 - position.y * scale;
-    
-    ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, 192, 192);
-    
-    const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
-    setPhotoPreview(croppedDataUrl);
-    setTempImage(null);
-    setPosition({ x: 0, y: 0 });
-  };
-
-  return (
-    <div className="flex items-center justify-center min-h-screen p-4">
-      <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-2xl relative">
-        <button
-          onClick={onBack}
-          className="absolute top-4 left-4 p-2 text-gray-600 hover:bg-gray-100 rounded-full"
-          aria-label="Go back"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        
-        <h2 className="text-3xl font-bold text-gray-800 mb-2">Add {name}'s Photo</h2>
-        <p className="text-gray-600 mb-6">Helps {name} recognize themselves while learning</p>
-        
-        <div
-          ref={containerRef}
-          className="relative w-48 h-48 mx-auto mb-6 border-4 border-purple-200 rounded-2xl overflow-hidden bg-purple-50"
-        >
-          {tempImage ? (
-            <>
-              <img
-                ref={imageRef}
-                src={tempImage}
-                alt="Photo preview"
-                className="w-auto h-auto max-w-none cursor-move"
-                style={{
-                  transform: `translate(${position.x}px, ${position.y}px)`,
-                  cursor: isDragging ? 'grabbing' : 'grab',
-                }}
-                onMouseDown={handleDragStart}
-                onMouseMove={handleDragMove}
-                onMouseUp={handleDragEnd}
-                onMouseLeave={handleDragEnd}
-                onTouchStart={handleDragStart}
-                onTouchMove={handleDragMove}
-                onTouchEnd={handleDragEnd}
-              />
-              <button
-                onClick={handleConfirmCrop}
-                className="absolute bottom-2 right-2 p-3 bg-green-500 text-white rounded-full hover:bg-green-600 shadow-lg"
-                aria-label="Confirm cropped photo"
-              >
-                <CheckCircle size={24} />
-              </button>
-              <button
-                onClick={() => {
-                  setTempImage(null);
-                  setPosition({ x: 0, y: 0 });
-                }}
-                className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 shadow-lg"
-                aria-label="Cancel photo preview"
-              >
-                <X size={20} />
-              </button>
-              <div className="absolute bottom-2 left-2 bg-black/50 text-white px-2 py-1 rounded text-xs">
-                Drag to reposition
-              </div>
-            </>
-          ) : photoPreview ? (
-            <>
-              <img
-                src={photoPreview}
-                alt={name}
-                className="w-full h-full object-cover"
-              />
-              <button
-                onClick={() => {
-                  setPhotoPreview('');
-                  fileInputRef.current?.click();
-                }}
-                className="absolute bottom-2 right-2 p-3 bg-white rounded-full shadow-lg hover:bg-gray-100"
-                aria-label="Replace photo"
-              >
-                <RefreshCw size={20} className="text-gray-600" />
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full h-full flex flex-col items-center justify-center hover:bg-purple-100 transition-colors"
-              aria-label="Upload child's photo"
-            >
-              <Camera size={64} className="text-purple-500 mb-4" />
-              <span className="text-purple-600 font-medium text-lg">Tap to Add Photo</span>
-            </button>
-          )}
-        </div>
-        
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handlePhotoSelect}
-          className="hidden"
-        />
-        
-        {!tempImage && (
-          <>
-            <div className="bg-green-50 border border-green-200 p-4 rounded-lg mb-6 text-left">
-              <p className="text-sm text-green-800">
-                🔒 <strong>100% Private:</strong> This photo stays on YOUR device only. 
-                Never uploaded. Works offline forever.
-              </p>
-            </div>
-            
-            <button
-              onClick={() => photoPreview && onNext(photoPreview)}
-              disabled={!photoPreview}
-              className={`w-full py-4 rounded-xl font-bold text-xl transition-all flex items-center justify-center gap-2 ${
-                photoPreview
-                  ? 'bg-purple-500 text-white hover:bg-purple-600'
-                  : 'bg-gray-300 text-gray-500'
-              }`}
-            >
-              Next: Record Your Voice <ChevronRight />
-            </button>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ====== RECORDING SCREEN ======
-function RecordingScreen({ 
-  name, 
-  recordings, 
-  saveRecording, 
-  onComplete, 
-  onBack 
-}: { 
-  name: string; 
-  recordings: Record<string, string>; 
-  saveRecording: (key: string, value: string) => Promise<void>;
-  onComplete: () => void;
-  onBack: () => void;
-}) {
-  const [currentStage, setCurrentStage] = useState(0);
-  const letters = name.split('');
-  
-  const stages = [
-    { 
-      id: 'fullname', 
-      label: `Full Name: "${name}"`, 
-      key: 'fullname',
-      instruction: `Say their name clearly: "${name}"`,
-      icon: <Volume2 size={20} />
-    },
-    ...letters.map((letter, i) => ({
-      id: `letter-${i}`,
-      label: `Letter ${i + 1}: "${letter}"`,
-      key: `letter-${i}`,
-      instruction: `Say the SOUND of "${letter}" (not the letter name)\nExample: B = "buh" not "bee"`,
-      icon: <BookOpen size={20} />
-    })),
-    { 
-      id: 'sentence', 
-      label: 'Walking Sentence', 
-      key: 'sentence',
-      instruction: `Say: "${name}, do you want to go for a walk?"`,
-      icon: <Footprints size={20} />
-    },
-    { 
-      id: 'rhyme', 
-      label: `Fun Rhyme`, 
-      key: 'rhyme',
-      instruction: `Make a fun rhyme with "${name}"\nExample: "${name} is sweet, from head to feet!"`,
-      icon: <Music size={20} />
-    }
-  ];
-  
-  const handleRecordingComplete = async (audioBlob: Blob, stageKey: string) => {
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const audioData = e.target?.result as string;
-      console.log('Recording saved for:', stageKey, 'Size:', (audioData.length / 1024).toFixed(1) + 'KB');
-      
-      await saveRecording(stageKey, audioData);
-      
-      if (currentStage < stages.length - 1) {
-        setTimeout(() => setCurrentStage(currentStage + 1), 1000);
-      }
-    };
-    reader.readAsDataURL(audioBlob);
-  };
-  
-  const isComplete = stages.every(stage => recordings[stage.key]);
-  
-  return (
-    <div className="min-h-screen p-4 flex items-center justify-center">
-      <div className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl relative">
-        <button
-          onClick={onBack}
-          className="absolute top-4 left-4 p-2 text-gray-600 hover:bg-gray-100 rounded-full"
-          aria-label="Go back"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        
-        <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-          Record Your Voice
-        </h2>
-        
-        {Object.keys(recordings).length > 0 && Object.keys(recordings).length < stages.length && (
-          <div className="bg-purple-50 border border-purple-200 p-2 rounded-lg mb-3 text-center">
-            <p className="text-xs text-purple-700">
-              💜 Even partial recordings help! You can always add more later.
-            </p>
-          </div>
-        )}
-        
-        <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-4">
-          <div className="flex items-center gap-2 text-blue-800">
-            <Info size={16} />
-            <p className="text-sm font-medium">How to Record:</p>
-          </div>
-          <ol className="text-sm text-blue-700 mt-1 ml-6">
-            <li>1. Tap any item to select it</li>
-            <li>2. Tap the RED microphone to START recording</li>
-            <li>3. Say the word/sound clearly</li>
-            <li>4. Tap the SQUARE to STOP</li>
-            <li>5. Green check = Saved!</li>
-            <li>6. <strong>To re-record: Tap the item again and record</strong></li>
-          </ol>
-        </div>
-        
-        <div className="mb-4">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm text-gray-600 font-medium">Your Progress</span>
-            <span className="text-sm text-gray-600 font-medium">
-              {Object.keys(recordings).length} of {stages.length} done
-            </span>
-          </div>
-          <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500"
-              style={{ width: `${(Object.keys(recordings).length / stages.length) * 100}%` }}
-            />
-          </div>
-        </div>
-        
-        <div className="space-y-2 mb-6 max-h-80 overflow-y-auto">
-          {stages.map((stage, index) => (
-            <RecordingStage
-              key={stage.id}
-              stage={stage}
-              isActive={index === currentStage}
-              isComplete={!!recordings[stage.key]}
-              onRecord={(blob: Blob) => handleRecordingComplete(blob, stage.key)}
-              onClick={() => setCurrentStage(index)}
-            />
-          ))}
-        </div>
-        
-        <button
-          onClick={onComplete}
-          disabled={!isComplete}
-          className={`w-full py-4 rounded-xl font-bold text-xl transition-all ${
-            isComplete
-              ? 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700'
-              : 'bg-gray-300 text-gray-500'
-          }`}
-        >
-          {isComplete ? '🎉 All Done! Create Flashcards' : `📝 ${stages.length - Object.keys(recordings).length} recordings left`}
-        </button>
-        
-        {isComplete && (
-          <p className="text-xs text-gray-500 text-center mt-2">
-            💡 Tip: Test audio playback in flashcards. If no sound, check volume/silent mode.
-          </p>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ====== RECORDING STAGE COMPONENT ======
-function RecordingStage({ 
-  stage, 
-  isActive, 
-  isComplete, 
-  onRecord, 
-  onClick 
-}: { 
-  stage: { id: string; label: string; key: string; instruction: string; icon: React.ReactNode };
-  isActive: boolean;
-  isComplete: boolean;
-  onRecord: (blob: Blob) => void;
-  onClick: () => void;
-}) {
-  const [isRecording, setIsRecording] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-  
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      
-      const mimeTypes = [
-        'audio/webm;codecs=opus',
-        'audio/webm',
-        'audio/mp4',
-        'audio/mpeg',
-        'audio/wav'
-      ];
-      
-      let selectedMimeType = 'audio/webm';
-      for (const mimeType of mimeTypes) {
-        if (MediaRecorder.isTypeSupported(mimeType)) {
-          selectedMimeType = mimeType;
-          break;
-        }
-      }
-      
-      console.log('Using audio format:', selectedMimeType);
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: selectedMimeType });
-      chunksRef.current = [];
-      
-      mediaRecorder.ondataavailable = (e) => chunksRef.current.push(e.data);
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: selectedMimeType });
-        onRecord(blob);
-        stream.getTracks().forEach(track => track.stop());
-        
-        setShowSuccess(true);
-        setTimeout(() => setShowSuccess(false), 2000);
-      };
-      
-      mediaRecorderRef.current = mediaRecorder;
-      mediaRecorder.start();
-      setIsRecording(true);
-    } catch (err) {
-      alert('Please allow microphone access to record your voice');
-    }
-  };
-  
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-    }
-  };
-  
-  useEffect(() => {
-    return () => {
-      if (mediaRecorderRef.current && isRecording) {
-        mediaRecorderRef.current.stop();
-        if (mediaRecorderRef.current.stream) {
-          mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
-        }
-      }
-    };
-  }, [isRecording]);
-  
-  return (
-    <div
-      onClick={onClick}
-      className={`p-4 rounded-xl border-2 transition-all cursor-pointer ${
-        isActive ? 'border-purple-500 bg-purple-50 shadow-lg scale-[1.02]' : 
-        isComplete ? 'border-green-500 bg-green-50' : 
-        'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-      }`}
-    >
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3 flex-1">
-          <div className={`${isComplete ? 'text-green-600' : isActive ? 'text-purple-600' : 'text-gray-400'}`}>
-            {stage.icon}
-          </div>
-          <div className="flex-1">
-            <span className={`font-medium ${isActive ? 'text-purple-700' : isComplete ? 'text-green-700' : 'text-gray-700'}`}>
-              {stage.label}
-            </span>
-            {isActive && (
-              <p className="text-xs text-gray-600 mt-1 whitespace-pre-line">
-                {stage.instruction}
-              </p>
-            )}
-          </div>
-        </div>
-        
-        {isActive && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              isRecording ? stopRecording() : startRecording();
-            }}
-            className={`p-4 rounded-full transition-all ${
-              isRecording 
-                ? 'bg-red-500 text-white animate-pulse scale-110' 
-                : isComplete
-                  ? 'bg-orange-500 text-white hover:bg-orange-600 hover:scale-105'
-                  : 'bg-purple-500 text-white hover:bg-purple-600 hover:scale-105'
-            }`}
-            aria-label={isRecording ? 'Stop recording' : 'Start recording'}
-          >
-            {isRecording ? (
-              <Square size={28} />
-            ) : (
-              <div className="relative">
-                <Mic size={28} />
-                {isComplete && (
-                  <div className="absolute -bottom-1 -right-1 bg-orange-500 rounded-full p-0.5">
-                    <RefreshCw size={12} className="text-white" />
-                  </div>
-                )}
-              </div>
-            )}
-          </button>
-        )}
-        
-        {isComplete && !isActive && (
-          <div className="flex items-center gap-2">
-            {showSuccess && <span className="text-sm font-medium text-green-600">Saved!</span>}
-            <div className="p-2 bg-green-500 text-white rounded-full">
-              <Check size={20} />
-            </div>
-          </div>
-        )}
-      </div>
-      
-      {isComplete && isActive && (
-        <div className="bg-orange-100 border border-orange-300 rounded-lg p-2 mt-2">
-          <p className="text-xs text-orange-700 font-medium text-center">
-            🎤 Tap the microphone to re-record this sound
-          </p>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ====== MENU SCREEN ======
-function MenuScreen({ 
-  name, 
-  onPlay, 
-  onRecord, 
-  onReset 
-}: { 
-  name: string; 
-  onPlay: () => void; 
-  onRecord: () => void; 
-  onReset: () => void 
-}) {
-  return (
-    <div className="min-h-screen p-4 flex items-center justify-center">
-      <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-2xl">
-        <h2 className="text-3xl font-bold text-gray-800 mb-2">{name}'s Learning</h2>
-        <p className="text-gray-600 mb-8">Everything is ready!</p>
-        
-        <div className="space-y-4">
-          <button
-            onClick={onPlay}
-            className="w-full py-6 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-bold text-xl hover:from-green-600 hover:to-green-700 transition-all transform hover:scale-[1.02] flex items-center justify-center gap-3"
-          >
-            <Play size={32} />
-            Start Learning!
-          </button>
-          
-          <button
-            onClick={onRecord}
-            className="w-full py-4 bg-purple-500 text-white rounded-xl font-medium hover:bg-purple-600 transition-colors flex items-center justify-center gap-2"
-          >
-            <Mic size={20} />
-            Re-record Voice
-          </button>
-          
-          <button
-            onClick={onReset}
-            className="w-full py-4 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-colors"
-          >
-            Start Over (Delete Everything)
-          </button>
-        </div>
-        
-        <p className="text-xs text-gray-500 mt-8">
-          Created with ❤️ by BoredMamaApp<br/>
-          <span className="text-green-600 font-medium">💡 Tip: Use app buttons, not browser back</span>
-        </p>
-      </div>
-    </div>
-  );
-}
-
-// ====== FLASHCARD SCREEN ======
-function FlashcardScreen({ 
-  name, 
-  photo, 
-  recordings, 
-  current, 
-  setCurrent, 
-  onHome 
-}: { 
-  name: string; 
-  photo: string; 
-  recordings: Record<string, string>;
-  current: number;
-  setCurrent: (current: number) => void;
-  onHome: () => void;
-}) {
-  const letters = name.split('');
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [isPlaying, setIsPlaying] = useState('');
-  const [audioError, setAudioError] = useState(false);
-  const [hasInteracted, setHasInteracted] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  
-  const playSound = (recordingKey: string, label = '') => {
-    const audio = recordings[recordingKey];
-    if (audio) {
-      console.log('Playing audio for:', recordingKey);
-      setIsLoading(true);
-      setIsPlaying(label);
-      setAudioError(false);
-      setHasInteracted(true);
-      
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-      
-      audioRef.current = new Audio(audio);
-      
-      audioRef.current.onloadeddata = () => {
-        setIsLoading(false);
-        console.log('Audio loaded and ready');
-      };
-      
-      const playPromise = audioRef.current.play();
-      
-      if (playPromise !== undefined) {
-        playPromise.then(() => {
-          console.log('Audio playing successfully');
-          setIsLoading(false);
-        }).catch(err => {
-          console.error('Audio playback failed:', err);
-          setAudioError(true);
-          setIsPlaying('');
-          setIsLoading(false);
-          if (!hasInteracted) {
-            alert('Please tap any sound button to enable audio playback');
-          }
-        });
-      }
-      
-      audioRef.current.onended = () => {
-        setIsPlaying('');
-        console.log('Audio ended');
-      };
-    } else {
-      console.error('No audio found for:', recordingKey);
-      alert('No recording found. Please go back and record this sound.');
-    }
-  };
-  
-  const next = () => {
-    if (current < letters.length - 1) {
-      setCurrent(current + 1);
-      if (hasInteracted) {
-        setTimeout(() => playSound(`letter-${current + 1}`), 300);
-      }
-    }
-  };
-  
-  const prev = () => {
-    if (current > 0) {
-      setCurrent(current - 1);
-      if (hasInteracted) {
-        setTimeout(() => playSound(`letter-${current - 1}`), 300);
-      }
-    }
-  };
-  
-  useEffect(() => {
-    if (hasInteracted) {
-      const timer = setTimeout(() => {
-        playSound(`letter-${current}`);
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [current, hasInteracted]);
-  
-  useEffect(() => {
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-    };
-  }, []);
-  
-  return (
-    <div className="min-h-screen p-4 flex flex-col">
-      <header className="flex justify-between items-center mb-6 max-w-6xl mx-auto w-full">
-        <button
-          onClick={onHome}
-          className="p-3 bg-white rounded-full hover:bg-gray-100 transition-colors shadow-lg"
-          aria-label="Go back to menu"
-        >
-          <Home size={28} className="text-gray-800" />
-        </button>
-        
-        <h2 className="text-2xl font-bold text-white drop-shadow-lg">Learning: {name}</h2>
-        
-        <div className="w-14" />
-      </header>
-      
-      <div className="flex-1 flex items-center justify-center">
-        <div className="bg-white rounded-3xl p-8 shadow-2xl max-w-6xl w-full">
-          <div className="flex flex-col lg:flex-row items-center justify-center gap-8 mb-8">
-            <div className="flex-1 flex items-center justify-center">
-              <img
-                src={photo}
-                alt={`Photo of ${name}`}
-                className="w-48 h-48 rounded-3xl object-cover shadow-lg"
-              />
-            </div>
-            
-            <div className="flex-1 flex items-center justify-center">
-              <div className="bg-gradient-to-br from-purple-100 to-pink-100 rounded-3xl p-12 shadow-xl">
-                <span 
-                  className="font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 select-none block animate-pulse"
-                  style={{ fontSize: '200px', lineHeight: '1' }}
-                  role="heading"
-                  aria-level="2"
-                  aria-label={`Letter ${letters[current]}`}
+return (
+        <div className={`relative ${className}`}>
+                <button
+                        onClick={handleNativeShare}
+                        onMouseEnter={() => setIsHovered(true)}
+                        onMouseLeave={() => setIsHovered(false)}
+                        className={`
+                                w-full py-3 px-6 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2
+                                ${isHovered 
+                                        ? 'bg-orange-400 text-white shadow-lg transform scale-105' 
+                                        : 'bg-transparent text-purple-600 border-2 border-purple-200 hover:border-purple-300'
+                                }
+                        `}
+                        aria-label="Share this app with friends and family"
                 >
-                  {letters[current]}
-                </span>
-              </div>
+                        {isHovered ? 'SHARE THIS APP' : 'Share with friends & family'} 
+                        <Share2 size={16} />
+                </button>
+
+                {isExpanded && (
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border-2 border-gray-100 p-4 z-50">
+                                <button 
+                                        onClick={() => setIsExpanded(false)}
+                                        className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                                        aria-label="Close sharing options"
+                                >
+                                        <X size={16} />
+                                </button>
+                                <div className="grid grid-cols-2 gap-3">
+                                        <button
+                                                onClick={() => handleShare('whatsapp')}
+                                                className="flex items-center gap-2 p-3 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors"
+                                        >
+                                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.886 3.488"/>
+                                                </svg>
+                                                WhatsApp
+                                        </button>
+                                        <button
+                                                onClick={() => handleShare('snapchat')}
+                                                className="flex items-center gap-2 p-3 rounded-lg bg-yellow-400 text-black hover:bg-yellow-500 transition-colors"
+                                        >
+                                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.174-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.347-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.402.162-1.499-.69-2.436-2.888-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.357-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24.009 12.017 24c6.624 0 11.99-5.367 11.99-12.013C24.007 5.367 18.641.001.017 0"/>
+                                                </svg>
+                                                Snapchat
+                                        </button>
+                                        <button
+                                                onClick={() => handleShare('facebook')}
+                                                className="flex items-center gap-2 p-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                                        >
+                                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                                                </svg>
+                                                Facebook
+                                        </button>
+                                        <button
+                                                onClick={() => handleShare('twitter')}
+                                                className="flex items-center gap-2 p-3 rounded-lg bg-black text-white hover:bg-gray-800 transition-colors"
+                                        >
+                                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/>
+                                                </svg>
+                                                X (Twitter)
+                                        </button>
+                                </div>
+                        </div>
+                )}
+        </div>
+);
+});
+
+// WelcomeScreen Component
+const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) => {
+const [name, setName] = useState('');
+const [showGitHubModal, setShowGitHubModal] = useState(false);
+const [showLicenseModal, setShowLicenseModal] = useState(false);
+
+const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+if (e.key === 'Enter' && name.length >= 2 && name.length <= 12) {
+onNext(name.toUpperCase());
+}
+};
+
+return (
+<div className="flex items-center justify-center min-h-screen p-4">
+<div className="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-2xl relative">
+<button
+onClick={onGuide}
+className="absolute top-4 right-4 p-2 text-gray-500 hover:bg-gray-100 rounded-full"
+aria-label="Open parent guide"
+>
+<Info size={20} aria-hidden="true" />
+</button>
+
+<div className="mb-6">
+        <BoredMamaLogo />
+</div>
+<h1 className="text-4xl font-bold text-gray-800 mb-2">My Name Is</h1>
+<p className="text-gray-600 mb-2">Teach your child their name with YOUR voice</p>
+<p className="text-purple-600 text-sm font-medium mb-4">
+⭐ "My 18-month-old learned all letters phonetically!" - Real parent
+</p>
+
+
+
+<input
+type="text"
+value={name}
+onChange={(e) => setName(e.target.value.replace(/[^a-zA-Z]/g, ''))}
+onKeyPress={handleKeyPress}
+placeholder="Enter your child's name"
+className="w-full p-4 text-2xl text-center border-2 border-purple-200 rounded-xl text-gray-800 mb-6"
+maxLength={12}
+autoFocus
+aria-label="Child's name"
+/>
+
+{name.length >= 10 && (
+<p className="text-xs text-orange-600 -mt-4 mb-4 text-center">
+{12 - name.length} characters left
+</p>
+)}
+
+<button
+onClick={() => name.length >= 2 && name.length <= 12 && onNext(name.toUpperCase())}
+disabled={name.length < 2 || name.length > 12}
+className={`w-full py-4 rounded-xl font-bold text-xl transition-all flex items-center justify-center gap-2 ${
+name.length >= 2 && name.length <= 12
+? 'bg-purple-500 text-white hover:bg-purple-600'
+: 'bg-gray-300 text-gray-500'
+}`}
+aria-label="Proceed to record voice"
+>
+Next <ChevronRight />
+</button>
+
+<button
+onClick={onGuide}
+className="mt-4 text-purple-600 underline text-sm"
+aria-label="View parent guide"
+>
+Need help? Read 4-minute guide
+</button>
+
+<ShareButton className="mt-6" />
+
+{/* GitHub Modal */}
+{showGitHubModal && (
+  <div 
+    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+    onClick={() => setShowGitHubModal(false)}
+  >
+    <div 
+      className="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-2xl"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <span className="text-white text-sm font-bold">🔗</span>
             </div>
+            <h2 className="text-xl font-bold text-gray-900">Open Source</h2>
           </div>
-          
-          <div className="text-center mb-6">
-            <p className="text-gray-800 text-xl font-bold">
-              Letter {current + 1} of {letters.length}
-            </p>
-            <div className="flex justify-center gap-2 mt-3">
-              {letters.map((_, i) => (
-                <div
-                  key={i}
-                  className={`h-3 rounded-full transition-all ${
-                    i === current ? 'bg-purple-500 w-16' : 'bg-gray-300 w-3'
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-          
-          <div className="bg-yellow-100 border-2 border-yellow-400 rounded-lg p-3 mb-6 max-w-2xl mx-auto">
-            <p className="text-gray-800 text-lg font-semibold flex items-center justify-center gap-2">
-              <span className="text-2xl">👆</span>
-              Tap buttons below to hear sounds
-            </p>
-            {!hasInteracted && (
-              <button
-                onClick={() => playSound(`letter-${current}`, 'letter')}
-                className="mt-3 px-6 py-3 bg-purple-500 text-white rounded-xl font-bold hover:bg-purple-600 transition-all animate-pulse"
-              >
-                🔊 Tap to Start Audio
-              </button>
-            )}
-          </div>
-          
-          {audioError && (
-            <div className="bg-red-100 border-2 border-red-400 rounded-lg p-3 mb-4 max-w-2xl mx-auto">
-              <p className="text-red-800 text-sm font-medium text-center">
-                ⚠️ Audio playback issue. Please tap the button again or check your volume.
-              </p>
-            </div>
-          )}
-          
-          {isLoading && (
-            <div className="bg-blue-100 border-2 border-blue-400 rounded-lg p-3 mb-4 max-w-2xl mx-auto">
-              <p className="text-blue-800 text-sm font-medium text-center flex items-center justify-center gap-2">
-                <span className="animate-spin">⏳</span> Loading audio...
-              </p>
-            </div>
-          )}
-          
-          <div className="grid grid-cols-2 gap-4 max-w-2xl mx-auto">
-            <button
-              onClick={() => playSound(`letter-${current}`, 'letter')}
-              aria-label={`Play the sound of letter ${letters[current]}`}
-              className={`px-6 py-5 rounded-xl font-medium transition-all flex items-center justify-center gap-3 text-lg shadow-lg ${
-                isPlaying === 'letter' 
-                  ? 'bg-purple-600 text-white scale-95' 
-                  : 'bg-purple-500 text-white hover:bg-purple-600 hover:scale-[1.02]'
-              }`}
-            >
-              <BookOpen size={24} />
-              Letter Sound
-            </button>
-            
-            <button
-              onClick={() => playSound('fullname', 'name')}
-              aria-label={`Play the full name ${name}`}
-              className={`px-6 py-5 rounded-xl font-medium transition-all flex items-center justify-center gap-3 text-lg shadow-lg ${
-                isPlaying === 'name' 
-                  ? 'bg-pink-600 text-white scale-95' 
-                  : 'bg-pink-500 text-white hover:bg-pink-600 hover:scale-[1.02]'
-              }`}
-            >
-              <Volume2 size={24} />
-              Full Name
-            </button>
-            
-            <button
-              onClick={() => playSound('sentence', 'sentence')}
-              aria-label="Play walking sentence"
-              className={`px-6 py-5 rounded-xl font-medium transition-all flex items-center justify-center gap-3 text-lg shadow-lg ${
-                isPlaying === 'sentence' 
-                  ? 'bg-blue-600 text-white scale-95' 
-                  : 'bg-blue-500 text-white hover:bg-blue-600 hover:scale-[1.02]'
-              }`}
-            >
-              <Footprints size={24} />
-              Walking
-            </button>
-            
-            <button
-              onClick={() => playSound('rhyme', 'rhyme')}
-              aria-label="Play fun rhyme"
-              className={`px-6 py-5 rounded-xl font-medium transition-all flex items-center justify-center gap-3 text-lg shadow-lg ${
-                isPlaying === 'rhyme' 
-                  ? 'bg-green-600 text-white scale-95' 
-                  : 'bg-green-500 text-white hover:bg-green-600 hover:scale-[1.02]'
-              }`}
-            >
-              <Music size={24} />
-              Fun Rhyme
-            </button>
-          </div>
+          <button
+            onClick={() => setShowGitHubModal(false)}
+            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+            aria-label="Close"
+          >
+            ×
+          </button>
         </div>
       </div>
       
-      <footer className="flex justify-between items-center max-w-6xl mx-auto w-full mt-6">
-        <button
-          onClick={prev}
-          disabled={current === 0}
-          data-action="prev"
-          aria-label="Go to previous letter"
-          className={`px-8 py-4 rounded-xl font-bold transition-all flex items-center gap-2 text-lg shadow-lg ${
-            current > 0 
-              ? 'bg-white text-purple-600 hover:bg-gray-100 hover:scale-105' 
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-          }`}
-        >
-          <ChevronLeft size={24} /> Previous
-        </button>
-        
-        <div className="text-center">
-          <button
-            onClick={() => {
-              setCurrent(0);
-              if (hasInteracted) {
-                playSound('letter-0');
-              }
-            }}
-            aria-label="Start over from first letter"
-            className="px-6 py-3 bg-white text-purple-600 font-bold rounded-xl hover:bg-gray-100 transition-all hover:scale-105 shadow-lg"
+      <div className="p-6 space-y-4">
+        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4">
+          <h3 className="font-semibold text-gray-900 mb-2">MyNameIsApp on GitHub</h3>
+          <p className="text-gray-700 text-sm mb-4">
+            Explore the complete source code, contribute features, or learn how we built this privacy-first app.
+          </p>
+          <a
+            href="https://github.com/Respect4Code/my-name-is-app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
           >
-            Start Over
-          </button>
-          <p className="text-xs text-white/80 mt-1">Use ← → arrow keys!</p>
+            <span className="mr-2">🔗</span>
+            Visit GitHub Repository
+          </a>
         </div>
-        
-        <button
-          onClick={next}
-          disabled={current === letters.length - 1}
-          data-action="next"
-          aria-label="Go to next letter"
-          className={`px-8 py-4 rounded-xl font-bold transition-all flex items-center gap-2 text-lg shadow-lg ${
-            current < letters.length - 1 
-              ? 'bg-white text-purple-600 hover:bg-gray-100 hover:scale-105' 
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-          }`}
-        >
-          Next <ChevronRight size={24} />
-        </button>
-      </footer>
+      </div>
     </div>
-  );
+  </div>
+)}
+
+{/* License Modal */}
+{showLicenseModal && (
+  <div 
+    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+    onClick={() => setShowLicenseModal(false)}
+  >
+    <div 
+      className="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-2xl"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <span className="text-white text-sm font-bold">⚖️</span>
+            </div>
+            <h2 className="text-xl font-bold text-gray-900">License</h2>
+          </div>
+          <button
+            onClick={() => setShowLicenseModal(false)}
+            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+      
+      <div className="p-6 space-y-4">
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4">
+          <h3 className="font-semibold text-gray-900 mb-2">Creative Commons BY-NC-SA 4.0</h3>
+          <p className="text-gray-700 text-sm mb-4">
+            This app is licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0.
+          </p>
+          <a
+            href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+          >
+            <span className="mr-2">🔗</span>
+            Read Full License
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+</div>
+</div>
+);
+});
+
+// RecordingStage Component
+const RecordingStage: React.FC<RecordingStageProps> = memo(({ stage, isActive, isComplete, isNext, onRecord, onClick, onReRecord, recordings }) => {
+const [isRecording, setIsRecording] = useState(false);
+const [isStopping, setIsStopping] = useState(false);
+const [countdown, setCountdown] = useState<number | null>(null);
+const [tempRecording, setTempRecording] = useState<string | null>(null);
+const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+const audioChunksRef = useRef<Blob[]>([]);
+const audioRef = useRef<HTMLAudioElement | null>(null);
+
+useEffect(() => {
+return () => {
+if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+mediaRecorderRef.current.stop();
+}
+};
+}, []);
+
+const startRecording = async () => {
+try {
+console.log('Attempting to start recording for:', stage.label);
+const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+if (!stream) throw new Error('No audio stream available');
+const possibleTypes = [
+'audio/webm;codecs=opus',
+'audio/webm',
+'audio/mp4',
+'audio/mpeg',
+'audio/ogg;codecs=opus',
+];
+const mimeType = possibleTypes.find(type => MediaRecorder.isTypeSupported(type)) || 'audio/webm';
+console.log('Using mimeType:', mimeType);
+mediaRecorderRef.current = new MediaRecorder(stream, { mimeType });
+audioChunksRef.current = [];
+
+mediaRecorderRef.current.ondataavailable = (e) => {
+if (e.data.size > 0) {
+audioChunksRef.current.push(e.data);
+}
+};
+
+mediaRecorderRef.current.onstop = () => {
+stream.getTracks().forEach(track => track.stop());
+const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+const reader = new FileReader();
+reader.onload = () => {
+const audioData = reader.result as string;
+console.log('Recording stopped, data length:', audioData.length);
+setTempRecording(audioData);
+setIsRecording(false);
+setIsStopping(false);
+setCountdown(null);
+// Auto-save after 2 seconds delay so user can hear the recording preview
+setTimeout(() => {
+console.log('Auto-saving recording for stage:', stage.key);
+onRecord(audioData);
+setTempRecording(null);
+console.log('Auto-save completed');
+}, 2000);
+};
+reader.readAsDataURL(audioBlob);
+};
+
+mediaRecorderRef.current.start();
+setIsRecording(true);
+} catch (err) {
+console.error('Recording error:', err);
+const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+alert(`Recording failed: ${errorMessage}. Please ensure microphone access is granted.`);
+setIsRecording(false);
+setIsStopping(false);
+setCountdown(null);
+}
+};
+
+const stopRecording = () => {
+if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+setIsStopping(true);
+mediaRecorderRef.current.stop();
+}
+};
+
+const toggleRecording = () => {
+if (isRecording) {
+stopRecording();
+} else {
+setTempRecording(null);
+setCountdown(1);
+setTimeout(() => {
+startRecording();
+}, 1000);
+}
+};
+
+const playRecording = () => {
+if (tempRecording && audioRef.current) {
+audioRef.current.src = tempRecording;
+audioRef.current.play().catch(err => {
+console.error('Preview playback failed:', err);
+alert('Unable to play preview. Check your device volume or silent mode.');
+});
+}
+};
+
+const saveRecording = () => {
+if (tempRecording) {
+console.log('Saving recording for stage:', stage.key);
+onRecord(tempRecording);
+setTempRecording(null);
+console.log('Recording saved and temp cleared');
+} else {
+console.log('No temp recording to save');
+}
+};
+
+return (
+<div
+onClick={onClick}
+className={`p-3 rounded-xl cursor-pointer transition-all flex items-center justify-between ${
+isActive
+? 'bg-blue-100 border-2 border-blue-300'
+: isNext && !isComplete
+? 'bg-yellow-50 border-2 border-yellow-300'
+: 'bg-gray-100 hover:bg-gray-200'
+}`}
+role="button"
+tabIndex={0}
+aria-label={`Record ${stage.label}`}
+onKeyPress={(e) => e.key === 'Enter' && onClick()}
+>
+<div className="flex items-center gap-2">
+{stage.icon}
+<span className="text-sm font-medium">{stage.label}</span>
+</div>
+<div className="flex items-center gap-2 relative">
+{countdown !== null && (
+<span className="absolute -top-6 text-xs text-blue-600 font-bold">
+Recording in {countdown}...
+</span>
+)}
+{tempRecording ? (
+<div className="flex gap-2">
+<button
+onClick={(e) => {
+e.stopPropagation();
+playRecording();
+}}
+className="p-2 bg-purple-500 rounded-full hover:bg-purple-600 text-white"
+aria-label={`Play preview of ${stage.label}`}
+>
+<Play size={20} aria-hidden="true" />
+</button>
+<button
+onClick={(e) => {
+e.stopPropagation();
+saveRecording();
+}}
+className="p-2 bg-green-500 rounded-full hover:bg-green-600 text-white"
+aria-label={`SAVE recording for ${stage.label}`}
+>
+<CheckCircle size={20} aria-hidden="true" />
+</button>
+<button
+onClick={(e) => {
+e.stopPropagation();
+toggleRecording();
+}}
+className="p-2 bg-blue-500 rounded-full hover:bg-blue-600 text-white"
+aria-label={`Re-record ${stage.label}`}
+>
+<RefreshCw size={20} aria-hidden="true" />
+</button>
+<audio ref={audioRef} className="hidden" />
+</div>
+) : isComplete ? (
+<div className="flex gap-2 items-center">
+<button
+onClick={(e) => {
+e.stopPropagation();
+if (recordings[stage.key]) {
+const audio = new Audio(recordings[stage.key]);
+audio.play().catch(err => {
+console.error('Playback failed:', err);
+alert('Unable to play audio. Check your device volume or silent mode.');
+});
+}
+}}
+className="p-2 bg-purple-500 rounded-full hover:bg-purple-600 text-white"
+aria-label={`Play ${stage.label} recording`}
+>
+<Play size={20} aria-hidden="true" />
+</button>
+<button
+onClick={(e) => {
+e.stopPropagation();
+onReRecord();
+}}
+className="p-2 bg-blue-500 rounded-full hover:bg-blue-600 text-white"
+aria-label={`Re-record ${stage.label}`}
+>
+<RefreshCw size={20} aria-hidden="true" />
+</button>
+<CheckCircle size={20} className="text-green-500" aria-hidden="true" />
+</div>
+) : isActive && isRecording ? (
+<button
+onClick={(e) => {
+e.stopPropagation();
+toggleRecording();
+}}
+className={`p-2 rounded-full ${isStopping ? 'bg-gray-400' : 'bg-red-500 hover:bg-red-600'} text-white`}
+aria-label={isStopping ? 'Stopping recording' : 'Stop recording'}
+disabled={isStopping}
+>
+{isStopping ? <Loader2 size={20} className="animate-spin" aria-hidden="true" /> : <Square size={20} aria-hidden="true" />}
+</button>
+) : isActive ? (
+<button
+onClick={(e) => {
+e.stopPropagation();
+toggleRecording();
+}}
+className="p-2 bg-orange-500 rounded-full hover:bg-orange-600 text-white"
+aria-label="Start recording"
+disabled={countdown !== null}
+>
+<Mic size={20} aria-hidden="true" />
+</button>
+) : null}
+</div>
+</div>
+);
+});
+
+// RecordingScreen Component
+const RecordingScreen: React.FC<RecordingScreenProps> = memo(({ name, recordings, setRecordings, onComplete, onBack }) => {
+const [currentStage, setCurrentStage] = useState(0);
+
+const letters = name.split('');
+
+const stages: Stage[] = [
+{ 
+id: 'fullname', 
+label: `Full Name: "${name}"`, 
+key: 'fullname',
+instruction: `Say their name clearly: "${name}"`,
+icon: <Volume2 size={20} />
+},
+{ 
+id: 'question', 
+label: 'Name Question', 
+key: 'question',
+instruction: `Ask: "What is your name?" (pause for response)`,
+icon: <Volume2 size={20} />
+},
+...letters.map((letter, i) => ({
+id: `letter-${i}`,
+label: `Letter ${i + 1}: "${letter}"`,
+key: `letter-${i}`,
+instruction: `Say the SOUND of "${letter}" (not the letter name)\nExample: B = "buh" not "bee"`,
+icon: <BookOpen size={20} />
+})),
+{ 
+id: 'sentence', 
+label: 'Say a sentence with name', 
+key: 'sentence',
+instruction: `Say a sentence using "${name}" - be creative!`,
+icon: <Moon size={20} />
+},
+{ 
+id: 'rhyme', 
+label: `Say a fun rhyme with name`, 
+key: 'rhyme',
+instruction: `Make a fun rhyme with "${name}"\nExample: "${name} is sweet, from head to feet!"`,
+icon: <Music size={20} />
+}
+];
+
+const isComplete = stages.every(stage => recordings[stage.key]);
+const nextUnrecordedStage = stages.findIndex(stage => !recordings[stage.key]);
+
+// Keep one debug line to track completion
+console.log(`Progress: ${Object.keys(recordings).length}/${stages.length} recordings complete`);
+console.log('Available recording stages:', stages.map(s => s.label));
+
+const startRecordingForStage = async (stageIndex: number) => {
+setCurrentStage(stageIndex);
+const stage = stages[stageIndex];
+try {
+const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+const possibleTypes = [
+'audio/webm;codecs=opus',
+'audio/webm',
+'audio/mp4',
+'audio/mpeg',
+'audio/ogg;codecs=opus',
+];
+const mimeType = possibleTypes.find(type => MediaRecorder.isTypeSupported(type)) || 'audio/webm';
+const mediaRecorder = new MediaRecorder(stream, { mimeType });
+const audioChunks: Blob[] = [];
+
+mediaRecorder.ondataavailable = (e) => {
+if (e.data.size > 0) {
+audioChunks.push(e.data);
+}
+};
+
+mediaRecorder.onstop = () => {
+stream.getTracks().forEach(track => track.stop());
+const audioBlob = new Blob(audioChunks, { type: mimeType });
+const reader = new FileReader();
+reader.onload = () => {
+setRecordings(prev => ({
+...prev,
+[stage.key]: reader.result as string
+}));
+};
+reader.readAsDataURL(audioBlob);
+};
+
+setTimeout(() => {
+mediaRecorder.start();
+}, 1000);
+} catch (err) {
+console.error('Recording failed:', err);
+alert('Please allow microphone access to record your voice');
+}
+};
+
+const handleBack = () => {
+if (window.confirm('Going back will clear all recordings and the name. Are you sure?')) {
+onBack();
+}
+};
+
+
+
+return (
+<div className="min-h-screen p-4 flex items-center justify-center">
+<div className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl relative">
+<div className="relative">
+<button
+onClick={handleBack}
+className="absolute top-4 left-4 p-2 text-gray-600 hover:bg-gray-100 rounded-full"
+aria-label="Go back to name entry and clear recordings"
+id="back-button"
+>
+<ArrowLeft size={20} aria-hidden="true" />
+</button>
+
+
+</div>
+
+<h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+Record Your Voice for {name}
+</h2>
+
+{Object.keys(recordings).length > 0 && Object.keys(recordings).length < stages.length && (
+<div className="bg-purple-50 border border-purple-200 p-2 rounded-lg mb-3 text-center">
+<p className="text-xs text-purple-700">
+💜 Even partial recordings help! You can always add more later.
+</p>
+</div>
+)}
+
+<div className="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-4 relative">
+<div className="flex items-center gap-2 text-blue-800">
+<Info size={16} aria-hidden="true" />
+<p className="text-sm font-medium">How to Record:</p>
+</div>
+<ol className="text-sm text-blue-700 mt-1 ml-6 list-decimal">
+<li>Tap any item to select it</li>
+<li>Tap the RED microphone to START recording</li>
+<li>Say the word/sound clearly</li>
+<li>Tap the SQUARE to STOP</li>
+<li>Recording auto-saves after 2 seconds - no need to click SAVE!</li>
+<li><strong>To re-record: Tap the BLUE refresh icon</strong></li>
+</ol>
+
+
+</div>
+
+<div className="mb-4">
+<div className="flex justify-between items-center mb-2">
+<span className="text-sm text-gray-600 font-medium">Your Progress</span>
+<span className="text-sm text-gray-600 font-medium">
+{Object.keys(recordings).length} of {stages.length} done
+</span>
+</div>
+<div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+<div
+className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500"
+style={{ width: `${(Object.keys(recordings).length / stages.length) * 100}%` }}
+/>
+</div>
+{Object.keys(recordings).length > 0 && (
+<p className="text-xs text-gray-500 mt-1 text-center">
+Storage used: ~{((JSON.stringify(recordings).length / 1024 / 1024) * 2).toFixed(1)}MB
+</p>
+)}
+</div>
+
+<div className="space-y-2 mb-6 max-h-80 overflow-y-auto">
+{stages.map((stage, index) => (
+<div key={stage.id} className="relative">
+<RecordingStage
+stage={stage}
+isActive={index === currentStage}
+isComplete={!!recordings[stage.key]}
+isNext={index === nextUnrecordedStage}
+onRecord={(audioData: string) => {
+setRecordings(prev => ({
+...prev,
+[stage.key]: audioData
+}));
+// Auto-advance to next unrecorded stage after successful recording
+if (index < stages.length - 1) {
+setTimeout(() => setCurrentStage(index + 1), 1000);
+}
+}}
+onClick={() => setCurrentStage(index)}
+onReRecord={() => {
+console.log('Re-recording initiated for:', stage.label);
+setRecordings(prev => {
+const newRecordings = { ...prev };
+delete newRecordings[stage.key]; // Clear the existing recording
+console.log('Cleared recording for:', stage.label);
+return newRecordings;
+});
+setCurrentStage(index);
+}}
+recordings={recordings}
+/>
+
+</div>
+))}
+</div>
+
+<button
+onClick={onComplete}
+disabled={!isComplete}
+className={`w-full py-4 rounded-xl font-bold text-xl transition-all ${
+isComplete
+? 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700'
+: 'bg-gray-300 text-gray-500'
+}`}
+aria-label={isComplete ? "Create flashcards" : "Complete all recordings to proceed"}
+>
+{isComplete ? '🎉 All Done! Create Flashcards' : `📝 ${stages.length - Object.keys(recordings).length} recordings left`}
+</button>
+
+{isComplete && (
+<p className="text-xs text-gray-500 text-center mt-2">
+💡 Tip: Test audio playback in flashcards. If no sound, check volume/silent mode.
+</p>
+)}
+</div>
+</div>
+);
+});
+
+// FlashcardScreen Component
+const FlashcardScreen: React.FC<FlashcardScreenProps> = memo(({ name, recordings, onReset }) => {
+const [currentLetterIndex, setCurrentLetterIndex] = useState(0);
+const letters = name.split('');
+
+const playAudio = (key: string) => {
+if (!recordings[key]) {
+console.warn(`No recording found for key: ${key}`);
+return;
+}
+const audio = new Audio(recordings[key]);
+audio.play().catch(err => {
+console.error('Audio playback failed:', err);
+alert('Unable to play audio. Check your device volume or silent mode.');
+});
+};
+
+const handleKeyPress = (e: React.KeyboardEvent) => {
+if (e.key === 'ArrowRight' && currentLetterIndex < letters.length - 1) {
+setCurrentLetterIndex(currentLetterIndex + 1);
+} else if (e.key === 'ArrowLeft' && currentLetterIndex > 0) {
+setCurrentLetterIndex(currentLetterIndex - 1);
+} else if (e.key === 'Enter') {
+playAudio(`letter-${currentLetterIndex}`);
+}
+};
+
+return (
+<div
+className="min-h-screen p-4 flex items-center justify-center"
+tabIndex={0}
+onKeyDown={handleKeyPress}
+aria-label="Flashcard navigation"
+>
+<div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl">
+<h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+{name}'s Flashcards
+</h2>
+
+<div className="text-center mb-8">
+<span
+className="text-9xl font-bold text-purple-600 animate-pulse"
+aria-label={`Current letter: ${letters[currentLetterIndex]}`}
+>
+{ letters[currentLetterIndex]}
+</span>
+</div>
+
+<div className="flex justify-center gap-4 mb-6">
+<button
+onClick={() => playAudio('fullname')}
+className="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 flex items-center gap-2"
+aria-label="Play full name"
+>
+<Volume2 size={20} aria-hidden="true" /> Name
+</button>
+
+<button
+onClick={() => playAudio(`letter-${currentLetterIndex}`)}
+className="px-4 py-2 bg-purple-500 text-white rounded-xl hover:bg-purple-600 flex items-center gap-2"
+aria-label="Play letter sound"
+>
+<Volume2 size={20} aria-hidden="true" />
+<span>Play Letter Sound</span>
+</button>
+</div>
+
+<div className="flex justify-center gap-4 mb-6">
+<button
+onClick={() => playAudio('question')}
+className="px-4 py-2 bg-purple-500 text-white rounded-xl hover:bg-purple-600 flex items-center gap-2"
+aria-label="Play name question"
+>
+<Volume2 size={20} aria-hidden="true" /> Question
+</button>
+
+<button
+onClick={() => playAudio('sentence')}
+className="px-4 py-2 bg-green-500 text-white rounded-xl hover:bg-green-600 flex items-center gap-2"
+aria-label="Play walking sentence"
+>
+<Moon size={20} aria-hidden="true" /> Sentence
+</button>
+
+<button
+onClick={() => playAudio('rhyme')}
+className="px-4 py-2 bg-pink-500 text-white rounded-xl hover:bg-pink-600 flex items-center gap-2"
+aria-label="Play fun rhyme"
+>
+<Music size={20} aria-hidden="true" /> Rhyme
+</button>
+</div>
+
+<div className="flex justify-between mb-6">
+<div className="flex flex-col items-center">
+<button
+onClick={() => setCurrentLetterIndex(currentLetterIndex - 1)}
+disabled={currentLetterIndex === 0}
+className={`p-3 rounded-xl ${
+currentLetterIndex === 0
+? 'bg-gray-300 text-gray-500'
+: 'bg-gray-500 text-white hover:bg-gray-600'
+}`}
+aria-label="Previous letter"
+>
+<ChevronLeft size={24} aria-hidden="true" />
+</button>
+<span className="text-sm text-gray-600 mt-2 font-medium">Previous Letter</span>
+</div>
+
+<div className="flex flex-col items-center">
+<button
+onClick={() => setCurrentLetterIndex(currentLetterIndex + 1)}
+disabled={currentLetterIndex === letters.length - 1}
+className={`p-3 rounded-xl ${
+currentLetterIndex === letters.length - 1
+? 'bg-gray-300 text-gray-500'
+: 'bg-purple-500 text-white hover:bg-purple-600'
+}`}
+aria-label="Next letter"
+>
+<ArrowRight size={24} aria-hidden="true" />
+</button>
+<span className="text-sm text-gray-600 mt-2 font-medium">Next Letter</span>
+</div>
+</div>
+
+<button
+onClick={onReset}
+className="w-full py-3 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 mb-4"
+aria-label="Start over and clear all data"
+>
+Start Over
+</button>
+
+
+
+<ShareButton />
+</div>
+</div>
+);
+});
+
+// App Component
+const App = () => {
+
+const [step, setStep] = useState<'welcome' | 'recording' | 'flashcards'>('welcome');
+const [name, setName] = useState<string | null>(null);
+const [recordings, setRecordings] = useState<Record<string, string>>({});
+const [showGuide, setShowGuide] = useState(false);
+const [showGitHubModal, setShowGitHubModal] = useState(false);
+const [showLicenseModal, setShowLicenseModal] = useState(false);
+
+useEffect(() => {
+const loadData = async () => {
+try {
+
+// Try IndexedDB first, fallback to localStorage
+let loadedRecordings: Record<string, string> = {};
+
+try {
+const db = await openDB('MyNameIsDB', 1, {
+upgrade(db) {
+db.createObjectStore('recordings');
+},
+});
+const savedRecordings = await db.getAll('recordings');
+for (const { key, value } of savedRecordings) {
+loadedRecordings[key] = value;
+}
+console.log('Loaded recordings from IndexedDB:', Object.keys(loadedRecordings).length);
+} catch (idbError) {
+console.warn('IndexedDB failed, trying localStorage:', idbError);
+// Fallback to localStorage
+const savedRecordings = localStorage.getItem('recordings');
+if (savedRecordings) {
+try {
+loadedRecordings = JSON.parse(savedRecordings);
+} catch (parseError) {
+console.error('Failed to parse localStorage recordings:', parseError);
+loadedRecordings = {};
+}
+}
 }
 
-// Add animations
-if (typeof document !== 'undefined') {
-  const style = document.createElement('style');
-  style.textContent = `
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: .8; transform: scale(1.05); }
-    }
-    .animate-pulse {
-      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-  `;
-  document.head.appendChild(style);
+setRecordings(loadedRecordings);
+
+const savedName = localStorage.getItem('childName');
+// Validate saved name length (max 12 characters)
+if (savedName && savedName.length <= 12 && Object.keys(loadedRecordings).length > 0) {
+setName(savedName);
+setStep('flashcards');
+} else if (savedName && savedName.length > 12) {
+// Clear invalid data
+localStorage.removeItem('childName');
+setRecordings({});
+// Clear IndexedDB as well
+try {
+const db = await openDB('MyNameIsDB', 1);
+const tx = db.transaction('recordings', 'readwrite');
+await tx.objectStore('recordings').clear();
+await tx.done;
+console.log('Cleared invalid data from storage');
+} catch (error) {
+console.log('Cleanup completed');
 }
+}
+} catch (err) {
+console.error('Failed to load data:', err);
+// Don't show error alert on initial load - just start fresh
+}
+};
+loadData();
+}, []);
+
+useEffect(() => {
+if (name) localStorage.setItem('childName', name);
+}, [name]);
+
+useEffect(() => {
+const saveRecordings = async () => {
+if (Object.keys(recordings).length === 0) return;
+
+try {
+// Try IndexedDB first
+try {
+const db = await openDB('MyNameIsDB', 1);
+const tx = db.transaction('recordings', 'readwrite');
+const store = tx.objectStore('recordings');
+for (const [key, value] of Object.entries(recordings)) {
+await store.put({ key, value });
+}
+await tx.done;
+console.log('Saved recordings to IndexedDB:', Object.keys(recordings).length);
+} catch (idbError) {
+console.warn('IndexedDB failed, using localStorage:', idbError);
+// Fallback to localStorage
+localStorage.setItem('recordings', JSON.stringify(recordings));
+console.log('Saved recordings to localStorage:', Object.keys(recordings).length);
+}
+} catch (err) {
+console.error('Failed to save recordings:', err);
+// Silent fallback - don't interrupt user experience
+localStorage.setItem('recordings', JSON.stringify(recordings));
+}
+};
+saveRecordings();
+}, [recordings]);
+
+const handleReset = async () => {
+if (window.confirm('This will clear all recordings and data. Are you sure?')) {
+try {
+// Clear both IndexedDB and localStorage
+try {
+const db = await openDB('MyNameIsDB', 1);
+const tx = db.transaction('recordings', 'readwrite');
+await tx.objectStore('recordings').clear();
+await tx.done;
+} catch (idbError) {
+console.warn('IndexedDB clear failed:', idbError);
+}
+localStorage.removeItem('recordings');
+localStorage.removeItem('childName');
+localStorage.removeItem('tooltipsDismissed');
+setRecordings({});
+setName(null);
+setStep('welcome');
+console.log('Reset complete - all data cleared');
+} catch (err) {
+console.error('Failed to clear data:', err);
+// Force reset even if clearing fails
+setRecordings({});
+setName(null);
+setStep('welcome');
+}
+}
+};
+
+return (
+<div className="min-h-screen bg-gradient-to-b from-purple-100 to-pink-100">
+{showGuide && <ParentGuide onClose={() => setShowGuide(false)} />}
+
+{step === 'welcome' && (
+<WelcomeScreen
+onNext={(newName) => {
+setName(newName);
+setRecordings({});
+setStep('recording');
+}}
+onGuide={() => setShowGuide(true)}
+/>
+)}
+
+{step === 'recording' && name && (
+<RecordingScreen
+name={name}
+recordings={recordings}
+setRecordings={setRecordings}
+onComplete={() => setStep('flashcards')}
+onBack={() => {
+handleReset();
+}}
+/>
+)}
+
+{step === 'flashcards' && name && (
+<FlashcardScreen
+name={name}
+recordings={recordings}
+onReset={handleReset}
+/>
+)}
+
+{/* Historic AI Endorsement Footer */}
+<footer className="text-center text-xs mt-8 mb-4" style={{padding:"20px 16px", borderTop:"2px solid #8B5CF6", background:"linear-gradient(135deg, #f8f4ff 0%, #fdf2f8 100%)", color:"#374151"}}>
+  <div style={{marginBottom:"12px"}}>
+    <span style={{background:"linear-gradient(135deg, #8B5CF6, #EC4899)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", fontWeight:"bold", fontSize:"0.85rem"}}>
+      🏆 FIRST MULTI-AI PUBLIC ENDORSEMENT IN HISTORY 🏆
+    </span>
+  </div>
+  <p style={{margin:"8px 0", fontWeight:"600", color:"#4B5563"}}>Join the Global Phonics Revolution 🌍</p>
+  <p style={{margin:"8px 0", fontWeight:"600", color:"#059669"}}>
+    Historic Achievement: Validated by Claude AI • Grok AI • ChatGPT • Replit AI
+  </p>
+  <p style={{margin:"6px 0", color:"#6B7280"}}>
+    <button onClick={() => setShowGitHubModal(true)} style={{color:"#007BFF", textDecoration:"underline", border:"none", background:"none", cursor:"pointer", fontSize:"inherit", fontFamily:"inherit"}}>
+      Open Source
+    </button> Revolution • Translate to 65+ Countries • Privacy-First Pioneer
+  </p>
+  <p style={{margin:"6px 0", color:"#6B7280"}}>Trusted by parents in: 🇵🇭 Philippines, 🇮🇳 India, 🇳🇬 Nigeria, 🇵🇰 Pakistan, 🇸🇬 Singapore, 🇲🇾 Malaysia</p>
+  <p style={{margin:"8px 0"}}>
+    <span style={{color:"#8B5CF6", fontWeight:"600"}}>100% Private • Works Offline • Revolutionary</span> • 
+    <button onClick={() => setShowLicenseModal(true)} style={{color:"#1D4ED8", textDecoration:"underline", border:"none", background:"none", cursor:"pointer", fontSize:"inherit", fontFamily:"inherit", fontWeight:"500"}}>
+      CC BY-NC-SA 4.0
+    </button>
+  </p>
+  <div style={{marginTop:"12px", paddingTop:"8px", borderTop:"1px solid #E5E7EB"}}>
+    <span style={{fontSize:"0.7rem", color:"#9CA3AF", fontStyle:"italic"}}>
+      "The app that doesn't exist on your phone" - Featured in AI History • August 2025
+    </span>
+  </div>
+  <p style={{margin:"8px 0"}}>
+    <span style={{color:"#EC4899", fontWeight:"600"}}>Created with ❤️ by BoredMamaApp</span>
+  </p>
+  <p style={{margin:"4px 0"}}>
+    <span style={{color:"#8B5CF6", fontWeight:"500", fontSize:"0.8rem"}}>Revolutionising Motherhood</span>
+  </p>
+</footer>
+
+{/* GitHub Modal */}
+{showGitHubModal && (
+  <div 
+    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+    onClick={() => setShowGitHubModal(false)}
+  >
+    <div 
+      className="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-2xl"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <span className="text-white text-sm font-bold">🔗</span>
+            </div>
+            <h2 className="text-xl font-bold text-gray-900">Open Source</h2>
+          </div>
+          <button
+            onClick={() => setShowGitHubModal(false)}
+            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+      
+      <div className="p-6 space-y-4">
+        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4">
+          <h3 className="font-semibold text-gray-900 mb-2">MyNameIsApp on GitHub</h3>
+          <p className="text-gray-700 text-sm mb-4">
+            Explore the complete source code, contribute features, or learn how we built this privacy-first app.
+          </p>
+          <a
+            href="https://github.com/Respect4Code/my-name-is-app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
+          >
+            <span className="mr-2">🔗</span>
+            Visit GitHub Repository
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
+{/* License Modal */}
+{showLicenseModal && (
+  <div 
+    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+    onClick={() => setShowLicenseModal(false)}
+  >
+    <div 
+      className="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-2xl"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <span className="text-white text-sm font-bold">⚖️</span>
+            </div>
+            <h2 className="text-xl font-bold text-gray-900">License</h2>
+          </div>
+          <button
+            onClick={() => setShowLicenseModal(false)}
+            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+      
+      <div className="p-6 space-y-4">
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4">
+          <h3 className="font-semibold text-gray-900 mb-2">Creative Commons BY-NC-SA 4.0</h3>
+          <p className="text-gray-700 text-sm mb-4">
+            This app is licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0.
+          </p>
+          <a
+            href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+          >
+            <span className="mr-2">🔗</span>
+            Read Full License
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+</div>
+);
+};
+
+export default App;
