@@ -259,8 +259,6 @@ export default function Home() {
             Revolutionising Motherhood
           </p>
         </div>
-          <span style={{ color: "#8B5CF6", fontWeight: "500", fontSize: "0.8rem" }}>Revolutionising Motherhood</span>
-        </p>
       </footer>
 
       {/* GitHub Modal */}
