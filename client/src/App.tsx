@@ -285,7 +285,9 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
   // Info button handlers for secret menu
   const handleInfoMouseDown = () => {
     setInfoPressing(true);
+    longPressRef.current = false;
     const timer = setTimeout(() => {
+      longPressRef.current = true;
       setShowSecretMenu(true);
       setInfoPressing(false);
       showToastNotification('🎯 Secret menu activated!');
@@ -302,6 +304,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
     if (!longPressRef.current && !showSecretMenu) {
       onGuide();
     }
+    longPressRef.current = false;
   };
 
   const handleInfoTouchStart = (e: React.TouchEvent) => {
