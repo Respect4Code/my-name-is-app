@@ -277,82 +277,13 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
   return (
     <div className="flex items-center justify-center min-h-screen p-4">
       <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-2xl relative">
-        <div className="absolute top-4 right-4">
-          <button
-            onMouseDown={handleInfoMouseDown}
-            onMouseUp={handleInfoMouseUp}
-            onTouchStart={handleInfoTouchStart}
-            onTouchEnd={handleInfoTouchEnd}
-            className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-all"
-            aria-label="Open parent guide (hold for secret menu)"
-          >
-            <Info size={20} aria-hidden="true" />
-          </button>
-
-          {/* Secret Dropdown Menu */}
-          {showDropdown && (
-            <div className="absolute top-full right-0 mt-2 bg-white rounded-xl shadow-xl border-2 border-gray-100 p-3 z-50 min-w-48">
-              <div className="text-xs text-gray-600 mb-2 font-medium">🎯 Secret Modes</div>
-              <div className="space-y-1">
-                <button
-                  onClick={() => handleModeChange('standard')}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                    currentMode === 'standard' ? 'bg-purple-100 text-purple-700' : 'hover:bg-gray-100'
-                  }`}
-                >
-                  📚 Standard Mode
-                </button>
-                <button
-                  onClick={() => handleModeChange('alphabet')}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                    currentMode === 'alphabet' ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'
-                  }`}
-                >
-                  🔤 Alphabet Mode (ALP)
-                </button>
-                <button
-                  onClick={() => handleModeChange('numbers')}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                    currentMode === 'numbers' ? 'bg-yellow-100 text-yellow-700' : 'hover:bg-gray-100'
-                  }`}
-                >
-                  🔢 Numbers Mode (NUM)
-                </button>
-                <button
-                  onClick={() => handleModeChange('actions')}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                    currentMode === 'actions' ? 'bg-pink-100 text-pink-700' : 'hover:bg-gray-100'
-                  }`}
-                >
-                  ⚡ Action Words (ING)
-                </button>
-                <button
-                  onClick={() => handleModeChange('grandparent')}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                    currentMode === 'grandparent' ? 'bg-gray-100 text-gray-700' : 'hover:bg-gray-100'
-                  }`}
-                >
-                  👴 Grandparent Mode (GRA)
-                </button>
-                <button
-                  onClick={() => handleModeChange('vip')}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                    currentMode === 'vip' ? 'bg-amber-100 text-amber-700' : 'hover:bg-gray-100'
-                  }`}
-                >
-                  ⭐ VIP Mode (VIP)
-                </button>
-              </div>
-              <button
-                onClick={() => setShowDropdown(false)}
-                className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
-                aria-label="Close menu"
-              >
-                <X size={14} />
-              </button>
-            </div>
-          )}
-        </div>
+        <button
+          onClick={onGuide}
+          className="absolute top-4 right-4 p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-all"
+          aria-label="Open parent guide"
+        >
+          <Info size={20} aria-hidden="true" />
+        </button>
 
         <div className="mb-6">
           <BoredMamaLogo />
