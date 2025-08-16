@@ -47,6 +47,17 @@ interface ParentGuideProps {
 interface WelcomeScreenProps {
   onNext: (name: string) => void;
   onGuide: () => void;
+  showSecretMenu: boolean;
+  setShowSecretMenu: (show: boolean) => void;
+  currentMode: 'standard' | 'alphabet' | 'numbers' | 'actions' | 'grandparent' | 'vip';
+  setCurrentMode: (mode: 'standard' | 'alphabet' | 'numbers' | 'actions' | 'grandparent' | 'vip') => void;
+  handleInfoMouseDown: () => void;
+  handleInfoMouseUp: () => void;
+  handleInfoTouchStart: (e: React.TouchEvent) => void;
+  handleInfoTouchEnd: (e: React.TouchEvent) => void;
+  handleModeChange: (mode: 'standard' | 'alphabet' | 'numbers' | 'actions' | 'grandparent' | 'vip') => void;
+  infoPressing: boolean;
+  showToastNotification: (message: string) => void;
 }
 
 interface ShareButtonProps {
@@ -265,7 +276,21 @@ const ShareButton: React.FC<ShareButtonProps> = memo(({ className = "" }) => {
 });
 
 // WelcomeScreen Component
-const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) => {
+const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ 
+  onNext, 
+  onGuide,
+  showSecretMenu,
+  setShowSecretMenu,
+  currentMode,
+  setCurrentMode,
+  handleInfoMouseDown,
+  handleInfoMouseUp,
+  handleInfoTouchStart,
+  handleInfoTouchEnd,
+  handleModeChange,
+  infoPressing,
+  showToastNotification
+}) => {
   const [name, setName] = useState('');
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -1177,6 +1202,17 @@ const App = () => {
             setStep('recording');
           }}
           onGuide={() => setShowGuide(true)}
+          showSecretMenu={showSecretMenu}
+          setShowSecretMenu={setShowSecretMenu}
+          currentMode={currentMode}
+          setCurrentMode={setCurrentMode}
+          handleInfoMouseDown={handleInfoMouseDown}
+          handleInfoMouseUp={handleInfoMouseUp}
+          handleInfoTouchStart={handleInfoTouchStart}
+          handleInfoTouchEnd={handleInfoTouchEnd}
+          handleModeChange={handleModeChange}
+          infoPressing={infoPressing}
+          showToastNotification={showToastNotification}
         />
       )}
 
@@ -1215,7 +1251,7 @@ const App = () => {
         />
       )}
 
-      <footer className="text-center text-xs text-gray-500 py-6 px-4 mt-8"></footer>
+      <footer className="text-center text-xs text-gray-500 py-6 px-4 mt-8">
         <div className="space-y-3">
           <div>
             <p className="text-gray-700 text-sm">The phonics app that doesn't exist on your phone</p>
