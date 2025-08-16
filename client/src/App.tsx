@@ -267,6 +267,58 @@ const ShareButton: React.FC<ShareButtonProps> = memo(({ className = "" }) => {
 // WelcomeScreen Component
 const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) => {
   const [name, setName] = useState('');
+  const [infoPressing, setInfoPressing] = useState(false);
+  const [infoPressTimer, setInfoPressTimer] = useState<NodeJS.Timeout | null>(null);
+  const [showSecretMenu, setShowSecretMenu] = useState(false);
+  const [currentMode, setCurrentMode] = useState<'standard' | 'alphabet' | 'numbers' | 'actions' | 'grandparent' | 'vip'>('standard');
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const longPressRef = useRef(false);
+
+  // Toast notification
+  const showToastNotification = (message: string) => {
+    setToastMessage(message);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
+
+  // Info button handlers for secret menu
+  const handleInfoMouseDown = () => {
+    setInfoPressing(true);
+    const timer = setTimeout(() => {
+      setShowSecretMenu(true);
+      setInfoPressing(false);
+      showToastNotification('🎯 Secret menu activated!');
+    }, 600);
+    setInfoPressTimer(timer);
+  };
+
+  const handleInfoMouseUp = () => {
+    setInfoPressing(false);
+    if (infoPressTimer) {
+      clearTimeout(infoPressTimer);
+      setInfoPressTimer(null);
+    }
+    if (!longPressRef.current && !showSecretMenu) {
+      onGuide();
+    }
+  };
+
+  const handleInfoTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
+    handleInfoMouseDown();
+  };
+
+  const handleInfoTouchEnd = (e: React.TouchEvent) => {
+    e.preventDefault();
+    handleInfoMouseUp();
+  };
+
+  const handleModeChange = (mode: typeof currentMode) => {
+    setCurrentMode(mode);
+    setShowSecretMenu(false);
+    showToastNotification(`✨ ${mode.toUpperCase()} Mode Activated!`);
+  };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && name.length >= 2 && name.length <= 12) {
@@ -407,6 +459,21 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
         </button>
 
         <ShareButton className="mt-6" />
+
+        {/* Toast Notification */}
+        {showToast && (
+          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-white rounded-xl shadow-lg border-2 border-purple-200 px-6 py-3 z-50 animate-bounce">
+            <div className="text-sm font-medium text-gray-800">{toastMessage}</div>
+          </div>
+        )}
+
+        {/* Global click handler to close dropdown */}
+        {showSecretMenu && (
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setShowSecretMenu(false)}
+          />
+        )}
       </div>
     </div>
   );
@@ -961,100 +1028,7 @@ const App = () => {
   // Toast state
   const [toast, setToast] = useState({ message: '', type: 'info', show: false });
 
-  // Secret sauce features
-  const [currentMode, setCurrentMode] = useState<'standard' | 'alphabet' | 'numbers' | 'actions' | 'grandparent' | 'vip'>('standard');
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [magicBuffer, setMagicBuffer] = useState('');
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  const longPressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const longPressRef = useRef(false);
-  const [infoPressing, setInfoPressing] = useState(false);
-  const [infoPressTimer, setInfoPressTimer] = useState<NodeJS.Timeout | null>(null);
-  const [showSecretMenu, setShowSecretMenu] = useState(false);
-
-  // Toast notification
-  const showToastNotification = (message: string) => {
-    setToastMessage(message);
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000);
-  };
-
-  // Info button handlers for secret menu
-  const handleInfoMouseDown = () => {
-    setInfoPressing(true);
-    const timer = setTimeout(() => {
-      setShowSecretMenu(true);
-      setInfoPressing(false);
-      showToastNotification('🎯 Secret menu activated!');
-    }, 600);
-    setInfoPressTimer(timer);
-  };
-
-  const handleInfoMouseUp = () => {
-    setInfoPressing(false);
-    if (infoPressTimer) {
-      clearTimeout(infoPressTimer);
-      setInfoPressTimer(null);
-    }
-    if (!longPressRef.current && !showSecretMenu) {
-      setShowGuide(true);
-    }
-  };
-
-  const handleInfoTouchStart = (e: React.TouchEvent) => {
-    e.preventDefault();
-    handleInfoMouseDown();
-  };
-
-  const handleInfoTouchEnd = (e: React.TouchEvent) => {
-    e.preventDefault();
-    handleInfoMouseUp();
-  };
-
-  const handleModeChange = (mode: typeof currentMode) => {
-    setCurrentMode(mode);
-    setShowDropdown(false);
-    showToastNotification(`✨ ${mode.toUpperCase()} Mode Activated!`);
-  };
-
-  // Magic words detection
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const newBuffer = (magicBuffer + e.key.toUpperCase()).slice(-3);
-      setMagicBuffer(newBuffer);
-
-      const magicWords = {
-        'ING': 'actions',
-        'ALP': 'alphabet',
-        'NUM': 'numbers',
-        'VIP': 'vip',
-        'GRA': 'grandparent'
-      };
-
-      if (magicWords[newBuffer as keyof typeof magicWords]) {
-        const newMode = magicWords[newBuffer as keyof typeof magicWords] as typeof currentMode;
-        setCurrentMode(newMode);
-        showToastNotification(`✨ ${newMode.toUpperCase()} Mode Activated!`);
-        setMagicBuffer('');
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [magicBuffer, currentMode]);
-
-  // Mode-specific background classes
-  const getModeBackground = () => {
-    switch (currentMode) {
-      case 'alphabet': return 'bg-gradient-to-br from-blue-400 via-cyan-500 to-blue-600';
-      case 'numbers': return 'bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500';
-      case 'actions': return 'bg-gradient-to-br from-pink-400 via-purple-500 to-pink-600';
-      case 'grandparent': return 'bg-gradient-to-br from-yellow-200 via-gray-200 to-yellow-300';
-      case 'vip': return 'bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-500';
-      default: return 'bg-gradient-to-b from-purple-100 to-pink-100';
-    }
-  };
+  
 
   useEffect(() => {
     const loadData = async () => {
@@ -1166,7 +1140,7 @@ const App = () => {
   };
 
   return (
-    <div className={`min-h-screen transition-all duration-500 ${getModeBackground()}`}>
+    <div className="min-h-screen bg-gradient-to-b from-purple-100 to-pink-100">
       {showGuide && <ParentGuide onClose={() => setShowGuide(false)} />}
 
       {step === 'welcome' && (
@@ -1200,20 +1174,7 @@ const App = () => {
         />
       )}
 
-      {/* Toast Notification */}
-      {showToast && (
-        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-white rounded-xl shadow-lg border-2 border-purple-200 px-6 py-3 z-50 animate-bounce">
-          <div className="text-sm font-medium text-gray-800">{toastMessage}</div>
-        </div>
-      )}
-
-      {/* Global click handler to close dropdown */}
-      {showSecretMenu && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setShowSecretMenu(false)}
-        />
-      )}
+      
 
       <footer className="text-center text-xs text-gray-500 py-6 px-4 mt-8">
         <div className="space-y-3">
