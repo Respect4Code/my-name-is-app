@@ -1255,6 +1255,7 @@ onReset={handleReset}
     <p style={{margin:"0", fontSize:"0.75rem", color:"#8B5CF6", fontWeight:"500"}}>Revolutionising Motherhood</p>
   </div>
 </footer>
+</div>
 
 {/* GitHub Modal */}
 {showGitHubModal && (
