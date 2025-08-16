@@ -1,5 +1,4 @@
 import React, { memo, useState, useEffect, useRef } from 'react';
-import ReactDOM from 'react-dom/client';
 import {
 Info, ChevronRight, ArrowLeft, Volume2, BookOpen, Moon, Music, Loader2, ArrowRight, ChevronLeft,
 CheckCircle, Mic, Square, RefreshCw, Play, Share2, HelpCircle, X
