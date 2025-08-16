@@ -47,17 +47,6 @@ interface ParentGuideProps {
 interface WelcomeScreenProps {
   onNext: (name: string) => void;
   onGuide: () => void;
-  showSecretMenu: boolean;
-  setShowSecretMenu: (show: boolean) => void;
-  currentMode: 'standard' | 'alphabet' | 'numbers' | 'actions' | 'grandparent' | 'vip';
-  setCurrentMode: (mode: 'standard' | 'alphabet' | 'numbers' | 'actions' | 'grandparent' | 'vip') => void;
-  handleInfoMouseDown: () => void;
-  handleInfoMouseUp: () => void;
-  handleInfoTouchStart: (e: React.TouchEvent) => void;
-  handleInfoTouchEnd: (e: React.TouchEvent) => void;
-  handleModeChange: (mode: 'standard' | 'alphabet' | 'numbers' | 'actions' | 'grandparent' | 'vip') => void;
-  infoPressing: boolean;
-  showToastNotification: (message: string) => void;
 }
 
 interface ShareButtonProps {
@@ -276,21 +265,7 @@ const ShareButton: React.FC<ShareButtonProps> = memo(({ className = "" }) => {
 });
 
 // WelcomeScreen Component
-const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ 
-  onNext, 
-  onGuide,
-  showSecretMenu,
-  setShowSecretMenu,
-  currentMode,
-  setCurrentMode,
-  handleInfoMouseDown,
-  handleInfoMouseUp,
-  handleInfoTouchStart,
-  handleInfoTouchEnd,
-  handleModeChange,
-  infoPressing,
-  showToastNotification
-}) => {
+const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) => {
   const [name, setName] = useState('');
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -319,7 +294,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({
           <div className="absolute top-16 right-4 bg-white rounded-xl shadow-xl border-2 border-gray-100 p-4 z-50 min-w-[260px]">
             <div className="space-y-2">
               <div className="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-3">Secret Features</div>
-              
+
               <button
                 onClick={() => handleModeChange('actions')}
                 className={`w-full text-left p-2 rounded-lg hover:bg-purple-50 flex items-center gap-2 ${currentMode === 'actions' ? 'bg-purple-100 text-purple-700' : ''}`}
@@ -327,7 +302,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({
                 🎬 Action Words Mode
                 {currentMode === 'actions' && <span className="ml-auto text-xs bg-purple-500 text-white px-2 py-1 rounded">ACTIVE</span>}
               </button>
-              
+
               <button
                 onClick={() => handleModeChange('alphabet')}
                 className={`w-full text-left p-2 rounded-lg hover:bg-blue-50 flex items-center gap-2 ${currentMode === 'alphabet' ? 'bg-blue-100 text-blue-700' : ''}`}
@@ -335,7 +310,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({
                 🔤 Alphabet Mode
                 {currentMode === 'alphabet' && <span className="ml-auto text-xs bg-blue-500 text-white px-2 py-1 rounded">ACTIVE</span>}
               </button>
-              
+
               <button
                 onClick={() => handleModeChange('numbers')}
                 className={`w-full text-left p-2 rounded-lg hover:bg-orange-50 flex items-center gap-2 ${currentMode === 'numbers' ? 'bg-orange-100 text-orange-700' : ''}`}
@@ -343,7 +318,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({
                 🔢 Numbers Mode
                 {currentMode === 'numbers' && <span className="ml-auto text-xs bg-orange-500 text-white px-2 py-1 rounded">ACTIVE</span>}
               </button>
-              
+
               <button
                 onClick={() => handleModeChange('grandparent')}
                 className={`w-full text-left p-2 rounded-lg hover:bg-yellow-50 flex items-center gap-2 ${currentMode === 'grandparent' ? 'bg-yellow-100 text-yellow-700' : ''}`}
@@ -351,7 +326,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({
                 👴 Grandparent Mode
                 {currentMode === 'grandparent' && <span className="ml-auto text-xs bg-yellow-500 text-white px-2 py-1 rounded">ACTIVE</span>}
               </button>
-              
+
               <button
                 onClick={() => handleModeChange('vip')}
                 className={`w-full text-left p-2 rounded-lg hover:bg-gray-50 flex items-center gap-2 ${currentMode === 'vip' ? 'bg-gray-100 text-gray-700' : ''}`}
@@ -359,7 +334,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({
                 🔒 VIP Mode
                 {currentMode === 'vip' && <span className="ml-auto text-xs bg-gray-500 text-white px-2 py-1 rounded">ACTIVE</span>}
               </button>
-              
+
               <div className="border-t pt-2 mt-3">
                 <button
                   onClick={() => {
@@ -373,7 +348,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({
                 </button>
               </div>
             </div>
-            
+
             <button
               onClick={() => setShowSecretMenu(false)}
               className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600 rounded-full"
@@ -1202,17 +1177,6 @@ const App = () => {
             setStep('recording');
           }}
           onGuide={() => setShowGuide(true)}
-          showSecretMenu={showSecretMenu}
-          setShowSecretMenu={setShowSecretMenu}
-          currentMode={currentMode}
-          setCurrentMode={setCurrentMode}
-          handleInfoMouseDown={handleInfoMouseDown}
-          handleInfoMouseUp={handleInfoMouseUp}
-          handleInfoTouchStart={handleInfoTouchStart}
-          handleInfoTouchEnd={handleInfoTouchEnd}
-          handleModeChange={handleModeChange}
-          infoPressing={infoPressing}
-          showToastNotification={showToastNotification}
         />
       )}
 
