@@ -4,7 +4,16 @@ import { Input } from "@/components/ui/input";
 import { Settings, Mic, X, ExternalLink } from "lucide-react";
 import { useParentRecordings } from "@/hooks/use-parent-recordings";
 import TestRecording from "./test-recording";
-import BoredMamaLogo from "@/components/bored-mama-logo"; // Assuming BoredMamaLogo is correctly imported
+// BoredMama logo component
+const BoredMamaLogo = () => {
+  return (
+    <div className="flex items-center justify-center mb-2">
+      <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 rounded-2xl shadow-lg">
+        <span className="text-white font-bold text-lg tracking-wide">BoredMama</span>
+      </div>
+    </div>
+  );
+};
 
 interface WelcomeScreenProps {
   onCreateFlashcards: (name: string) => void;
