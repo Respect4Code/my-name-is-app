@@ -1,0 +1,58 @@
+// Add this to your WelcomeScreen component
+
+// 1. Visual mode indicator banner (shows after mode selection)
+{currentMode !== 'standard' && (
+  <div className="mode-banner" style={{
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    padding: '10px',
+    background: currentMode === 'actions' ? '#ff00ff' : 
+               currentMode === 'alphabet' ? '#007bff' :
+               currentMode === 'numbers' ? '#00ff00' :
+               currentMode === 'grandparent' ? '#ffa500' :
+               currentMode === 'vip' ? '#ffd700' : '#333',
+    color: 'white',
+    textAlign: 'center',
+    zIndex: 1000,
+    animation: 'slideDown 0.3s ease'
+  }}>
+    {currentMode === 'actions' && '🎬 ACTION WORDS MODE ACTIVE'}
+    {currentMode === 'alphabet' && '🔤 ALPHABET MODE ACTIVE'}
+    {currentMode === 'numbers' && '🔢 NUMBERS MODE ACTIVE'}
+    {currentMode === 'grandparent' && '👴 GRANDPARENT MODE ACTIVE'}
+    {currentMode === 'vip' && '🔒 VIP MODE - Maximum Security'}
+  </div>
+)}
+
+// 2. Background tint to show mode is active
+<div className="app-container" style={{
+  backgroundColor: currentMode === 'actions' ? 'rgba(255, 0, 255, 0.05)' :
+                   currentMode === 'alphabet' ? 'rgba(0, 123, 255, 0.05)' :
+                   currentMode === 'numbers' ? 'rgba(0, 255, 0, 0.05)' :
+                   currentMode === 'grandparent' ? 'rgba(255, 165, 0, 0.05)' :
+                   currentMode === 'vip' ? 'rgba(255, 215, 0, 0.05)' : 'transparent',
+  transition: 'background-color 0.3s ease'
+}}>
+
+// 3. Update placeholder text to reflect active mode
+<input
+  type="text"
+  value={name}
+  onChange={(e) => setName(e.target.value)}
+  placeholder={
+    currentMode === 'actions' ? "Type 'ING' or click Next to see categories" :
+    currentMode === 'alphabet' ? "Type a letter (A-Z) to begin" :
+    currentMode === 'numbers' ? "Type a number (0-9) to begin" :
+    currentMode === 'grandparent' ? "TYPE CHILD'S NAME (LARGER TEXT)" :
+    currentMode === 'vip' ? "Enter name (Privacy Mode - No Storage)" :
+    "Enter your child's name"
+  }
+/>
+
+// 4. Add CSS animation
+@keyframes slideDown {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
