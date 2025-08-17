@@ -1,0 +1,202 @@
+Love this direction — you’re thinking like a product designer now 👏
+
+Here’s the **clean, minimal plan** that does exactly what you want without a rewrite.
+
+## What we’ll add
+
+* **Compose step** for Action mode: after picking/typing a word you can
+
+  1. record the **word**,
+  2. (optionally) record a **sentence** (“Sam is climbing”),
+  3. (optionally) record a short **rhyme**,
+     with playback for each.
+* **Record All in Category** really walks through *every* word (1/6 → 2/6 …), and gives a **Play All** button (sequential playback).
+* **Start Over** always returns to the **Category Grid** and clears drafts/queues (same idea we can mirror for Alphabet/Numbers later).
+
+---
+
+## Tiny patches (drop-in)
+
+### 1) New state + helpers
+
+```ts
+type IngView = 'grid' | 'words' | 'compose' | 'record';
+
+const [ingView, setIngView] = useState<IngView>('grid');
+const [ingQueue, setIngQueue] = useState<string[]>([]);
+const [ingIndex, setIngIndex] = useState(0);
+const [recordTarget, setRecordTarget] = useState<'word'|'sentence'|'rhyme'>('word');
+const [composeSentence, setComposeSentence] = useState('');
+const [composeRhyme, setComposeRhyme] = useState('');
+const [savedWordClips, setSavedWordClips] = useState<Record<string,string>>({}); // word → objectURL
+
+const primeCompose = (w:string) => {
+  setComposeSentence(`We are ${w}.`);
+  setComposeRhyme(`${w} ${w}, ${w} all day — ${w} ${w}, hip-hip-hooray!`);
+};
+
+function playAllSequential(words:string[]) {
+  const urls = words.map(w => savedWordClips[w]).filter(Boolean);
+  if (!urls.length) return;
+  let i = 0;
+  const a = new Audio(urls[i]);
+  a.addEventListener('ended', () => { i++; if (i<urls.length){ a.src = urls[i]; a.play(); }});
+  a.play();
+}
+```
+
+### 2) Selection handlers (pink vs green)
+
+```ts
+// PINK: single (or typed) word → Compose
+const chooseWord = (word:string) => {
+  const w = word.toLowerCase();
+  setIngQueue([w]); setIngIndex(0); primeCompose(w);
+  setIngView('compose');
+};
+
+// GREEN: all in category → start at Compose for word #1
+const chooseAllInCategory = () => {
+  if (!ingCategory) return;
+  const list = [...ING[ingCategory]];
+  setIngQueue(list); setIngIndex(0); primeCompose(list[0]);
+  setIngView('compose');
+};
+
+// Start Over (Action mode)
+const startOverAction = () => {
+  setIngView('grid'); setIngQueue([]); setIngIndex(0);
+  setComposeSentence(''); setComposeRhyme(''); setRecordTarget('word');
+  showToastNotification('🔁 Reset Action Words');
+};
+```
+
+### 3) Compose step (new view)
+
+```tsx
+{currentMode==='actions' && ingView==='compose' && ingQueue.length>0 && (
+  <div>
+    <button onClick={()=>setIngView('words')} style={{background:'transparent',border:'none',fontSize:24,cursor:'pointer'}}>← Back</button>
+
+    <h3 style={{textAlign:'center',margin:'6px 0 14px'}}>
+      Word: <strong>{ingQueue[ingIndex]}</strong> ({ingIndex+1}/{ingQueue.length})
+    </h3>
+
+    <div style={{display:'grid',gap:12}}>
+      <button onClick={()=>{ setRecordTarget('word'); setIngView('record'); }}
+              style={{padding:14,background:'#ff00ff',color:'#fff',border:'none',borderRadius:12,fontWeight:'bold'}}>
+        🎤 Record WORD →
+      </button>
+
+      <label>Sentence</label>
+      <input value={composeSentence} onChange={e=>setComposeSentence(e.target.value)}
+             placeholder={`e.g., Sam is ${ingQueue[ingIndex]}`} style={{padding:12,border:'2px solid #ddd',borderRadius:12}} />
+      <button onClick={()=>{ setRecordTarget('sentence'); setIngView('record'); }}
+              style={{padding:14,background:'#7c4dff',color:'#fff',border:'none',borderRadius:12,fontWeight:'bold'}}>
+        🎤 Record SENTENCE →
+      </button>
+
+      <label>Rhyme</label>
+      <textarea value={composeRhyme} onChange={e=>setComposeRhyme(e.target.value)} rows={3}
+                style={{padding:12,border:'2px solid #ddd',borderRadius:12}} />
+      <button onClick={()=>{ setRecordTarget('rhyme'); setIngView('record'); }}
+              style={{padding:14,background:'#4CAF50',color:'#fff',border:'none',borderRadius:12,fontWeight:'bold'}}>
+        🎤 Record RHYME →
+      </button>
+
+      {/* Play All (uses saved word clips; appears as you save) */}
+      {Object.keys(savedWordClips).length>0 && (
+        <button onClick={()=>playAllSequential(ingQueue)}
+                style={{padding:12,background:'#8e44ad',color:'#fff',border:'none',borderRadius:12}}>
+          ▶︎ Play All Words
+        </button>
+      )}
+
+      <button onClick={()=>{
+                const next = ingIndex+1;
+                if (next<ingQueue.length){ setIngIndex(next); primeCompose(ingQueue[next]); }
+                else { setIngQueue([]); setIngIndex(0); setIngView('words'); showToastNotification('✅ Finished this set!'); }
+              }}
+              style={{padding:12,background:'#eee',border:'1px solid #ddd',borderRadius:12}}>
+        Next Word →
+      </button>
+    </div>
+  </div>
+)}
+```
+
+### 4) Recorder (content-agnostic) + save hook
+
+```tsx
+function RecordClip({ title, text, onSaved, onBack }:{
+  title:string; text:string; onSaved:(url:string)=>void; onBack:()=>void;
+}) {
+  const [rec,setRec] = useState<MediaRecorder|null>(null);
+  const [url,setUrl] = useState('');
+  const chunks = useRef<Blob[]>([]);
+
+  async function start(){ /* same MediaRecorder logic; setUrl on stop */ }
+  function stop(){ rec?.stop(); setRec(null); }
+
+  return (
+    <div>
+      <button onClick={onBack} style={{background:'transparent',border:'none',fontSize:24,cursor:'pointer'}}>← Back</button>
+      <h2 style={{textAlign:'center'}}>{title}</h2>
+      <p style={{textAlign:'center',color:'#666'}}>{text}</p>
+
+      {!rec && !url && <button onClick={start} style={{width:'100%',padding:14,background:'#ff00ff',color:'#fff',border:'none',borderRadius:12}}>🎤 Record (15s)</button>}
+      {rec && <button onClick={stop} style={{width:'100%',padding:14,background:'#ff4444',color:'#fff',border:'none',borderRadius:12}}>■ Stop</button>}
+
+      {url && (
+        <div style={{textAlign:'center',marginTop:16}}>
+          <audio src={url} controls style={{width:'100%',marginBottom:10}}/>
+          <div style={{display:'flex',gap:10,justifyContent:'center'}}>
+            <button onClick={()=>{ setUrl(''); start(); }} style={{padding:'10px 18px',background:'#ff00ff',color:'#fff',border:'none',borderRadius:12}}>Re-record</button>
+            <button onClick={()=>onSaved(url)} style={{padding:'10px 18px',background:'#4CAF50',color:'#fff',border:'none',borderRadius:12}}>✓ Save</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+Use it like:
+
+```tsx
+{currentMode==='actions' && ingView==='record' && (
+  <RecordClip
+    title={recordTarget==='word' ? `Record word: ${ingQueue[ingIndex]}` :
+           recordTarget==='sentence' ? 'Record sentence' : 'Record rhyme'}
+    text={recordTarget==='word' ? ingQueue[ingIndex] :
+          recordTarget==='sentence' ? composeSentence : composeRhyme}
+    onBack={()=>setIngView('compose')}
+    onSaved={(url)=>{
+      if (recordTarget==='word') {
+        setSavedWordClips(prev => ({...prev, [ingQueue[ingIndex]]: url}));
+      }
+      setIngView('compose'); // return to compose to add sentence/rhyme or go next
+    }}
+  />
+)}
+```
+
+---
+
+## Answers to your UX questions
+
+* **Where should “Start Over/Start Again” go?**
+  Back to the **Category Grid** (top of Action flow). It clears the queue and any compose text — simplest and predictable.
+* **Do we need to force a sentence when using the green button?**
+  No. Make sentences/rhymes **optional** on the Compose page. Parents can tap **Next Word** to speed-run the set, or record extras for favorite words.
+* **Playback for the green flow?**
+  The **Play All Words** button on Compose plays saved word clips sequentially (no heavy audio merging, so it works well on iOS).
+
+---
+
+## Gotchas (so you’re not surprised)
+
+* Browsers (esp. iOS) block autoplay — the **Play All** must be triggered by a user click (which we do).
+* If you ever want to **save** audio between sessions, you’ll need to persist blobs (IndexedDB) or upload; for now we’re just keeping object URLs in memory.
+
+If you want, we can mirror this **Compose** step for **Alphabet** (word → sound → sentence like “A is for apple”) and **Numbers** (“We have three apples”) next.

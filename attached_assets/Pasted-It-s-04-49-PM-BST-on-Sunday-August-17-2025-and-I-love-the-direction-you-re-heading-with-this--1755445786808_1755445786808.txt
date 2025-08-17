@@ -1,0 +1,903 @@
+It’s **04:49 PM BST on Sunday, August 17, 2025**, and I love the direction you’re heading with this! Your surgical add-on for Action mode is spot-on, and I’ll integrate your requests for a **"Compose" step** with sentence/rhyme recording and clear **navigation** (including "Start Over" behavior). I’ll build on your provided code patches, ensuring compatibility with the existing flow, and address your questions.
+
+---
+
+### Updated Approach
+- **UX Flow**: `Grid → Words → Compose → Record`, with the green button ("Record All in Category") stepping through words and optionally jumping to Compose.
+- **Compose Step**: Adds sentence (e.g., "Sam is climbing") and rhyme (e.g., "climbing climbing, climbing all day") with separate record/playback for each.
+- **Navigation**: "Back" on Compose returns to Words; "Start Over" resets to Grid.
+
+---
+
+### Solution: Integrated Code
+Here’s the updated `client/src/App.tsx` incorporating your patches, with minor refinements for seamlessness.
+
+```javascript
+import React, { useState, useCallback, useRef, useEffect, memo } from 'react';
+
+const WelcomeScreen: React.FC<{ onNext: () => void; onGuide: () => void }> = memo(({ onNext, onGuide }) => {
+  const [name, setName] = useState('');
+  const [infoPressing, setInfoPressing] = useState(false);
+  const [infoPressTimer, setInfoPressTimer] = useState<NodeJS.Timeout | null>(null);
+  const [showSecretMenu, setShowSecretMenu] = useState(false);
+  const [currentMode, setCurrentMode] = useState<'standard' | 'alphabet' | 'numbers' | 'actions' | 'grandparent' | 'vip'>(
+    (sessionStorage.getItem('mode') as any) || 'standard'
+  );
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [isLongPress, setIsLongPress] = useState(false);
+  const [ingView, setIngView] = useState<'grid' | 'words' | 'compose' | 'record'>('grid'); // Updated view type
+  const [ingCategory, setIngCategory] = useState<keyof typeof ING | null>(null);
+  const [ingQueue, setIngQueue] = useState<string[]>([]);
+  const [ingIndex, setIngIndex] = useState(0);
+  const [composeSentence, setComposeSentence] = useState(''); // New compose state
+  const [composeRhyme, setComposeRhyme] = useState('');     // New compose state
+  const [recordTarget, setRecordTarget] = useState<'word' | 'sentence' | 'rhyme'>('word'); // New record target
+  const recorderRef = useRef<MediaRecorder | null>(null);
+
+  // Toast notification
+  const showToastNotification = useCallback((message: string) => {
+    setToastMessage(message);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  }, []);
+
+  // Info button handlers
+  const handleInfoMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsLongPress(false);
+    setInfoPressing(true);
+    const timer = setTimeout(() => {
+      setIsLongPress(true);
+      setShowSecretMenu(true);
+      setInfoPressing(false);
+      showToastNotification('🎯 Secret menu activated!');
+    }, 600);
+    setInfoPressTimer(timer);
+  }, [showToastNotification]);
+
+  const handleInfoMouseUp = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setInfoPressing(false);
+    if (infoPressTimer) {
+      clearTimeout(infoPressTimer);
+      setInfoPressTimer(null);
+    }
+    if (!isLongPress && !showSecretMenu) {
+      onGuide();
+    }
+    setIsLongPress(false);
+  }, [infoPressTimer, isLongPress, showSecretMenu, onGuide]);
+
+  const handlePointerLeave = useCallback(() => {
+    if (infoPressTimer) {
+      clearTimeout(infoPressTimer);
+      setInfoPressTimer(null);
+      setInfoPressing(false);
+      setIsLongPress(false);
+    }
+  }, [infoPressTimer]);
+
+  const handleInfoTouchStart = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    handleInfoMouseDown(e as any);
+  }, [handleInfoMouseDown]);
+
+  const handleInfoTouchEnd = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    handleInfoMouseUp(e as any);
+  }, [handleInfoMouseUp]);
+
+  // Mode selection
+  const setMode = useCallback((mode: typeof currentMode) => {
+    setCurrentMode(mode);
+    setShowSecretMenu(false);
+    if (mode === 'vip') {
+      sessionStorage.clear();
+      localStorage.clear();
+    } else {
+      sessionStorage.setItem('mode', mode);
+    }
+    const messages = {
+      standard: '🏠 Standard Mode Active - Enter a name to begin',
+      actions: '🎬 Action Words Mode Active - Choose a category',
+      alphabet: '🔤 Alphabet Mode Active - Enter letters to begin',
+      numbers: '🔢 Numbers Mode Active - Enter numbers to begin',
+      grandparent: '👴 Grandparent Mode Active - Larger text enabled',
+      vip: '🔒 VIP Mode Active - Maximum privacy enabled',
+    };
+    showToastNotification(messages[mode]);
+    if (mode === 'actions') {
+      setIngView('grid');
+      setIngCategory(null);
+      if (recorderRef.current?.state === 'recording') {
+        recorderRef.current.stop();
+      }
+      setIngQueue([]);
+      setIngIndex(0);
+      setComposeSentence('');
+      setComposeRhyme('');
+      setRecordTarget('word');
+    }
+    setIsLongPress(false);
+  }, [showToastNotification]);
+
+  // Proceed next
+  const proceedNext = useCallback(() => {
+    const value = name.trim();
+    const isValidIngWord = value.length > 0 && /ing$/i.test(value);
+    if (!value && currentMode !== 'actions') {
+      alert('Please enter a name or word first');
+      return;
+    }
+    if (currentMode === 'actions') {
+      if (ingView === 'grid' && !isValidIngWord) {
+        setIngView('grid');
+      } else if (isValidIngWord) {
+        chooseWord(value);
+      } else if (ingView === 'words' && !ingQueue.length) {
+        alert('Please select a word or type one to record');
+      }
+    } else {
+      onNext();
+    }
+  }, [currentMode, name, ingView, ingQueue.length, onNext]);
+
+  // Action Words data
+  const ING = {
+    daily: ['eating', 'drinking', 'brushing', 'washing', 'sleeping', 'waking'],
+    movement: ['running', 'jumping', 'walking', 'crawling', 'rolling', 'spinning'],
+    hands: ['clapping', 'waving', 'grabbing', 'throwing', 'catching', 'pointing'],
+    emotions: ['laughing', 'smiling', 'crying', 'hugging', 'kissing', 'loving'],
+    creative: ['drawing', 'painting', 'singing', 'dancing', 'building', 'making'],
+    playing: ['hiding', 'seeking', 'climbing', 'sliding', 'swinging', 'bouncing'],
+  };
+
+  // Simple rhyme maker
+  const makeSimpleRhyme = (w: string) =>
+    `${w} ${w}, ${w} all day — ${w} ${w}, hip-hip-hooray!`;
+
+  // Navigation functions
+  const openCategory = useCallback((cat: keyof typeof ING) => {
+    setIngCategory(cat);
+    setIngView('words');
+  }, []);
+
+  const chooseWord = useCallback((word: string) => {
+    const w = word.toLowerCase();
+    setIngQueue([w]);
+    setIngIndex(0);
+    setComposeSentence(`We are ${w}.`);
+    setComposeRhyme(makeSimpleRhyme(w));
+    setIngView('compose');
+  }, []);
+
+  const chooseAllInCategory = useCallback(() => {
+    if (!ingCategory) return;
+    const list = [...ING[ingCategory]];
+    setIngQueue(list);
+    setIngIndex(0);
+    setIngView('record');
+    setRecordTarget('word');
+  }, [ingCategory]);
+
+  const startOverActionMode = useCallback(() => {
+    setIngView('grid');
+    setIngQueue([]);
+    setIngIndex(0);
+    setComposeSentence('');
+    setComposeRhyme('');
+    setRecordTarget('word');
+    showToastNotification('🔄 Action Mode reset!');
+  }, [showToastNotification]);
+
+  // Magic words detection
+  useEffect(() => {
+    const value = name.trim().toUpperCase();
+    if (value === 'ING' || value === 'ACTIONS') {
+      setMode('actions');
+      setName('');
+    } else if (value === 'ALPHABET' || value === 'ABC') {
+      setMode('alphabet');
+      setName('');
+    } else if (value === 'NUMBERS' || value === '123') {
+      setMode('numbers');
+      setName('');
+    } else if (value === 'GRANDPA' || value === 'GRANDPARENT') {
+      setMode('grandparent');
+      setName('');
+    } else if (value === 'VIP') {
+      setMode('vip');
+      setName('');
+    }
+  }, [name, setMode]);
+
+  // Mode-specific styling
+  const getModeStyle = () => {
+    switch (currentMode) {
+      case 'actions': return { background: 'linear-gradient(135deg, #fff0ff, #ffe0ff)' };
+      case 'alphabet': return { background: 'linear-gradient(135deg, #e0f0ff, #d0e8ff)' };
+      case 'numbers': return { background: 'linear-gradient(135deg, #e0ffe0, #d0ffd0)' };
+      case 'grandparent': return { background: 'linear-gradient(135deg, #fff8e0, #fff0d0)', fontSize: '18px' };
+      case 'vip': return { background: 'linear-gradient(135deg, #fffde0, #fff8d0)' };
+      default: return { background: 'white' };
+    }
+  };
+
+  // Pretty print category
+  const pretty = (cat: string) => cat.charAt(0).toUpperCase() + cat.slice(1);
+
+  return (
+    <div className="app-wrapper" style={{ minHeight: '100vh', padding: '20px' }}>
+      {/* Mode Banner */}
+      {currentMode !== 'standard' && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          padding: '12px',
+          background: currentMode === 'actions' ? '#ff00ff' :
+                     currentMode === 'alphabet' ? '#007bff' :
+                     currentMode === 'numbers' ? '#00cc00' :
+                     currentMode === 'grandparent' ? '#ff8800' :
+                     currentMode === 'vip' ? '#ffcc00' : '#333',
+          color: 'white',
+          textAlign: 'center',
+          fontSize: '16px',
+          fontWeight: 'bold',
+          zIndex: 1000,
+          boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+        }}>
+          {currentMode === 'actions' && '🎬 ACTION WORDS MODE ACTIVE'}
+          {currentMode === 'alphabet' && '🔤 ALPHABET MODE ACTIVE'}
+          {currentMode === 'numbers' && '🔢 NUMBERS MODE ACTIVE'}
+          {currentMode === 'grandparent' && '👴 GRANDPARENT MODE ACTIVE'}
+          {currentMode === 'vip' && '🔒 VIP MODE - MAXIMUM SECURITY'}
+        </div>
+      )}
+
+      <div className="app-container" style={{
+        ...getModeStyle(),
+        borderRadius: '24px',
+        padding: currentMode !== 'standard' ? '60px 30px 30px' : '40px 30px',
+        maxWidth: '480px',
+        margin: '0 auto',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.1)',
+        position: 'relative',
+        transition: 'all 0.3s ease',
+      }}>
+        {/* Info Button */}
+        <button
+          className={`info-btn ${infoPressing ? 'pressing' : ''}`}
+          style={{
+            position: 'absolute',
+            top: '20px',
+            right: '20px',
+            background: infoPressing ? '#ddd' : 'transparent',
+            border: '2px solid #666',
+            borderRadius: '50%',
+            width: '40px',
+            height: '40px',
+            fontSize: '20px',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+          }}
+          onMouseDown={handleInfoMouseDown}
+          onMouseUp={handleInfoMouseUp}
+          onMouseLeave={handlePointerLeave}
+          onTouchStart={handleInfoTouchStart}
+          onTouchEnd={handleInfoTouchEnd}
+          onTouchCancel={handlePointerLeave}
+          aria-label="Information"
+        >
+          ℹ️
+        </button>
+
+        {/* Secret Menu Dropdown */}
+        {showSecretMenu && (
+          <div className="dropdown-menu" style={{
+            position: 'absolute',
+            top: '70px',
+            right: '20px',
+            background: 'white',
+            border: '2px solid #333',
+            borderRadius: '10px',
+            padding: '10px',
+            zIndex: 1001,
+            minWidth: '250px',
+            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+          }}>
+            <div style={{ fontSize: '12px', color: '#666', marginBottom: '10px' }}>
+              SECRET FEATURES
+            </div>
+            {['standard', 'actions', 'alphabet', 'numbers', 'grandparent', 'vip'].map((mode) => (
+              <button
+                key={mode}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setMode(mode as any);
+                }}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  padding: '10px',
+                  margin: '5px 0',
+                  background: currentMode === mode ? '#4CAF50' : '#f0f0f0',
+                  color: currentMode === mode ? 'white' : 'black',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'all 0.2s',
+                }}
+              >
+                {mode === 'standard' && '🏠 Standard Mode'}
+                {mode === 'actions' && '🎬 Action Words Mode'}
+                {mode === 'alphabet' && '🔤 Alphabet Mode'}
+                {mode === 'numbers' && '🔢 Numbers Mode'}
+                {mode === 'grandparent' && '👴 Grandparent Mode'}
+                {mode === 'vip' && '🔒 VIP Mode'}
+                {currentMode === mode && ' ✓'}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Main Content */}
+        {currentMode === 'actions' ? (
+          <>
+            {ingView === 'grid' && (
+              <div>
+                <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>
+                  🎬 Choose a Category
+                </h2>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                  {Object.keys(ING).map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => openCategory(cat as keyof typeof ING)}
+                      style={{
+                        padding: '20px',
+                        background: 'white',
+                        border: '2px solid #ff00ff',
+                        borderRadius: '10px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        textAlign: 'center',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#ff00ff';
+                        e.currentTarget.style.color = 'white';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'white';
+                        e.currentTarget.style.color = 'black';
+                      }}
+                    >
+                      <div style={{ fontSize: '30px', marginBottom: '10px' }}>
+                        {cat === 'daily' ? '🍽️' : cat === 'movement' ? '🏃' : cat === 'hands' ? '✋' :
+                         cat === 'emotions' ? '😊' : cat === 'creative' ? '🎨' : '🎮'}
+                      </div>
+                      <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>
+                        {pretty(cat)}
+                      </div>
+                      <div style={{ fontSize: '12px', opacity: '0.7' }}>
+                        {ING[cat as keyof typeof ING].slice(0, 3).join(', ')}...
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={startOverActionMode}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    background: '#ff4444',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '10px',
+                    cursor: 'pointer',
+                    marginTop: '20px',
+                  }}
+                >
+                  Start Over
+                </button>
+              </div>
+            )}
+
+            {ingView === 'words' && ingCategory && (
+              <div>
+                <button
+                  onClick={() => setIngView('grid')}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    fontSize: '24px',
+                    cursor: 'pointer',
+                    marginBottom: '20px',
+                  }}
+                >
+                  ← Back to Categories
+                </button>
+                <h3 style={{ textAlign: 'center', marginBottom: '20px' }}>
+                  {pretty(ingCategory)} Actions
+                </h3>
+                <div className="chip-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: '10px', marginBottom: '20px' }}>
+                  {ING[ingCategory].map((w) => (
+                    <button
+                      key={w}
+                      className="chip"
+                      onClick={() => chooseWord(w)}
+                      style={{
+                        padding: '10px',
+                        background: '#f0f0f0',
+                        border: '1px solid #ddd',
+                        borderRadius: '15px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#ff00ff';
+                        e.currentTarget.style.color = 'white';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#f0f0f0';
+                        e.currentTarget.style.color = 'black';
+                      }}
+                    >
+                      {w}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ textAlign: 'center', marginBottom: '10px', color: '#666' }}>or</div>
+                <input
+                  placeholder="Type your own -ING word(s) (e.g., climbing, waving)"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                      const words = e.currentTarget.value.trim().split(',').map(w => w.trim().toLowerCase()).filter(w => /ing$/i.test(w));
+                      if (words.length) {
+                        setIngQueue(words);
+                        setIngIndex(0);
+                        setComposeSentence(`We are ${words[0]}.`);
+                        setComposeRhyme(makeSimpleRhyme(words[0]));
+                        setIngView('compose');
+                      }
+                    }
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    border: '2px solid #ddd',
+                    borderRadius: '10px',
+                    marginBottom: '10px',
+                    boxSizing: 'border-box',
+                  }}
+                />
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                  <button
+                    onClick={() => {
+                      const v = document.querySelector<HTMLInputElement>('input')?.value?.trim();
+                      if (v) {
+                        const words = v.split(',').map(w => w.trim().toLowerCase()).filter(w => /ing$/i.test(w));
+                        if (words.length) {
+                          setIngQueue(words);
+                          setIngIndex(0);
+                          setComposeSentence(`We are ${words[0]}.`);
+                          setComposeRhyme(makeSimpleRhyme(words[0]));
+                          setIngView('compose');
+                        }
+                      }
+                    }}
+                    style={{
+                      padding: '10px 15px',
+                      background: '#ff00ff',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '10px',
+                      cursor: 'pointer',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    Record Typed Word(s) →
+                  </button>
+                  <button
+                    onClick={chooseAllInCategory}
+                    style={{
+                      padding: '10px 15px',
+                      background: '#4CAF50',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '10px',
+                      cursor: 'pointer',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    Record All in Category →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {ingView === 'compose' && ingQueue.length > 0 && (
+              <div>
+                <button
+                  onClick={() => setIngView('words')}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    fontSize: '24px',
+                    cursor: 'pointer',
+                    marginBottom: '20px',
+                  }}
+                >
+                  ← Back
+                </button>
+                <h3 style={{ textAlign: 'center', marginBottom: '10px' }}>
+                  Word: <strong>{ingQueue[ingIndex]}</strong>
+                </h3>
+                <label style={{ display: 'block', margin: '10px 0 6px' }}>Sentence</label>
+                <input
+                  value={composeSentence}
+                  onChange={(e) => setComposeSentence(e.target.value)}
+                  placeholder={`e.g., Sam is ${ingQueue[ingIndex]}`}
+                  style={{ width: '100%', padding: 12, border: '2px solid #ddd', borderRadius: 10 }}
+                />
+                <label style={{ display: 'block', margin: '14px 0 6px' }}>Rhyme</label>
+                <textarea
+                  value={composeRhyme}
+                  onChange={(e) => setComposeRhyme(e.target.value)}
+                  rows={3}
+                  placeholder={makeSimpleRhyme(ingQueue[ingIndex])}
+                  style={{ width: '100%', padding: 12, border: '2px solid #ddd', borderRadius: 10 }}
+                />
+                <div style={{ display: 'grid', gap: 10, gridTemplateColumns: '1fr', marginTop: 16 }}>
+                  <button
+                    onClick={() => { setRecordTarget('word'); setIngView('record'); }}
+                    style={{ padding: 14, background: '#ff00ff', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 'bold' }}
+                  >
+                    🎤 Record WORD →
+                  </button>
+                  <button
+                    onClick={() => { setRecordTarget('sentence'); setIngView('record'); }}
+                    style={{ padding: 14, background: '#7c4dff', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 'bold' }}
+                  >
+                    🎤 Record SENTENCE →
+                  </button>
+                  <button
+                    onClick={() => { setRecordTarget('rhyme'); setIngView('record'); }}
+                    style={{ padding: 14, background: '#4CAF50', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 'bold' }}
+                  >
+                    🎤 Record RHYME →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {ingView === 'record' && ingQueue.length > 0 && (
+              <RecordClip
+                key={`${ingQueue[ingIndex]}-${recordTarget}`} // Fresh UI per change
+                header={
+                  recordTarget === 'word'
+                    ? `Record word: ${ingQueue[ingIndex]}`
+                    : recordTarget === 'sentence'
+                      ? 'Record sentence'
+                      : 'Record rhyme'
+                }
+                text={
+                  recordTarget === 'word'
+                    ? ingQueue[ingIndex]
+                    : recordTarget === 'sentence'
+                      ? composeSentence
+                      : composeRhyme
+                }
+                onDone={() => setIngView('compose')}
+                onNextWord={() => {
+                  const next = ingIndex + 1;
+                  if (next < ingQueue.length) {
+                    setIngIndex(next);
+                    const w = ingQueue[next];
+                    setComposeSentence(`We are ${w}.`);
+                    setComposeRhyme(makeSimpleRhyme(w));
+                    setIngView('compose');
+                  } else {
+                    setIngView('words');
+                    setIngQueue([]);
+                    setIngIndex(0);
+                    showToastNotification('✅ Finished this category!');
+                  }
+                }}
+                onBack={() => setIngView('compose')}
+              />
+            )}
+          </>
+        ) : (
+          <>
+            <div className="logo" style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <span style={{
+                background: 'linear-gradient(45deg, #ff00ff, #00ffff)',
+                color: 'white',
+                padding: '10px 20px',
+                borderRadius: '20px',
+                fontWeight: 'bold',
+              }}>BoredMama</span>
+            </div>
+            <h1 style={{ textAlign: 'center', fontSize: '32px', margin: '20px 0' }}>
+              My Name Is
+            </h1>
+            <p style={{ textAlign: 'center', color: '#666', marginBottom: '20px' }}>
+              {currentMode === 'standard' && 'Teach your child their name with YOUR voice'}
+              {currentMode === 'actions' && 'Teach action words with YOUR voice (-ING verbs)'}
+              {currentMode === 'alphabet' && 'Teach the alphabet with YOUR voice'}
+              {currentMode === 'numbers' && 'Teach numbers with YOUR voice'}
+              {currentMode === 'grandparent' && 'Easy mode with larger text'}
+              {currentMode === 'vip' && 'Maximum privacy - no data stored'}
+            </p>
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <span className="star">⭐</span>
+              <span>
+                {currentMode === 'standard' && '"My 18-month-old learned all letters phonetically!" - Real parent'}
+                {currentMode === 'actions' && '"My toddler loves recording -ING verbs!" - Happy parent'}
+                {currentMode === 'alphabet' && '"Great for letter sounds!" - Parent'}
+                {currentMode === 'numbers' && '"Counting made fun!" - Parent'}
+                {currentMode === 'grandparent' && '"Easy for grandparents to use!" - Family'}
+                {currentMode === 'vip' && '"Perfect privacy for my child!" - Parent'}
+              </span>
+            </div>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && currentMode === 'actions' && name.trim().length > 0 && /ing$/i.test(name)) {
+                  chooseWord(name.trim());
+                }
+              }}
+              placeholder={
+                currentMode === 'standard' ? "Enter your child's name" :
+                currentMode === 'actions' ? "Type an -ING word or category (e.g., climbing)" :
+                currentMode === 'alphabet' ? "Enter letters (A-Z)" :
+                currentMode === 'numbers' ? "Enter numbers (0-9)" :
+                currentMode === 'grandparent' ? "TYPE THE CHILD'S NAME" :
+                currentMode === 'vip' ? "Enter name (Privacy Mode)" :
+                "Enter a value"
+              }
+              style={{
+                width: '100%',
+                padding: currentMode === 'grandparent' ? '20px' : '15px',
+                fontSize: currentMode === 'grandparent' ? '24px' : '18px',
+                border: '2px solid #ddd',
+                borderRadius: '10px',
+                marginBottom: '20px',
+                boxSizing: 'border-box',
+              }}
+              autoComplete="off"
+            />
+            <button
+              onClick={proceedNext}
+              style={{
+                width: currentMode === 'actions' ? 'auto' : '100%',
+                padding: currentMode === 'grandparent' ? '20px' : '15px',
+                fontSize: currentMode === 'grandparent' ? '24px' : '18px',
+                background: currentMode === 'actions' && name.trim().length > 0 && /ing$/i.test(name) ? '#ff00ff' : '#4CAF50',
+                color: 'white',
+                border: 'none',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                margin: currentMode === 'actions' ? '0 auto' : '0',
+                display: 'block',
+              }}
+              disabled={currentMode === 'actions' && name.trim().length > 0 && !/ing$/i.test(name)}
+            >
+              {currentMode === 'actions' && name.trim().length > 0 && /ing$/i.test(name) ? 'Start Recording →' :
+               currentMode === 'actions' ? 'Show Categories →' : 'Next →'}
+            </button>
+            {currentMode === 'standard' && (
+              <button
+                onClick={() => {
+                  setName('');
+                  setIngView('grid'); // Reset to Grid for consistency across modes
+                }}
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  background: '#ff4444',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  marginTop: '10px',
+                }}
+              >
+                Start Again
+              </button>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Toast Notification */}
+      {showToast && (
+        <div style={{
+          position: 'fixed',
+          bottom: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: '#333',
+          color: 'white',
+          padding: '15px 30px',
+          borderRadius: '30px',
+          zIndex: 1002,
+          animation: 'fadeIn 0.3s ease',
+        }}>
+          {toastMessage}
+        </div>
+      )}
+    </div>
+  );
+}, (prevProps, nextProps) => prevProps.onNext === nextProps.onNext && prevProps.onGuide === nextProps.onGuide);
+
+// RecordClip component
+const RecordClip: React.FC<{
+  header: string;
+  text: string;
+  onDone: () => void;
+  onNextWord: () => void;
+  onBack: () => void;
+}> = ({ header, text, onDone, onNextWord, onBack }) => {
+  const [rec, setRec] = useState<MediaRecorder | null>(null);
+  const [audioURL, setAudioURL] = useState<string>('');
+  const chunksRef = useRef<Blob[]>([]);
+
+  async function start() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' :
+                   MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : '';
+      const r = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+      chunksRef.current = [];
+      r.ondataavailable = (e) => e.data.size && chunksRef.current.push(e.data);
+      r.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: mime || 'audio/webm' });
+        setAudioURL(URL.createObjectURL(blob));
+        stream.getTracks().forEach((t) => t.stop());
+      };
+      r.start();
+      setRec(r);
+      setTimeout(() => r.state === 'recording' && r.stop(), 15000); // 15s max
+    } catch (err) {
+      alert('Microphone access denied. Please allow permission.');
+    }
+  }
+
+  function stop() {
+    rec?.stop();
+    setRec(null);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (rec?.state === 'recording') rec.stop();
+    };
+  }, [rec]);
+
+  return (
+    <div>
+      <button
+        onClick={onBack}
+        style={{
+          background: 'transparent',
+          border: 'none',
+          fontSize: '24px',
+          cursor: 'pointer',
+          marginBottom: '20px',
+        }}
+      >
+        ← Back
+      </button>
+      <h2 style={{ textAlign: 'center', marginBottom: '10px' }}>{header}</h2>
+      <p style={{ textAlign: 'center', color: '#666', marginBottom: '20px' }}>{text}</p>
+      {!rec && !audioURL && (
+        <button
+          onClick={start}
+          style={{
+            width: '100%',
+            padding: 15,
+            background: '#ff00ff',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 10,
+            fontWeight: 'bold',
+          }}
+        >
+          🎤 Record (15s max)
+        </button>
+      )}
+      {rec && (
+        <button
+          onClick={stop}
+          style={{
+            width: '100%',
+            padding: 15,
+            background: '#ff4444',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 10,
+            fontWeight: 'bold',
+          }}
+        >
+          ■ Stop
+        </button>
+      )}
+      {audioURL && (
+        <div style={{ textAlign: 'center', marginTop: 20 }}>
+          <audio src={audioURL} controls style={{ width: '100%', marginBottom: 10 }} />
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+            <button
+              onClick={() => { setAudioURL(''); start(); }}
+              style={{ padding: '10px 20px', background: '#ff00ff', color: '#fff', border: 'none', borderRadius: 10 }}
+            >
+              Re-record
+            </button>
+            <button
+              onClick={onDone}
+              style={{ padding: '10px 20px', background: '#4CAF50', color: '#fff', border: 'none', borderRadius: 10 }}
+            >
+              ✓ Save
+            </button>
+            {ingQueue.length > 1 && (
+              <button
+                onClick={onNextWord}
+                style={{ padding: '10px 20px', background: '#7c4dff', color: '#fff', border: 'none', borderRadius: 10 }}
+              >
+                Next Word →
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default WelcomeScreen;
+```
+
+---
+
+### Key Changes
+1. **Compose Step**:
+   - Added `compose` view between `words` and `record`.
+   - Pre-fills sentence (e.g., "We are climbing") and rhyme (e.g., "climbing climbing, climbing all day") for the chosen word.
+   - Offers three record options: Word, Sentence, Rhyme, each with its own playback.
+
+2. **Navigation**:
+   - **Back on Compose**: Returns to `words` page.
+   - **Back to Categories**: From `words`, returns to `grid`.
+   - **Start Over**: Resets Action mode (clears queue, index, compose fields) and lands on `grid`, mirroring Standard mode’s behavior.
+
+3. **Green Button Flow**:
+   - Still steps through each word in `record` view.
+   - After recording a word, returns to `compose` for optional sentence/rhyme addition before "Next Word →".
+
+4. **Comma-Separated Input**:
+   - Supports multiple words (e.g., "climbing, waving") via the pink button, moving to `compose` for the first word.
+
+5. **Recorder**:
+   - Replaces `RecordWord` with `RecordClip`, adaptable to word/sentence/rhyme.
+   - Shows "Next Word →" only for multi-word queues (e.g., green button flow).
+
+---
+
+### Testing Instructions
+1. **Deploy**:
+   - Replace `client/src/App.tsx` in Replit and push:
+     ```bash
+     git add .
+     git commit -m "Add Compose step with sentence/rhyme recording for Action mode"
+     git push
+     ```
+
+2. **Test Flow**:
+   - **Single Word (Pink)**: Type "climbing," click "RecordSorry about that, something didn't go as planned. Please try again, and if you're still seeing this message, go ahead and restart the app.
