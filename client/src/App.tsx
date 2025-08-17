@@ -1,4 +1,5 @@
-import React, { memo, useState, useEffect, useRef, useCallback } from 'react';
+
+import React, { useState, useCallback, useRef, useEffect, memo } from 'react';
 import {
   Info, ChevronRight, ArrowLeft, Volume2, BookOpen, Moon, Music, Loader2, ArrowRight, ChevronLeft,
   CheckCircle, Mic, Square, RefreshCw, Play, Share2, HelpCircle, X, ChevronDown
@@ -78,148 +79,155 @@ interface RecordingStageProps {
   recordings: { [key: string]: string };
 }
 
-// RecordWord Component for Action Words mode
+// RecordWord Component for Action Words mode with MIME detection
 const RecordWord: React.FC<{
   word: string;
   onNext: () => void;
   onBack: () => void;
-  recorderRef: React.MutableRefObject<MediaRecorder | null>;
-}> = memo(({ word, onNext, onBack, recorderRef }) => {
-  const [isRecording, setIsRecording] = useState(false);
-  const [isStopping, setIsStopping] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
+}> = memo(({ word, onNext, onBack }) => {
+  const [rec, setRec] = useState<MediaRecorder | null>(null);
+  const [audioURL, setAudioURL] = useState<string>('');
+  const chunksRef = useRef<Blob[]>([]);
 
-  const startRecording = async () => {
-    if (!navigator.mediaDevices?.getUserMedia) {
-      alert('getUserMedia not supported on your browser.');
-      return;
-    }
-
+  const start = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? 'audio/webm;codecs=opus'
-        : MediaRecorder.isTypeSupported('audio/webm')
-          ? 'audio/webm'
-          : 'audio/mp4';
-
-      recorderRef.current = new MediaRecorder(stream, { mimeType });
-      audioChunksRef.current = [];
-
-      recorderRef.current.ondataavailable = (e) => {
-        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' :
+                   MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : '';
+      const r = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+      chunksRef.current = [];
+      r.ondataavailable = (e) => e.data.size && chunksRef.current.push(e.data);
+      r.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: mime || 'audio/webm' });
+        setAudioURL(URL.createObjectURL(blob));
+        stream.getTracks().forEach((t) => t.stop());
       };
-
-      recorderRef.current.onstop = () => {
-        stream.getTracks().forEach(track => track.stop());
-        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
-        const reader = new FileReader();
-        reader.onload = () => setPreviewUrl(reader.result as string);
-        reader.readAsDataURL(audioBlob);
-        setIsRecording(false);
-        setIsStopping(false);
-      };
-
-      recorderRef.current.start();
-      setIsRecording(true);
+      r.start();
+      setRec(r);
+      setTimeout(() => r.state === 'recording' && r.stop(), 15000); // 15s max
     } catch (err) {
       console.error('Recording error:', err);
       alert('Failed to start recording. Please check microphone permissions.');
-      setIsRecording(false);
-      setIsStopping(false);
     }
   };
 
-  const stopRecording = () => {
-    if (recorderRef.current && recorderRef.current.state === 'recording') {
-      setIsStopping(true);
-      recorderRef.current.stop();
-    }
+  const stop = () => {
+    rec?.stop();
+    setRec(null);
   };
 
-  const toggleRecording = () => {
-    if (isRecording) {
-      stopRecording();
-    } else {
-      startRecording();
-    }
-  };
-
-  const playPreview = () => {
-    if (previewUrl && audioRef.current) {
-      audioRef.current.src = previewUrl;
-      audioRef.current.play().catch(err => {
-        console.error('Preview playback failed:', err);
-        alert('Unable to play preview. Check your device volume or silent mode.');
-      });
-    }
-  };
-
-  const saveRecording = () => {
-    if (previewUrl) {
-      onNext();
-      // In a real app, you'd pass this data up to the parent component
-      // For now, we assume the parent handles saving the previewUrl with the word
-    }
-  };
+  useEffect(() => {
+    return () => {
+      if (rec?.state === 'recording') rec.stop();
+    };
+  }, [rec]);
 
   return (
     <div style={{ padding: '30px', background: '#fff0ff', borderRadius: '15px', textAlign: 'center' }}>
-      <h3 style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '15px', color: '#ff00ff' }}>
-        Record: {word}
-      </h3>
-      <p style={{ fontSize: '18px', color: '#666', marginBottom: '20px' }}>
-        Tap the mic to start, tap the square to stop.
+      <button
+        onClick={onBack}
+        style={{
+          background: 'transparent',
+          border: 'none',
+          fontSize: '24px',
+          cursor: 'pointer',
+          marginBottom: '20px',
+        }}
+      >
+        ← Back
+      </button>
+      <h2 style={{ textAlign: 'center', marginBottom: '20px', fontSize: '28px', fontWeight: 'bold', color: '#ff00ff' }}>
+        Recording: {word}
+      </h2>
+      <p style={{ textAlign: 'center', marginBottom: '20px', color: '#666', fontSize: '18px' }}>
+        Say the word, then a short sentence, e.g., "We are {word}!"
       </p>
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', alignItems: 'center' }}>
-        {previewUrl ? (
-          <>
-            <button
-              onClick={playPreview}
-              style={{ padding: '15px', background: '#ff00ff', color: 'white', border: 'none', borderRadius: '50%', cursor: 'pointer' }}
-            >
-              <Play size={24} />
-            </button>
-            <button
-              onClick={saveRecording}
-              style={{ padding: '15px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '50%', cursor: 'pointer' }}
-            >
-              <CheckCircle size={24} />
-            </button>
-            <button
-              onClick={() => { setPreviewUrl(null); setIsRecording(false); stopRecording(); }}
-              style={{ padding: '15px', background: '#f44336', color: 'white', border: 'none', borderRadius: '50%', cursor: 'pointer' }}
-            >
-              <RefreshCw size={24} />
-            </button>
-            <audio ref={audioRef} />
-          </>
-        ) : (
-          <button
-            onClick={toggleRecording}
-            style={{
-              padding: '20px',
-              background: isRecording ? '#f44336' : '#2196F3',
-              color: 'white',
-              border: 'none',
-              borderRadius: '50%',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {isRecording ? <Square size={30} /> : <Mic size={30} />}
-          </button>
-        )}
-      </div>
-      <div style={{ marginTop: '20px' }}>
-        <button onClick={onBack} style={{ background: 'transparent', border: 'none', color: '#999', cursor: 'pointer', fontSize: '16px' }}>
-          ← Back to Categories
+      {!rec && (
+        <button
+          onClick={start}
+          style={{
+            width: '100%',
+            padding: '15px',
+            background: '#ff00ff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '10px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            fontSize: '18px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '10px',
+          }}
+        >
+          <Mic size={24} /> Record (15s max)
         </button>
-      </div>
+      )}
+      {rec && (
+        <button
+          onClick={stop}
+          style={{
+            width: '100%',
+            padding: '15px',
+            background: '#ff4444',
+            color: 'white',
+            border: 'none',
+            borderRadius: '10px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            fontSize: '18px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '10px',
+          }}
+        >
+          <Square size={24} /> Stop Recording
+        </button>
+      )}
+      {audioURL && (
+        <div style={{ textAlign: 'center', marginTop: '20px' }}>
+          <audio src={audioURL} controls style={{ width: '100%', marginBottom: '10px' }} />
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+            <button
+              onClick={() => {
+                setAudioURL('');
+                start();
+              }}
+              style={{
+                padding: '10px 20px',
+                background: '#ff00ff',
+                color: 'white',
+                border: 'none',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+              }}
+            >
+              <RefreshCw size={16} /> Re-record
+            </button>
+            <button
+              onClick={onNext}
+              style={{
+                padding: '10px 20px',
+                background: '#4CAF50',
+                color: 'white',
+                border: 'none',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+              }}
+            >
+              <CheckCircle size={16} /> Next Word →
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 });
@@ -410,7 +418,7 @@ const ShareButton: React.FC<ShareButtonProps> = memo(({ className = "" }) => {
   );
 });
 
-// WelcomeScreen Component
+// WelcomeScreen Component with Grok's implementation
 const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) => {
   const [name, setName] = useState('');
   const [infoPressing, setInfoPressing] = useState(false);
@@ -426,7 +434,6 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
   const [ingCategory, setIngCategory] = useState<keyof typeof ING | null>(null);
   const [ingQueue, setIngQueue] = useState<string[]>([]);
   const [ingIndex, setIngIndex] = useState(0);
-  const recorderRef = useRef<MediaRecorder | null>(null);
 
   // Load saved mode on component mount
   useEffect(() => {
@@ -527,10 +534,6 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
       setIngQueue([]);
       setIngIndex(0);
       setName('');
-      // Stop any active recording
-      if (recorderRef.current?.state === 'recording') {
-        recorderRef.current.stop();
-      }
     } else {
       setIngView('grid');
       setIngCategory(null);
@@ -594,7 +597,6 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
       onNext(name.toUpperCase());
     }
   };
-
 
   // Action Words data
   const ING = {
@@ -937,7 +939,6 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
                   }
                 }}
                 onBack={() => setIngView('words')}
-                recorderRef={recorderRef}
               />
             )}
           </>
@@ -982,9 +983,9 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
               onClick={handleNextClick}
               className={`w-full py-4 rounded-xl font-bold text-xl transition-all flex items-center justify-center gap-2 ${
                 currentMode === 'actions' && name.trim().length > 0 && /ing$/i.test(name.trim())
-                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600'
-                  : currentMode === 'actions' ? 'bg-purple-300'
-                  : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
+                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white'
+                  : currentMode === 'actions' ? 'bg-purple-300 text-white'
+                  : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white'
               }`}
               aria-label="Proceed to next step"
               disabled={
@@ -1572,9 +1573,6 @@ const App = () => {
   const [showGitHubModal, setShowGitHubModal] = useState(false);
   const [showLicenseModal, setShowLicenseModal] = useState(false);
 
-  // Toast state
-  const [toast, setToast] = useState({ message: '', type: 'info', show: false });
-
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -1657,7 +1655,6 @@ const App = () => {
     saveRecordings();
   }, [recordings]);
 
-
   const handleReset = async () => {
     if (window.confirm('This will clear all recordings and data. Are you sure?')) {
       try {
@@ -1718,8 +1715,6 @@ const App = () => {
           onReset={handleReset}
         />
       )}
-
-
 
       <footer className="text-center text-xs text-gray-500 py-6 px-4 mt-8">
         <div className="space-y-3">
