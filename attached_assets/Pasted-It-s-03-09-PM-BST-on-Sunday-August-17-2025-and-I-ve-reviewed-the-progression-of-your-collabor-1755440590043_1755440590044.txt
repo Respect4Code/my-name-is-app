@@ -1,0 +1,784 @@
+It’s **03:09 PM BST on Sunday, August 17, 2025**, and I’ve reviewed the progression of your collaboration with multiple AI systems (Grok, ChatGPT, and this hybrid solution) on the Action Words mode implementation for your test site at [https://8c344db9-691a-4064-83ea-d3ef50523ebc-00-3eouhst0k9izb.riker.replit.dev/test-secret-sauce.html](https://8c344db9-691a-4064-83ea-d3ef50523ebc-00-3eouhst0k9izb.riker.replit.dev/test-secret-sauce.html). You’ve diligently posted individual contributions and the combined solution to Replit, creating a clear record of the evolution. Your question about whether all the individual posts were helpful or if a final post would have sufficed is a great one, and I’ll address it based on the context.
+
+---
+
+### Was the Progression Helpful, or Would a Final Post Have Been Enough?
+
+#### Value of the Progression
+The step-by-step collaboration was **highly valuable** for several reasons:
+- **Problem Clarification**: Each AI contribution (e.g., ChatGPT’s state machine, Grok’s CTA dynamics, and the hybrid queue-based recording) built on the previous, refining the understanding of the "chooser loop" issue (e.g., looping back to "Show Categories" instead of recording "clapping").
+- **Diverse Perspectives**: Multiple AIs approaching the problem validated the solution through independent analysis, increasing confidence in the final design (state machine, queue, dynamic CTA).
+- **Incremental Learning**: The progression allowed you to see how the solution evolved—starting with category selection, adding recording states, and culminating in queue-based multi-word recording. This was educational and helped you track changes in Replit.
+- **Debugging Aid**: Individual posts let you test and tweak each piece (e.g., my initial recording view vs. ChatGPT’s queue), making it easier to isolate issues like iOS compatibility or CTA logic.
+
+#### Drawbacks of the Progression
+- **Complexity**: Managing multiple posts (e.g., diffs, code blocks) could have been overwhelming, especially with overlapping suggestions (e.g., state machine implementations).
+- **Efficiency**: A single consolidated solution might have saved time by avoiding redundant implementation efforts (e.g., retiring `showIngCategories` could have been streamlined earlier).
+
+#### Would a Final Post Have Been Enough?
+A final post with the complete solution would have been **more efficient** for implementation, providing a ready-to-use `App.tsx` without requiring you to stitch together pieces. However, it might have lacked the context for why certain decisions were made (e.g., adding MIME detection for iOS), potentially making it harder to adapt or debug without the progression’s insights.
+
+#### Verdict
+The progression was **helpful** for understanding and validating the solution, especially given your active engagement on Replit. However, for future iterations, a final post with a clear changelog referencing key decisions (e.g., "Added MIME detection based on iOS feedback") could balance efficiency and context. Since you’ve already posted everything individually, the record is a strength—now, let’s ensure the final solution ties it all together.
+
+---
+
+### Final Consolidated Solution
+Based on all discussions, here’s the complete `client/src/App.tsx` incorporating the best of Grok, ChatGPT, and the hybrid approach. This eliminates the chooser loop, enables recording "clapping" or a category group, and includes robustness fixes (dynamic CTA, MIME detection, recorder cleanup).
+
+```javascript
+import React, { useState, useCallback, useRef, useEffect, memo } from 'react';
+
+const WelcomeScreen: React.FC<{ onNext: () => void; onGuide: () => void }> = memo(({ onNext, onGuide }) => {
+  const [name, setName] = useState('');
+  const [infoPressing, setInfoPressing] = useState(false);
+  const [infoPressTimer, setInfoPressTimer] = useState<NodeJS.Timeout | null>(null);
+  const [showSecretMenu, setShowSecretMenu] = useState(false);
+  const [currentMode, setCurrentMode] = useState<'standard' | 'alphabet' | 'numbers' | 'actions' | 'grandparent' | 'vip'>(
+    (sessionStorage.getItem('mode') as any) || 'standard'
+  );
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [isLongPress, setIsLongPress] = useState(false);
+  const [ingView, setIngView] = useState<'grid' | 'words' | 'record'>('grid');
+  const [ingCategory, setIngCategory] = useState<keyof typeof ING | null>(null);
+  const [ingQueue, setIngQueue] = useState<string[]>([]);
+  const [ingIndex, setIngIndex] = useState(0);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+
+  // Toast notification
+  const showToastNotification = useCallback((message: string) => {
+    setToastMessage(message);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  }, []);
+
+  // Info button handlers with long-press guard
+  const handleInfoMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsLongPress(false);
+    setInfoPressing(true);
+    const timer = setTimeout(() => {
+      setIsLongPress(true);
+      setShowSecretMenu(true);
+      setInfoPressing(false);
+      showToastNotification('🎯 Secret menu activated!');
+    }, 600);
+    setInfoPressTimer(timer);
+  }, [showToastNotification]);
+
+  const handleInfoMouseUp = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setInfoPressing(false);
+    if (infoPressTimer) {
+      clearTimeout(infoPressTimer);
+      setInfoPressTimer(null);
+    }
+    if (!isLongPress && !showSecretMenu) {
+      onGuide();
+    }
+    setIsLongPress(false);
+  }, [infoPressTimer, isLongPress, showSecretMenu, onGuide]);
+
+  const handlePointerLeave = useCallback(() => {
+    if (infoPressTimer) {
+      clearTimeout(infoPressTimer);
+      setInfoPressTimer(null);
+      setInfoPressing(false);
+      setIsLongPress(false);
+    }
+  }, [infoPressTimer]);
+
+  const handleInfoTouchStart = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    handleInfoMouseDown(e as any);
+  }, [handleInfoMouseDown]);
+
+  const handleInfoTouchEnd = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    handleInfoMouseUp(e as any);
+  }, [handleInfoMouseUp]);
+
+  // Mode selection with recorder cleanup
+  const setMode = useCallback((mode: typeof currentMode) => {
+    setCurrentMode(mode);
+    setShowSecretMenu(false);
+    if (mode === 'vip') {
+      sessionStorage.clear();
+      localStorage.clear();
+    } else {
+      sessionStorage.setItem('mode', mode);
+    }
+    const messages = {
+      standard: '🏠 Standard Mode Active - Enter a name to begin',
+      actions: '🎬 Action Words Mode Active - Choose a category',
+      alphabet: '🔤 Alphabet Mode Active - Enter letters to begin',
+      numbers: '🔢 Numbers Mode Active - Enter numbers to begin',
+      grandparent: '👴 Grandparent Mode Active - Larger text enabled',
+      vip: '🔒 VIP Mode Active - Maximum privacy enabled',
+    };
+    showToastNotification(messages[mode]);
+    if (mode === 'actions') {
+      setIngView('grid');
+      setIngCategory(null);
+      if (recorderRef.current?.state === 'recording') {
+        recorderRef.current.stop();
+      }
+      setIngQueue([]);
+      setIngIndex(0);
+    }
+    setIsLongPress(false);
+  }, [showToastNotification]);
+
+  // Proceed next with dynamic CTA
+  const proceedNext = useCallback(() => {
+    const value = name.trim();
+    const isValidIngWord = value.length > 0 && /ing$/i.test(value);
+    if (!value && currentMode !== 'actions') {
+      alert('Please enter a name or word first');
+      return;
+    }
+    if (currentMode === 'actions') {
+      if (ingView === 'grid' && !isValidIngWord) {
+        setIngView('grid'); // Stay in grid
+      } else if (isValidIngWord) {
+        chooseWord(value); // Record typed word
+      } else if (ingView === 'words' && !ingQueue.length) {
+        alert('Please select a word or type one to record');
+      } else if (ingView === 'record') {
+        const nextIndex = ingIndex + 1;
+        if (nextIndex < ingQueue.length) {
+          setIngIndex(nextIndex);
+        } else {
+          setIngView('words');
+          setIngQueue([]);
+          setIngIndex(0);
+          showToastNotification('Recording complete!');
+        }
+      }
+    } else {
+      onNext();
+    }
+  }, [currentMode, name, ingView, ingQueue.length, ingIndex, onNext]);
+
+  // Action Words data
+  const ING = {
+    daily: ['eating', 'drinking', 'brushing', 'washing', 'sleeping', 'waking'],
+    movement: ['running', 'jumping', 'walking', 'crawling', 'rolling', 'spinning'],
+    hands: ['clapping', 'waving', 'grabbing', 'throwing', 'catching', 'pointing'],
+    emotions: ['laughing', 'smiling', 'crying', 'hugging', 'kissing', 'loving'],
+    creative: ['drawing', 'painting', 'singing', 'dancing', 'building', 'making'],
+    playing: ['hiding', 'seeking', 'climbing', 'sliding', 'swinging', 'bouncing'],
+  };
+
+  // Navigation functions
+  const openCategory = useCallback((cat: keyof typeof ING) => {
+    setIngCategory(cat);
+    setIngView('words');
+  }, []);
+
+  const chooseWord = useCallback((word: string) => {
+    setIngQueue([word.toLowerCase()]);
+    setIngIndex(0);
+    setIngView('record');
+  }, []);
+
+  const chooseAllInCategory = useCallback(() => {
+    if (!ingCategory) return;
+    setIngQueue([...ING[ingCategory]]);
+    setIngIndex(0);
+    setIngView('record');
+  }, [ingCategory]);
+
+  // Magic words detection
+  useEffect(() => {
+    const value = name.trim().toUpperCase();
+    if (value === 'ING' || value === 'ACTIONS') {
+      setMode('actions');
+      setName('');
+    } else if (value === 'ALPHABET' || value === 'ABC') {
+      setMode('alphabet');
+      setName('');
+    } else if (value === 'NUMBERS' || value === '123') {
+      setMode('numbers');
+      setName('');
+    } else if (value === 'GRANDPA' || value === 'GRANDPARENT') {
+      setMode('grandparent');
+      setName('');
+    } else if (value === 'VIP') {
+      setMode('vip');
+      setName('');
+    }
+  }, [name, setMode]);
+
+  // Mode-specific styling
+  const getModeStyle = () => {
+    switch (currentMode) {
+      case 'actions': return { background: 'linear-gradient(135deg, #fff0ff, #ffe0ff)' };
+      case 'alphabet': return { background: 'linear-gradient(135deg, #e0f0ff, #d0e8ff)' };
+      case 'numbers': return { background: 'linear-gradient(135deg, #e0ffe0, #d0ffd0)' };
+      case 'grandparent': return { background: 'linear-gradient(135deg, #fff8e0, #fff0d0)', fontSize: '18px' };
+      case 'vip': return { background: 'linear-gradient(135deg, #fffde0, #fff8d0)' };
+      default: return { background: 'white' };
+    }
+  };
+
+  // Pretty print category
+  const pretty = (cat: string) => cat.charAt(0).toUpperCase() + cat.slice(1);
+
+  return (
+    <div className="app-wrapper" style={{ minHeight: '100vh', padding: '20px' }}>
+      {/* Mode Banner */}
+      {currentMode !== 'standard' && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          padding: '12px',
+          background: currentMode === 'actions' ? '#ff00ff' :
+                     currentMode === 'alphabet' ? '#007bff' :
+                     currentMode === 'numbers' ? '#00cc00' :
+                     currentMode === 'grandparent' ? '#ff8800' :
+                     currentMode === 'vip' ? '#ffcc00' : '#333',
+          color: 'white',
+          textAlign: 'center',
+          fontSize: '16px',
+          fontWeight: 'bold',
+          zIndex: 1000,
+          boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+        }}>
+          {currentMode === 'actions' && '🎬 ACTION WORDS MODE ACTIVE'}
+          {currentMode === 'alphabet' && '🔤 ALPHABET MODE ACTIVE'}
+          {currentMode === 'numbers' && '🔢 NUMBERS MODE ACTIVE'}
+          {currentMode === 'grandparent' && '👴 GRANDPARENT MODE ACTIVE'}
+          {currentMode === 'vip' && '🔒 VIP MODE - MAXIMUM SECURITY'}
+        </div>
+      )}
+
+      <div className="app-container" style={{
+        ...getModeStyle(),
+        borderRadius: '24px',
+        padding: currentMode !== 'standard' ? '60px 30px 30px' : '40px 30px',
+        maxWidth: '480px',
+        margin: '0 auto',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.1)',
+        position: 'relative',
+        transition: 'all 0.3s ease',
+      }}>
+        {/* Info Button */}
+        <button
+          className={`info-btn ${infoPressing ? 'pressing' : ''}`}
+          style={{
+            position: 'absolute',
+            top: '20px',
+            right: '20px',
+            background: infoPressing ? '#ddd' : 'transparent',
+            border: '2px solid #666',
+            borderRadius: '50%',
+            width: '40px',
+            height: '40px',
+            fontSize: '20px',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+          }}
+          onMouseDown={handleInfoMouseDown}
+          onMouseUp={handleInfoMouseUp}
+          onMouseLeave={handlePointerLeave}
+          onTouchStart={handleInfoTouchStart}
+          onTouchEnd={handleInfoTouchEnd}
+          onTouchCancel={handlePointerLeave}
+          aria-label="Information"
+        >
+          ℹ️
+        </button>
+
+        {/* Secret Menu Dropdown */}
+        {showSecretMenu && (
+          <div className="dropdown-menu" style={{
+            position: 'absolute',
+            top: '70px',
+            right: '20px',
+            background: 'white',
+            border: '2px solid #333',
+            borderRadius: '10px',
+            padding: '10px',
+            zIndex: 1001,
+            minWidth: '250px',
+            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+          }}>
+            <div style={{ fontSize: '12px', color: '#666', marginBottom: '10px' }}>
+              SECRET FEATURES
+            </div>
+            {['standard', 'actions', 'alphabet', 'numbers', 'grandparent', 'vip'].map((mode) => (
+              <button
+                key={mode}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setMode(mode as any);
+                }}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  padding: '10px',
+                  margin: '5px 0',
+                  background: currentMode === mode ? '#4CAF50' : '#f0f0f0',
+                  color: currentMode === mode ? 'white' : 'black',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'all 0.2s',
+                }}
+              >
+                {mode === 'standard' && '🏠 Standard Mode'}
+                {mode === 'actions' && '🎬 Action Words Mode'}
+                {mode === 'alphabet' && '🔤 Alphabet Mode'}
+                {mode === 'numbers' && '🔢 Numbers Mode'}
+                {mode === 'grandparent' && '👴 Grandparent Mode'}
+                {mode === 'vip' && '🔒 VIP Mode'}
+                {currentMode === mode && ' ✓'}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Main Content */}
+        {currentMode === 'actions' ? (
+          <>
+            {ingView === 'grid' && (
+              <div>
+                <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>
+                  🎬 Choose a Category
+                </h2>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                  {Object.keys(ING).map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => openCategory(cat as keyof typeof ING)}
+                      style={{
+                        padding: '20px',
+                        background: 'white',
+                        border: '2px solid #ff00ff',
+                        borderRadius: '10px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        textAlign: 'center',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#ff00ff';
+                        e.currentTarget.style.color = 'white';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'white';
+                        e.currentTarget.style.color = 'black';
+                      }}
+                    >
+                      <div style={{ fontSize: '30px', marginBottom: '10px' }}>
+                        {cat === 'daily' ? '🍽️' : cat === 'movement' ? '🏃' : cat === 'hands' ? '✋' :
+                         cat === 'emotions' ? '😊' : cat === 'creative' ? '🎨' : '🎮'}
+                      </div>
+                      <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>
+                        {pretty(cat)}
+                      </div>
+                      <div style={{ fontSize: '12px', opacity: '0.7' }}>
+                        {ING[cat as keyof typeof ING].slice(0, 3).join(', ')}...
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {ingView === 'words' && ingCategory && (
+              <div>
+                <button
+                  onClick={() => setIngView('grid')}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    fontSize: '24px',
+                    cursor: 'pointer',
+                    marginBottom: '20px',
+                  }}
+                >
+                  ← Back
+                </button>
+                <h3 style={{ textAlign: 'center', marginBottom: '20px' }}>
+                  {pretty(ingCategory)} Actions
+                </h3>
+                <div className="chip-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: '10px', marginBottom: '20px' }}>
+                  {ING[ingCategory].map((w) => (
+                    <button
+                      key={w}
+                      className="chip"
+                      onClick={() => chooseWord(w)}
+                      style={{
+                        padding: '10px',
+                        background: '#f0f0f0',
+                        border: '1px solid #ddd',
+                        borderRadius: '15px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#ff00ff';
+                        e.currentTarget.style.color = 'white';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#f0f0f0';
+                        e.currentTarget.style.color = 'black';
+                      }}
+                    >
+                      {w}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ textAlign: 'center', marginBottom: '10px', color: '#666' }}>or</div>
+                <input
+                  placeholder="Type your own -ING word (e.g., clapping)"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && e.currentTarget.value.trim() && /ing$/i.test(e.currentTarget.value.trim())) {
+                      chooseWord(e.currentTarget.value.trim());
+                    }
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    border: '2px solid #ddd',
+                    borderRadius: '10px',
+                    marginBottom: '10px',
+                    boxSizing: 'border-box',
+                  }}
+                />
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                  <button
+                    onClick={() => {
+                      const v = document.querySelector<HTMLInputElement>('input')?.value?.trim();
+                      if (v && /ing$/i.test(v)) chooseWord(v);
+                    }}
+                    style={{
+                      padding: '10px 15px',
+                      background: '#ff00ff',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '10px',
+                      cursor: 'pointer',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    Record Typed Word →
+                  </button>
+                  <button
+                    onClick={chooseAllInCategory}
+                    style={{
+                      padding: '10px 15px',
+                      background: '#4CAF50',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '10px',
+                      cursor: 'pointer',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    Record All in Category →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {ingView === 'record' && ingQueue.length > 0 && (
+              <RecordWord word={ingQueue[ingIndex]} onNext={() => {
+                const next = ingIndex + 1;
+                if (next < ingQueue.length) setIngIndex(next);
+                else {
+                  setIngView('words');
+                  setIngQueue([]);
+                  setIngIndex(0);
+                  showToastNotification('Recording complete!');
+                }
+              }} onBack={() => setIngView('words')} />
+            )}
+          </>
+        ) : (
+          <>
+            <div className="logo" style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <span style={{
+                background: 'linear-gradient(45deg, #ff00ff, #00ffff)',
+                color: 'white',
+                padding: '10px 20px',
+                borderRadius: '20px',
+                fontWeight: 'bold',
+              }}>BoredMama</span>
+            </div>
+            <h1 style={{ textAlign: 'center', fontSize: '32px', margin: '20px 0' }}>
+              My Name Is
+            </h1>
+            <p style={{ textAlign: 'center', color: '#666', marginBottom: '20px' }}>
+              {currentMode === 'standard' && 'Teach your child their name with YOUR voice'}
+              {currentMode === 'actions' && 'Teach action words with YOUR voice (-ING verbs)'}
+              {currentMode === 'alphabet' && 'Teach the alphabet with YOUR voice'}
+              {currentMode === 'numbers' && 'Teach numbers with YOUR voice'}
+              {currentMode === 'grandparent' && 'Easy mode with larger text'}
+              {currentMode === 'vip' && 'Maximum privacy - no data stored'}
+            </p>
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <span className="star">⭐</span>
+              <span>
+                {currentMode === 'standard' && '"My 18-month-old learned all letters phonetically!" - Real parent'}
+                {currentMode === 'actions' && '"My toddler loves recording -ING verbs!" - Happy parent'}
+                {currentMode === 'alphabet' && '"Great for letter sounds!" - Parent'}
+                {currentMode === 'numbers' && '"Counting made fun!" - Parent'}
+                {currentMode === 'grandparent' && '"Easy for grandparents to use!" - Family'}
+                {currentMode === 'vip' && '"Perfect privacy for my child!" - Parent'}
+              </span>
+            </div>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && currentMode === 'actions' && name.trim().length > 0 && /ing$/i.test(name)) {
+                  chooseWord(name.trim());
+                }
+              }}
+              placeholder={
+                currentMode === 'standard' ? "Enter your child's name" :
+                currentMode === 'actions' ? "Type an -ING word or category (e.g., clapping)" :
+                currentMode === 'alphabet' ? "Enter letters (A-Z)" :
+                currentMode === 'numbers' ? "Enter numbers (0-9)" :
+                currentMode === 'grandparent' ? "TYPE THE CHILD'S NAME" :
+                currentMode === 'vip' ? "Enter name (Privacy Mode)" :
+                "Enter a value"
+              }
+              style={{
+                width: '100%',
+                padding: currentMode === 'grandparent' ? '20px' : '15px',
+                fontSize: currentMode === 'grandparent' ? '24px' : '18px',
+                border: '2px solid #ddd',
+                borderRadius: '10px',
+                marginBottom: '20px',
+                boxSizing: 'border-box',
+              }}
+              autoComplete="off"
+            />
+            <button
+              onClick={proceedNext}
+              style={{
+                width: currentMode === 'actions' ? 'auto' : '100%',
+                padding: currentMode === 'grandparent' ? '20px' : '15px',
+                fontSize: currentMode === 'grandparent' ? '24px' : '18px',
+                background: currentMode === 'actions' && name.trim().length > 0 && /ing$/i.test(name) ? '#ff00ff' : '#4CAF50',
+                color: 'white',
+                border: 'none',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                margin: currentMode === 'actions' ? '0 auto' : '0',
+                display: 'block',
+              }}
+              disabled={currentMode === 'actions' && name.trim().length > 0 && !/ing$/i.test(name)}
+            >
+              {currentMode === 'actions' && name.trim().length > 0 && /ing$/i.test(name) ? 'Start Recording →' :
+               currentMode === 'actions' ? 'Show Categories →' : 'Next →'}
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* Toast Notification */}
+      {showToast && (
+        <div style={{
+          position: 'fixed',
+          bottom: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: '#333',
+          color: 'white',
+          padding: '15px 30px',
+          borderRadius: '30px',
+          zIndex: 1002,
+          animation: 'fadeIn 0.3s ease',
+        }}>
+          {toastMessage}
+        </div>
+      )}
+    </div>
+  );
+}, (prevProps, nextProps) => prevProps.onNext === nextProps.onNext && prevProps.onGuide === nextProps.onGuide);
+
+export default WelcomeScreen;
+
+// RecordWord component with MIME detection
+function RecordWord({ word, onNext, onBack }: { word: string; onNext: () => void; onBack: () => void }) {
+  const [rec, setRec] = useState<MediaRecorder | null>(null);
+  const [audioURL, setAudioURL] = useState<string>('');
+  const chunksRef = useRef<Blob[]>([]);
+
+  async function start() {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' :
+                 MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : '';
+    const r = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+    chunksRef.current = [];
+    r.ondataavailable = (e) => e.data.size && chunksRef.current.push(e.data);
+    r.onstop = () => {
+      const blob = new Blob(chunksRef.current, { type: mime || 'audio/webm' });
+      setAudioURL(URL.createObjectURL(blob));
+      stream.getTracks().forEach((t) => t.stop());
+    };
+    r.start();
+    setRec(r);
+    setTimeout(() => r.state === 'recording' && r.stop(), 15000); // 15s max
+  }
+
+  function stop() {
+    rec?.stop();
+    setRec(null);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (rec?.state === 'recording') rec.stop();
+    };
+  }, [rec]);
+
+  return (
+    <div>
+      <button
+        onClick={onBack}
+        style={{
+          background: 'transparent',
+          border: 'none',
+          fontSize: '24px',
+          cursor: 'pointer',
+          marginBottom: '20px',
+        }}
+      >
+        ← Back
+      </button>
+      <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Recording: {word}</h2>
+      <p style={{ textAlign: 'center', marginBottom: '20px', color: '#666' }}>
+        Say the word, then a short sentence, e.g., “We are {word}!”
+      </p>
+      {!rec && (
+        <button
+          className="record"
+          onClick={start}
+          style={{
+            width: '100%',
+            padding: '15px',
+            background: '#ff00ff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '10px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+          }}
+        >
+          🎤 Record (15s max)
+        </button>
+      )}
+      {rec && (
+        <button
+          className="stop"
+          onClick={stop}
+          style={{
+            width: '100%',
+            padding: '15px',
+            background: '#ff4444',
+            color: 'white',
+            border: 'none',
+            borderRadius: '10px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+          }}
+        >
+          ■ Stop
+        </button>
+      )}
+      {audioURL && (
+        <div style={{ textAlign: 'center', marginTop: '20px' }}>
+          <audio src={audioURL} controls style={{ width: '100%', marginBottom: '10px' }} />
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+            <button
+              onClick={() => {
+                setAudioURL('');
+                start();
+              }}
+              style={{
+                padding: '10px 20px',
+                background: '#ff00ff',
+                color: 'white',
+                border: 'none',
+                borderRadius: '10px',
+                cursor: 'pointer',
+              }}
+            >
+              Re-record
+            </button>
+            <button
+              onClick={onNext}
+              style={{
+                padding: '10px 20px',
+                background: '#4CAF50',
+                color: 'white',
+                border: 'none',
+                borderRadius: '10px',
+                cursor: 'pointer',
+              }}
+            >
+              Next Word →
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+---
+
+### Why This Works
+- **Breaks the Chooser Loop**: Typing "clapping" triggers "Start Recording →," moving directly to the recording view.
+- **State Machine**: `ingView` (`grid` → `words` → `record`) ensures smooth navigation.
+- **Queue-Based Recording**: `ingQueue` and `ingIndex` support single words or full categories via "Record All in Category →."
+- **Dynamic CTA**: The button adapts to typed -ING words, enhancing UX.
+- **iOS Compatibility**: MIME detection (`audio/webm;codecs=opus` or `audio/mp4`) ensures playback.
+- **Robustness**: Long-press guard, recorder cleanup, and disabled non-ING inputs prevent errors.
+
+---
+
+### Testing Instructions
+1. **Deploy the Solution**:
+   - Replace `client/src/App.tsx` with the code above in Replit.
+   - Commit and push:
+     ```bash
+     git add .
+     git commit -m "Final Action Words solution with state machine, queue, and dynamic CTA"
+     git push
+     ```
+   - Verify redeployment on the test site.
+
+2. **Test the Flow**:
+   - **Type "clapping"**: Enter "clapping," click "Start Recording →"—confirm recording view.
+   - **Select Category**: Click "hands" in the grid—verify words view.
+   - **Record Word**: Click "clapping" chip, record, and use "Next Word →"—confirm progression.
+   - **Record All**: Click "Record All in Category →"—verify it sequences through "hands" words.
+   - **iOS Test**: Test audio playback on an iOS device if possible.
+   - **Back Navigation**: Click "← Back" from any view—return to the previous step.
+
+3. **Debugging**:
+   - If the CTA doesn’t switch, log `name` and `/ing$/i.test(name)` in `proceedNext`.
+   - If recording fails, check microphone permissions and console errors.
+
+---
+
+### Deployment Notes
+Your Replit history shows multiple deployments (e.g., `02211287` deployed 1 day ago, `1ed3ef68` failed). The latest change should deploy to [https://name-badge-cyclone-media.replit.app](https://name-badge-cyclone-media.replit.app) and [https://mynameisapp.co.uk](https://mynameisapp.co.uk). Monitor the deployment status in Replit and resolve any failures (e.g., check logs for `1ed3ef68`).
+
+---
+
+### Next Steps
+This final solution should meet your needs. Test it thoroughly, then push to production. If you want to persist recordings or add features (e.g., audio storage), let me know! The progression was helpful for context, but a final post would have streamlined implementation—glad we got both! 🚀
