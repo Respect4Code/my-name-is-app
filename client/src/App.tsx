@@ -312,13 +312,15 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
       setInfoPressTimer(null);
     }
     
-    // Only show guide if it was a short tap (not a long-press)
+    // Only show guide if it was a short tap (not a long-press) AND menu isn't already open
     if (!longPressRef.current && !showSecretMenu) {
       onGuide(); // Short tap → show guide
     }
     
-    // Reset the flag for next interaction
-    longPressRef.current = false;
+    // Reset the flag for next interaction after a small delay to prevent conflicts
+    setTimeout(() => {
+      longPressRef.current = false;
+    }, 100);
   }, [infoPressTimer, showSecretMenu, onGuide]);
 
   const handleInfoTouchStart = useCallback((e: React.TouchEvent) => {
@@ -335,6 +337,9 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
     setCurrentMode(mode);
     setShowSecretMenu(false);
     
+    // Reset long-press flag when menu closes
+    longPressRef.current = false;
+    
     // Store the selected mode in localStorage for persistence (except VIP)
     if (mode === 'vip') {
       sessionStorage.clear();
@@ -345,26 +350,18 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
     
     // Mode-specific setup and immediate feedback
     const modeMessages = {
-      actions: '🎬 Action Words Mode - Choose a category!',
-      alphabet: '🔤 Alphabet Mode - Type a letter to begin',
-      numbers: '🔢 Numbers Mode - Type a number to begin',
-      grandparent: '👴 Grandparent Mode - Simplified interface',
+      actions: '🎬 Action Words Mode - Choose a category below!',
+      alphabet: '🔤 Alphabet Mode - Ready to learn A-Z!',
+      numbers: '🔢 Numbers Mode - Ready to learn 0-9!',
+      grandparent: '👴 Grandparent Mode - Simplified interface active',
       vip: '🔒 VIP Mode - Maximum privacy enabled',
-      standard: '🏠 Standard Mode - Name recording'
+      standard: '🏠 Standard Mode - Name recording ready'
     };
     
     showToastNotification(modeMessages[mode] || 'Mode changed');
     
-    // Update input based on mode
-    if (mode === 'actions') {
-      setName('');
-    } else if (mode === 'alphabet') {
-      setName('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-    } else if (mode === 'numbers') {
-      setName('0123456789');
-    } else {
-      setName('');
-    }
+    // Clear input for fresh start in new mode
+    setName('');
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -500,16 +497,66 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
           )}
         </h1>
         <p className="text-gray-600 mb-2">
-          {currentMode === 'actions' ? 'Learn action words ending in -ING!' :
-           currentMode === 'alphabet' ? 'Master the alphabet A-Z!' :
-           currentMode === 'numbers' ? 'Count and learn 0-9!' :
-           currentMode === 'grandparent' ? 'Learning at a comfortable pace' :
-           currentMode === 'vip' ? 'Premium phonics experience' :
+          {currentMode === 'actions' ? 'Learn action words ending in -ING with YOUR voice!' :
+           currentMode === 'alphabet' ? 'Master the alphabet A-Z with YOUR voice!' :
+           currentMode === 'numbers' ? 'Count and learn 0-9 with YOUR voice!' :
+           currentMode === 'grandparent' ? 'Simplified learning at a comfortable pace' :
+           currentMode === 'vip' ? 'Maximum privacy phonics experience' :
            'Teach your child their name with YOUR voice'}
         </p>
         <p className="text-purple-600 text-sm font-medium mb-4">
-          ⭐ "My 18-month-old learned all letters phonetically!" - Real parent
+          {currentMode === 'actions' ? '⭐ "My toddler loves learning action words!" - Happy parent' :
+           currentMode === 'alphabet' ? '⭐ "Perfect for learning letter sounds!" - Parent' :
+           currentMode === 'numbers' ? '⭐ "Counting made fun and personal!" - Parent' :
+           currentMode === 'grandparent' ? '⭐ "Easy for grandparents to use!" - Family' :
+           currentMode === 'vip' ? '⭐ "Perfect privacy for my child!" - Parent' :
+           '⭐ "My 18-month-old learned all letters phonetically!" - Real parent'}
         </p>
+
+        {/* Mode-specific content areas */}
+        {currentMode === 'actions' && (
+          <div className="mb-6 p-4 bg-purple-50 rounded-xl border-2 border-purple-200">
+            <h3 className="text-lg font-bold text-purple-800 mb-3">🎬 Choose Action Category:</h3>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => {
+                  setName('DAILY');
+                  showToastNotification('Daily actions selected! Click Next to record.');
+                }}
+                className="p-2 bg-purple-100 hover:bg-purple-200 rounded-lg text-sm font-medium text-purple-700"
+              >
+                🍽️ Daily<br/><span className="text-xs">(eating, drinking)</span>
+              </button>
+              <button
+                onClick={() => {
+                  setName('MOVEMENT');
+                  showToastNotification('Movement actions selected! Click Next to record.');
+                }}
+                className="p-2 bg-purple-100 hover:bg-purple-200 rounded-lg text-sm font-medium text-purple-700"
+              >
+                🏃 Movement<br/><span className="text-xs">(running, jumping)</span>
+              </button>
+              <button
+                onClick={() => {
+                  setName('HANDS');
+                  showToastNotification('Hand actions selected! Click Next to record.');
+                }}
+                className="p-2 bg-purple-100 hover:bg-purple-200 rounded-lg text-sm font-medium text-purple-700"
+              >
+                ✋ Hands<br/><span className="text-xs">(clapping, waving)</span>
+              </button>
+              <button
+                onClick={() => {
+                  setName('EMOTIONS');
+                  showToastNotification('Emotion actions selected! Click Next to record.');
+                }}
+                className="p-2 bg-purple-100 hover:bg-purple-200 rounded-lg text-sm font-medium text-purple-700"
+              >
+                😊 Emotions<br/><span className="text-xs">(laughing, smiling)</span>
+              </button>
+            </div>
+          </div>
+        )}
 
         <input
           type="text"
@@ -523,9 +570,9 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
           }}
           onKeyPress={handleKeyPress}
           placeholder={
-            currentMode === 'actions' ? "Type 'ING' or click Next to see categories" :
-            currentMode === 'alphabet' ? "Type a letter (A-Z) to begin" :
-            currentMode === 'numbers' ? "Type a number (0-9) to begin" :
+            currentMode === 'actions' ? (name ? `Selected: ${name} category` : "Select a category above or type 'ING'") :
+            currentMode === 'alphabet' ? "Type letters (A-Z) or use preset above" :
+            currentMode === 'numbers' ? "Type numbers (0-9) or use preset above" :
             currentMode === 'grandparent' ? "TYPE CHILD'S NAME (LARGER TEXT)" :
             currentMode === 'vip' ? "Enter name (Privacy Mode - No Storage)" :
             "Enter your child's name"
@@ -535,7 +582,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
           }`}
           maxLength={currentMode === 'alphabet' ? 26 : currentMode === 'numbers' ? 10 : 12}
           autoFocus
-          aria-label="Child's name"
+          aria-label="Input field"
         />
 
         {name.length >= 10 && (
@@ -545,16 +592,51 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
         )}
 
         <button
-          onClick={() => name.length >= 2 && name.length <= 12 && onNext(name.toUpperCase())}
-          disabled={name.length < 2 || name.length > 12}
+          onClick={() => {
+            if (currentMode === 'actions' && (!name || name.length < 2)) {
+              showToastNotification('Please select a category above first!');
+              return;
+            }
+            if (currentMode === 'alphabet' && (!name || name.length < 1)) {
+              setName('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+              showToastNotification('Alphabet preset loaded! Click Next again to continue.');
+              return;
+            }
+            if (currentMode === 'numbers' && (!name || name.length < 1)) {
+              setName('0123456789');
+              showToastNotification('Numbers preset loaded! Click Next again to continue.');
+              return;
+            }
+            
+            const minLength = currentMode === 'alphabet' ? 1 : currentMode === 'numbers' ? 1 : 2;
+            const maxLength = currentMode === 'alphabet' ? 26 : currentMode === 'numbers' ? 10 : 12;
+            
+            if (name.length >= minLength && name.length <= maxLength) {
+              onNext(name.toUpperCase());
+            }
+          }}
+          disabled={(() => {
+            const minLength = currentMode === 'alphabet' ? 1 : currentMode === 'numbers' ? 1 : 2;
+            const maxLength = currentMode === 'alphabet' ? 26 : currentMode === 'numbers' ? 10 : 12;
+            return name.length < minLength || name.length > maxLength;
+          })()}
           className={`w-full py-4 rounded-xl font-bold text-xl transition-all flex items-center justify-center gap-2 ${
-            name.length >= 2 && name.length <= 12
-              ? 'bg-purple-500 text-white hover:bg-purple-600'
-              : 'bg-gray-300 text-gray-500'
+            (() => {
+              const minLength = currentMode === 'alphabet' ? 1 : currentMode === 'numbers' ? 1 : 2;
+              const maxLength = currentMode === 'alphabet' ? 26 : currentMode === 'numbers' ? 10 : 12;
+              return name.length >= minLength && name.length <= maxLength
+                ? 'bg-purple-500 text-white hover:bg-purple-600'
+                : 'bg-gray-300 text-gray-500';
+            })()
           }`}
           aria-label="Proceed to record voice"
         >
-          Next <ChevronRight />
+          {currentMode === 'actions' ? 'Start Recording Actions' :
+           currentMode === 'alphabet' ? 'Start Recording Alphabet' :
+           currentMode === 'numbers' ? 'Start Recording Numbers' :
+           currentMode === 'grandparent' ? 'Start Simple Recording' :
+           currentMode === 'vip' ? 'Start Private Recording' :
+           'Next'} <ChevronRight />
         </button>
 
         <button
