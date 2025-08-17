@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useRef, useEffect, memo } from 'react';
 import {
   Info, ChevronRight, ArrowLeft, Volume2, BookOpen, Moon, Music, Loader2, ArrowRight, ChevronLeft,
@@ -300,7 +299,7 @@ const ParentGuide: React.FC<ParentGuideProps> = memo(({ onClose }) => {
             <h3 className="font-bold mb-2">🎙️ Recording Tips</h3>
             <ul className="text-gray-700 space-y-1 list-disc ml-4">
               <li>🔴 Red mic = Start/stop recording</li>
-              <li>▶️ Play button = Listen to what you just recorded</li>
+              <li>▶︎ Play button = Listen to what you just recorded</li>
               <li>✅ Recordings save automatically</li>
               <li>🔄 Blue refresh = Re-record if needed</li>
               <li>Record <strong>phoneme</strong> sounds, not alphabet names</li>
@@ -458,6 +457,9 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
   const [composeRhyme, setComposeRhyme] = useState('');
   const [savedWordClips, setSavedWordClips] = useState<Record<string, string>>({});
 
+  // Ref for the active recorder
+  const recorderRef = useRef<MediaRecorder | null>(null);
+
   // Load saved mode on component mount
   useEffect(() => {
     const savedMode = localStorage.getItem('selectedMode');
@@ -536,9 +538,14 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
 
   // Start Over for Action mode
   const startOverAction = useCallback(() => {
+    // Stop any active recording
+    if (recorderRef.current?.state === 'recording') {
+      recorderRef.current.stop();
+    }
+
     // Revoke object URLs to prevent memory leaks
     revokeAllObjectUrls(savedWordClips);
-    
+
     setIngView('grid');
     setIngQueue([]);
     setIngIndex(0);
@@ -549,49 +556,29 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
     showToastNotification('🔁 Reset Action Words');
   }, [savedWordClips, revokeAllObjectUrls, showToastNotification]);
 
-  // Enhanced mode selection with immediate feedback
-  const handleModeChange = useCallback((mode: typeof currentMode) => {
+  // Mode selection
+  const setMode = useCallback((mode: typeof currentMode) => {
     setCurrentMode(mode);
     setShowSecretMenu(false);
-    setIsLongPress(false);
-
-    // Store the selected mode in localStorage for persistence (except VIP)
     if (mode === 'vip') {
       sessionStorage.clear();
       localStorage.clear();
     } else {
-      localStorage.setItem('selectedMode', mode);
       sessionStorage.setItem('mode', mode);
     }
-
-    // Mode-specific immediate feedback
-    const modeMessages = {
-      actions: '🎬 Action Words Mode - Categories ready!',
-      alphabet: '🔤 Alphabet Mode - Ready to learn A-Z!',
-      numbers: '🔢 Numbers Mode - Ready to learn 0-9!',
-      grandparent: '👴 Grandparent Mode - Simplified interface active',
-      vip: '🔒 VIP Mode - Maximum privacy enabled',
-      standard: '🏠 Standard Mode - Name recording ready'
+    const messages = {
+      standard: '🏠 Standard Mode Active - Enter a name to begin',
+      actions: '🎬 Action Words Mode Active - Choose a category',
+      alphabet: '🔤 Alphabet Mode Active - Enter letters to begin',
+      numbers: '🔢 Numbers Mode Active - Enter numbers to begin',
+      grandparent: '👴 Grandparent Mode Active - Larger text enabled',
+      vip: '🔒 VIP Mode Active - Maximum privacy enabled',
     };
-
-    showToastNotification(modeMessages[mode] || 'Mode changed');
-
-    // Mode-specific state reset and initial setup
+    showToastNotification(messages[mode]);
     if (mode === 'actions') {
       startOverAction();
-    } else {
-      setIngView('grid');
-      setIngCategory(null);
-      setIngQueue([]);
-      setIngIndex(0);
-      if (mode === 'alphabet') {
-        setName('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-      } else if (mode === 'numbers') {
-        setName('0123456789');
-      } else {
-        setName('');
-      }
     }
+    setIsLongPress(false);
   }, [showToastNotification, startOverAction]);
 
   // Helper to parse -ING words from user input
@@ -680,7 +667,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
       showToastNotification('No recorded words to play');
       return;
     }
-    
+
     let i = 0;
     const audio = new Audio(urls[i]);
     audio.addEventListener('ended', () => {
@@ -739,6 +726,52 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
       default: return '❓';
     }
   };
+
+  // Enhanced mode selection with immediate feedback
+  const handleModeChange = useCallback((mode: typeof currentMode) => {
+    setCurrentMode(mode);
+    setShowSecretMenu(false);
+    setIsLongPress(false);
+
+    // Store the selected mode in localStorage for persistence (except VIP)
+    if (mode === 'vip') {
+      sessionStorage.clear();
+      localStorage.clear();
+    } else {
+      localStorage.setItem('selectedMode', mode);
+      sessionStorage.setItem('mode', mode);
+    }
+
+    // Mode-specific immediate feedback
+    const modeMessages = {
+      actions: '🎬 Action Words Mode - Categories ready!',
+      alphabet: '🔤 Alphabet Mode - Ready to learn A-Z!',
+      numbers: '🔢 Numbers Mode - Ready to learn 0-9!',
+      grandparent: '👴 Grandparent Mode - Simplified interface active',
+      vip: '🔒 VIP Mode - Maximum privacy enabled',
+      standard: '🏠 Standard Mode - Name recording ready'
+    };
+
+    showToastNotification(modeMessages[mode] || 'Mode changed');
+
+    // Mode-specific state reset and initial setup
+    if (mode === 'actions') {
+      startOverAction();
+    } else {
+      setIngView('grid');
+      setIngCategory(null);
+      setIngQueue([]);
+      setIngIndex(0);
+      if (mode === 'alphabet') {
+        setName('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+      } else if (mode === 'numbers') {
+        setName('0123456789');
+      } else {
+        setName('');
+      }
+    }
+  }, [showToastNotification, startOverAction]);
+
 
   return (
     <div className="flex items-center justify-center min-h-screen p-4" style={{
@@ -1130,17 +1163,18 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
                     return (
                       <button
                         onClick={() => playAllSequential(ingQueue)}
-                        disabled={!canPlayAll}
                         style={{
-                          padding: '12px',
+                          padding: 12,
                           background: canPlayAll ? '#8e44ad' : '#ccc',
                           color: '#fff',
                           border: 'none',
-                          borderRadius: '12px',
+                          borderRadius: 12,
                           cursor: canPlayAll ? 'pointer' : 'not-allowed',
                         }}
+                        disabled={!canPlayAll}
+                        title={canPlayAll ? 'Play all recorded words' : 'No words recorded yet'}
                       >
-                        ▶︎ Play All Words {recorded.length}/{ingQueue.length}
+                        ▶︎ Play All Words ({recorded.length}/{ingQueue.length})
                       </button>
                     );
                   })()}
@@ -1247,7 +1281,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
               }`}
               aria-label="Proceed to next step"
               disabled={
-                (currentMode === 'actions' && !name.trim() && ingView === 'grid') || // Cannot proceed from grid without selecting category
+                (currentMode === 'actions' && ingView === 'grid') || // Cannot proceed from grid without selecting category
                 (currentMode === 'actions' && ingView === 'words' && !name.trim() && ingQueue.length === 0) // Cannot proceed from words without selecting or typing
               }
             >
@@ -1381,7 +1415,7 @@ const RecordingStage: React.FC<RecordingStageProps> = memo(({ stage, isActive, i
   const playRecording = () => {
     if (tempRecording && audioRef.current) {
       audioRef.current.src = tempRecording;
-      audioRef.current.play().catch(err => {
+      audio.play().catch(err => {
         console.error('Preview playback failed:', err);
         alert('Unable to play preview. Check your device volume or silent mode.');
       });
