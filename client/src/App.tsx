@@ -270,16 +270,22 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
   const [infoPressing, setInfoPressing] = useState(false);
   const [infoPressTimer, setInfoPressTimer] = useState<NodeJS.Timeout | null>(null);
   const [showSecretMenu, setShowSecretMenu] = useState(false);
-  const [currentMode, setCurrentMode] = useState<'standard' | 'alphabet' | 'numbers' | 'actions' | 'grandparent' | 'vip'>('standard');
+  const [currentMode, setCurrentMode] = useState<'standard' | 'alphabet' | 'numbers' | 'actions' | 'grandparent' | 'vip'>(
+    (sessionStorage.getItem('mode') as any) || 'standard'
+  );
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  const longPressRef = useRef(false);
+  const [isLongPress, setIsLongPress] = useState(false);
+  const [showIngCategories, setShowIngCategories] = useState(false);
 
   // Load saved mode on component mount
   useEffect(() => {
     const savedMode = localStorage.getItem('selectedMode');
     if (savedMode && ['standard', 'alphabet', 'numbers', 'actions', 'grandparent', 'vip'].includes(savedMode)) {
       setCurrentMode(savedMode as typeof currentMode);
+      if (savedMode === 'actions') {
+        setShowIngCategories(true);
+      }
     }
   }, []);
 
@@ -290,12 +296,14 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
     setTimeout(() => setShowToast(false), 3000);
   }, []);
 
-  // Info button handlers for secret menu - Fixed version
-  const handleInfoMouseDown = useCallback(() => {
+  // Info button handlers with proper long-press detection
+  const handleInfoMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsLongPress(false);
     setInfoPressing(true);
-    longPressRef.current = false;
+    
     const timer = setTimeout(() => {
-      longPressRef.current = true;
+      setIsLongPress(true);
       setShowSecretMenu(true);
       setInfoPressing(false);
       showToastNotification('🎯 Secret menu activated!');
@@ -303,42 +311,46 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
     setInfoPressTimer(timer);
   }, [showToastNotification]);
 
-  const handleInfoMouseUp = useCallback(() => {
+  const handleInfoMouseUp = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
     setInfoPressing(false);
     
-    // Clear the timer if it hasn't fired yet
     if (infoPressTimer) {
       clearTimeout(infoPressTimer);
       setInfoPressTimer(null);
     }
     
-    // Only show guide if it was a short tap (not a long-press) AND menu isn't already open
-    if (!longPressRef.current && !showSecretMenu) {
-      onGuide(); // Short tap → show guide
+    if (!isLongPress && !showSecretMenu) {
+      onGuide();
     }
     
-    // Reset the flag for next interaction after a small delay to prevent conflicts
-    setTimeout(() => {
-      longPressRef.current = false;
-    }, 100);
-  }, [infoPressTimer, showSecretMenu, onGuide]);
+    setTimeout(() => setIsLongPress(false), 100);
+  }, [infoPressTimer, isLongPress, showSecretMenu, onGuide]);
+
+  const handleInfoMouseLeave = useCallback(() => {
+    if (infoPressTimer) {
+      clearTimeout(infoPressTimer);
+      setInfoPressTimer(null);
+    }
+    setInfoPressing(false);
+    setIsLongPress(false);
+  }, [infoPressTimer]);
 
   const handleInfoTouchStart = useCallback((e: React.TouchEvent) => {
     e.preventDefault();
-    handleInfoMouseDown();
+    handleInfoMouseDown(e as any);
   }, [handleInfoMouseDown]);
 
   const handleInfoTouchEnd = useCallback((e: React.TouchEvent) => {
     e.preventDefault();
-    handleInfoMouseUp();
+    handleInfoMouseUp(e as any);
   }, [handleInfoMouseUp]);
 
+  // Enhanced mode selection with immediate feedback
   const handleModeChange = (mode: typeof currentMode) => {
     setCurrentMode(mode);
     setShowSecretMenu(false);
-    
-    // Reset long-press flag when menu closes
-    longPressRef.current = false;
+    setIsLongPress(false);
     
     // Store the selected mode in localStorage for persistence (except VIP)
     if (mode === 'vip') {
@@ -346,11 +358,12 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
       localStorage.clear();
     } else {
       localStorage.setItem('selectedMode', mode);
+      sessionStorage.setItem('mode', mode);
     }
     
-    // Mode-specific setup and immediate feedback
+    // Mode-specific immediate feedback
     const modeMessages = {
-      actions: '🎬 Action Words Mode - Choose a category below!',
+      actions: '🎬 Action Words Mode - Categories ready!',
       alphabet: '🔤 Alphabet Mode - Ready to learn A-Z!',
       numbers: '🔢 Numbers Mode - Ready to learn 0-9!',
       grandparent: '👴 Grandparent Mode - Simplified interface active',
@@ -360,14 +373,72 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
     
     showToastNotification(modeMessages[mode] || 'Mode changed');
     
-    // Clear input for fresh start in new mode
-    setName('');
+    // Immediate mode-specific actions
+    if (mode === 'actions') {
+      setShowIngCategories(true);
+      setName('');
+    } else {
+      setShowIngCategories(false);
+      if (mode === 'alphabet') {
+        setName('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+      } else if (mode === 'numbers') {
+        setName('0123456789');
+      } else {
+        setName('');
+      }
+    }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && name.length >= 2 && name.length <= 12) {
-      onNext(name.toUpperCase());
+  // Magic word detection
+  useEffect(() => {
+    const value = name.trim().toUpperCase();
+    if (value === 'ING' || value === 'ACTIONS') {
+      handleModeChange('actions');
+    } else if (value === 'ALPHABET' || value === 'ABC') {
+      handleModeChange('alphabet');
+    } else if (value === 'NUMBERS' || value === '123') {
+      handleModeChange('numbers');
     }
+  }, [name]);
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleNextClick();
+    }
+  };
+
+  const handleNextClick = () => {
+    if (currentMode === 'actions' && !showIngCategories) {
+      setShowIngCategories(true);
+      showToastNotification('🎬 Categories displayed! Select one to begin.');
+      return;
+    }
+    
+    const minLength = currentMode === 'alphabet' ? 1 : currentMode === 'numbers' ? 1 : 2;
+    const maxLength = currentMode === 'alphabet' ? 26 : currentMode === 'numbers' ? 10 : 12;
+    
+    if (name.length >= minLength && name.length <= maxLength) {
+      onNext(name.toUpperCase());
+    } else {
+      showToastNotification(`Please enter ${minLength}-${maxLength} characters`);
+    }
+  };
+
+  // ING Categories data
+  const ingCategories = {
+    daily: { emoji: '🍽️', words: ['eating', 'drinking', 'sleeping'], label: 'Daily Actions' },
+    movement: { emoji: '🏃', words: ['running', 'jumping', 'walking'], label: 'Movement' },
+    hands: { emoji: '✋', words: ['clapping', 'waving', 'pointing'], label: 'Hand Actions' },
+    emotions: { emoji: '😊', words: ['laughing', 'smiling', 'crying'], label: 'Emotions' },
+    creative: { emoji: '🎨', words: ['drawing', 'painting', 'singing'], label: 'Creative' },
+    playing: { emoji: '🎮', words: ['hiding', 'seeking', 'building'], label: 'Playing' }
+  };
+
+  const handleCategorySelect = (category: string) => {
+    const categoryData = ingCategories[category as keyof typeof ingCategories];
+    setName(category.toUpperCase());
+    showToastNotification(`${categoryData.label} selected! Click Next to record.`);
+    setShowIngCategories(false);
   };
 
   return (
@@ -404,6 +475,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
           onClick={() => !showSecretMenu && onGuide()}
           onMouseDown={handleInfoMouseDown}
           onMouseUp={handleInfoMouseUp}
+          onMouseLeave={handleInfoMouseLeave}
           onTouchStart={handleInfoTouchStart}
           onTouchEnd={handleInfoTouchEnd}
           className={`absolute top-4 right-4 p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-all ${infoPressing ? 'bg-purple-500 text-white' : ''}`}
@@ -514,130 +586,84 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
         </p>
 
         {/* Mode-specific content areas */}
-        {currentMode === 'actions' && (
+        {showIngCategories && currentMode === 'actions' && (
           <div className="mb-6 p-4 bg-purple-50 rounded-xl border-2 border-purple-200">
-            <h3 className="text-lg font-bold text-purple-800 mb-3">🎬 Choose Action Category:</h3>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-bold text-purple-800">🎬 Choose Action Category:</h3>
               <button
-                onClick={() => {
-                  setName('DAILY');
-                  showToastNotification('Daily actions selected! Click Next to record.');
-                }}
-                className="p-2 bg-purple-100 hover:bg-purple-200 rounded-lg text-sm font-medium text-purple-700"
+                onClick={() => setShowIngCategories(false)}
+                className="text-purple-600 hover:text-purple-800 font-medium text-sm"
               >
-                🍽️ Daily<br/><span className="text-xs">(eating, drinking)</span>
+                ← Back
               </button>
-              <button
-                onClick={() => {
-                  setName('MOVEMENT');
-                  showToastNotification('Movement actions selected! Click Next to record.');
-                }}
-                className="p-2 bg-purple-100 hover:bg-purple-200 rounded-lg text-sm font-medium text-purple-700"
-              >
-                🏃 Movement<br/><span className="text-xs">(running, jumping)</span>
-              </button>
-              <button
-                onClick={() => {
-                  setName('HANDS');
-                  showToastNotification('Hand actions selected! Click Next to record.');
-                }}
-                className="p-2 bg-purple-100 hover:bg-purple-200 rounded-lg text-sm font-medium text-purple-700"
-              >
-                ✋ Hands<br/><span className="text-xs">(clapping, waving)</span>
-              </button>
-              <button
-                onClick={() => {
-                  setName('EMOTIONS');
-                  showToastNotification('Emotion actions selected! Click Next to record.');
-                }}
-                className="p-2 bg-purple-100 hover:bg-purple-200 rounded-lg text-sm font-medium text-purple-700"
-              >
-                😊 Emotions<br/><span className="text-xs">(laughing, smiling)</span>
-              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {Object.entries(ingCategories).map(([key, data]) => (
+                <button
+                  key={key}
+                  onClick={() => handleCategorySelect(key)}
+                  className="p-3 bg-purple-100 hover:bg-purple-200 rounded-lg text-sm font-medium text-purple-700 transition-colors"
+                >
+                  <div className="text-2xl mb-1">{data.emoji}</div>
+                  <div className="font-bold">{data.label}</div>
+                  <div className="text-xs opacity-75">
+                    {data.words.slice(0, 2).join(', ')}...
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
         )}
 
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => {
-            if (currentMode === 'numbers') {
-              setName(e.target.value.replace(/[^0-9]/g, ''));
-            } else {
-              setName(e.target.value.replace(/[^a-zA-Z]/g, ''));
-            }
-          }}
-          onKeyPress={handleKeyPress}
-          placeholder={
-            currentMode === 'actions' ? (name ? `Selected: ${name} category` : "Select a category above or type 'ING'") :
-            currentMode === 'alphabet' ? "Type letters (A-Z) or use preset above" :
-            currentMode === 'numbers' ? "Type numbers (0-9) or use preset above" :
-            currentMode === 'grandparent' ? "TYPE CHILD'S NAME (LARGER TEXT)" :
-            currentMode === 'vip' ? "Enter name (Privacy Mode - No Storage)" :
-            "Enter your child's name"
-          }
-          className={`w-full p-4 text-center border-2 border-purple-200 rounded-xl text-gray-800 mb-6 ${
-            currentMode === 'grandparent' ? 'text-3xl' : 'text-2xl'
-          }`}
-          maxLength={currentMode === 'alphabet' ? 26 : currentMode === 'numbers' ? 10 : 12}
-          autoFocus
-          aria-label="Input field"
-        />
+        {!showIngCategories && (
+          <>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => {
+                if (currentMode === 'numbers') {
+                  setName(e.target.value.replace(/[^0-9]/g, ''));
+                } else {
+                  setName(e.target.value.replace(/[^a-zA-Z]/g, ''));
+                }
+              }}
+              onKeyPress={handleKeyPress}
+              placeholder={
+                currentMode === 'actions' ? "Type 'ING' or click Next for categories" :
+                currentMode === 'alphabet' ? "Letters A-Z (preset loaded)" :
+                currentMode === 'numbers' ? "Numbers 0-9 (preset loaded)" :
+                currentMode === 'grandparent' ? "TYPE CHILD'S NAME (LARGER TEXT)" :
+                currentMode === 'vip' ? "Enter name (Privacy Mode - No Storage)" :
+                "Enter your child's name"
+              }
+              className={`w-full p-4 text-center border-2 border-purple-200 rounded-xl text-gray-800 mb-6 ${
+                currentMode === 'grandparent' ? 'text-3xl' : 'text-2xl'
+              }`}
+              maxLength={currentMode === 'alphabet' ? 26 : currentMode === 'numbers' ? 10 : 12}
+              autoFocus
+              aria-label="Input field"
+            />
 
-        {name.length >= 10 && (
-          <p className="text-xs text-orange-600 -mt-4 mb-4 text-center">
-            {12 - name.length} characters left
-          </p>
+            {name.length >= 10 && currentMode === 'standard' && (
+              <p className="text-xs text-orange-600 -mt-4 mb-4 text-center">
+                {12 - name.length} characters left
+              </p>
+            )}
+
+            <button
+              onClick={handleNextClick}
+              className="w-full py-4 rounded-xl font-bold text-xl transition-all flex items-center justify-center gap-2 bg-purple-500 text-white hover:bg-purple-600"
+              aria-label="Proceed to next step"
+            >
+              {currentMode === 'actions' ? 'Show Categories' :
+               currentMode === 'alphabet' ? 'Start Recording Alphabet' :
+               currentMode === 'numbers' ? 'Start Recording Numbers' :
+               currentMode === 'grandparent' ? 'Start Simple Recording' :
+               currentMode === 'vip' ? 'Start Private Recording' :
+               'Next'} <ChevronRight />
+            </button>
+          </>
         )}
-
-        <button
-          onClick={() => {
-            if (currentMode === 'actions' && (!name || name.length < 2)) {
-              showToastNotification('Please select a category above first!');
-              return;
-            }
-            if (currentMode === 'alphabet' && (!name || name.length < 1)) {
-              setName('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-              showToastNotification('Alphabet preset loaded! Click Next again to continue.');
-              return;
-            }
-            if (currentMode === 'numbers' && (!name || name.length < 1)) {
-              setName('0123456789');
-              showToastNotification('Numbers preset loaded! Click Next again to continue.');
-              return;
-            }
-            
-            const minLength = currentMode === 'alphabet' ? 1 : currentMode === 'numbers' ? 1 : 2;
-            const maxLength = currentMode === 'alphabet' ? 26 : currentMode === 'numbers' ? 10 : 12;
-            
-            if (name.length >= minLength && name.length <= maxLength) {
-              onNext(name.toUpperCase());
-            }
-          }}
-          disabled={(() => {
-            const minLength = currentMode === 'alphabet' ? 1 : currentMode === 'numbers' ? 1 : 2;
-            const maxLength = currentMode === 'alphabet' ? 26 : currentMode === 'numbers' ? 10 : 12;
-            return name.length < minLength || name.length > maxLength;
-          })()}
-          className={`w-full py-4 rounded-xl font-bold text-xl transition-all flex items-center justify-center gap-2 ${
-            (() => {
-              const minLength = currentMode === 'alphabet' ? 1 : currentMode === 'numbers' ? 1 : 2;
-              const maxLength = currentMode === 'alphabet' ? 26 : currentMode === 'numbers' ? 10 : 12;
-              return name.length >= minLength && name.length <= maxLength
-                ? 'bg-purple-500 text-white hover:bg-purple-600'
-                : 'bg-gray-300 text-gray-500';
-            })()
-          }`}
-          aria-label="Proceed to record voice"
-        >
-          {currentMode === 'actions' ? 'Start Recording Actions' :
-           currentMode === 'alphabet' ? 'Start Recording Alphabet' :
-           currentMode === 'numbers' ? 'Start Recording Numbers' :
-           currentMode === 'grandparent' ? 'Start Simple Recording' :
-           currentMode === 'vip' ? 'Start Private Recording' :
-           'Next'} <ChevronRight />
-        </button>
 
         <button
           onClick={onGuide}
