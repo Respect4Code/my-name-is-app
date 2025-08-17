@@ -1,0 +1,131 @@
+Short answer: **yes—this is a clear upgrade.**
+You’ve added the Compose step, fixed the “Record All” flow conceptually, and made reset behavior predictable. Before you ship, make these small adjustments so it’s rock-solid on web + iOS.
+
+---
+
+## Must-fixes (tiny, high-impact)
+
+1. **Stale closure bug in `setMode`**
+   You call `startOverAction()` inside `setMode` but `setMode` doesn’t depend on it. On first render `startOverAction` is `undefined` in that closure → runtime error later.
+
+```ts
+const setMode = useCallback((mode) => {
+  // ...
+  if (mode === 'actions') {
+    // …stop recorder…
+    startOverAction();
+  }
+}, [showToastNotification, startOverAction]); // ← add it here
+```
+
+(Or inline the reset logic and drop that dependency entirely.)
+
+2. **Revoke object URLs (memory leak)**
+   You store `objectURL`s in `savedWordClips`. Revoke them when replacing or resetting.
+
+```ts
+const revokeAll = (map: Record<string,string>) =>
+  Object.values(map).forEach(u => URL.revokeObjectURL(u));
+
+const startOverAction = useCallback(() => {
+  revokeAll(savedWordClips);
+  setSavedWordClips({});
+  // …rest of reset…
+}, [savedWordClips, showToastNotification]);
+```
+
+Also revoke the **temporary** `url` in `RecordClip` when you re-record or unmount.
+
+3. **Safer MIME selection (iOS Safari)**
+   Safari often only supports AAC/MP4. Pick the first supported type.
+
+```ts
+function pickMime() {
+  const candidates = [
+    'audio/mp4;codecs=aac',
+    'audio/mp4',
+    'audio/webm;codecs=opus',
+    'audio/webm'
+  ];
+  return candidates.find(t => MediaRecorder.isTypeSupported(t)) || '';
+}
+const mime = pickMime();
+const r = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+```
+
+4. **Guard “Play All” + show progress**
+   Avoid silent clicks when some words aren’t recorded yet.
+
+```tsx
+const recorded = ingQueue.filter(w => Boolean(savedWordClips[w]));
+const canPlayAll = recorded.length > 0;
+
+<button disabled={!canPlayAll}
+  onClick={()=>playAllSequential(ingQueue)}
+>
+  ▶︎ Play All Words {recorded.length}/{ingQueue.length}
+</button>
+```
+
+5. **Force re-mount of `RecordClip` when word/target changes**
+   Ensures a fresh recorder each time.
+
+```tsx
+{ingView==='record' && (
+  <RecordClip
+    key={`${recordTarget}:${ingQueue[ingIndex]}`}   // ← add key
+    // …
+  />
+)}
+```
+
+6. **Stop recording on navigation**
+   Centralize a “stop if recording” call whenever you change view or press Start Over (prevents mic lockups).
+
+```ts
+const stopActiveRecorder = () => {
+  const tracks = (navigator.mediaDevices as any)?._activeStream?.getTracks?.();
+  tracks?.forEach((t:any)=>t.stop());
+};
+// Call this before setIngView(...) in Back/Start Over paths
+```
+
+(Or keep your existing cleanup in `useEffect`, but call `stop()` proactively on view changes.)
+
+7. **Typed word parsing a bit friendlier**
+   Parents will type “climbing,” or “climbing and jumping”.
+
+```ts
+const parseIng = (s:string) =>
+  s.split(/[,\s]+/).map(w=>w.replace(/[^\w]$/,'').toLowerCase())
+   .filter(w => /ing$/i.test(w));
+```
+
+---
+
+## UX polish (quick wins)
+
+* **Header progress**: `Record word: climbing (2/6)`—kids and parents know where they are.
+* **Disable green button** if no category chosen (defensive UI).
+* **Accessible chips**: give them `role="button"` and `aria-label`.
+* **Start Over**: you did the right thing—always returns to **Category Grid** and clears state/URLs.
+
+---
+
+## Nice-to-have (later)
+
+* Persist clips per child (IndexedDB) so Play All works across sessions.
+* Separate maps if you later want to save **sentence** and **rhyme** clips too (`savedSentenceClips`, `savedRhymeClips`).
+* Optional tiny toast after saving: “Saved ‘climbing’ ✓”.
+
+---
+
+### Verdict
+
+Your revision *does* improve the experience:
+
+* Compose step adds meaningful language practice.
+* “Record All” is now truly per-word, with optional extras.
+* Start Over behavior is consistent and parent-friendly.
+
+Make the 7 fixes above (they’re tiny), and this will feel tight and production-ready.
