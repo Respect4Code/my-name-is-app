@@ -436,1620 +436,239 @@ const ShareButton: React.FC<ShareButtonProps> = memo(({ className = "" }) => {
   );
 });
 
-// WelcomeScreen Component with Grok's implementation
-const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) => {
-  const [name, setName] = useState('');
-  const [infoPressing, setInfoPressing] = useState(false);
-  const [infoPressTimer, setInfoPressTimer] = useState<NodeJS.Timeout | null>(null);
-  const [showSecretMenu, setShowSecretMenu] = useState(false);
-  const [currentMode, setCurrentMode] = useState<'standard' | 'alphabet' | 'numbers' | 'actions' | 'grandparent'>(
-    (sessionStorage.getItem('mode') as any) || 'standard'
-  );
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  const [isLongPress, setIsLongPress] = useState(false);
-  const [ingView, setIngView] = useState<'grid' | 'words' | 'compose' | 'record'>('grid');
-  const [ingCategory, setIngCategory] = useState<keyof typeof ING | null>(null);
-  const [ingQueue, setIngQueue] = useState<string[]>([]);
-  const [ingIndex, setIngIndex] = useState(0);
-  const [recordTarget, setRecordTarget] = useState<'word' | 'sentence' | 'rhyme'>('word');
-  const [composeSentence, setComposeSentence] = useState('');
-  const [composeRhyme, setComposeRhyme] = useState('');
-  const [savedWordClips, setSavedWordClips] = useState<Record<string, string>>({});
+// FlashcardsScreen Component
+const FlashcardsScreen: React.FC<{ name: string; onBack: () => void; mode: string }> = memo(({ name, onBack, mode }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [showLetter, setShowLetter] = useState(true);
+  const letters = name.toUpperCase().split('');
 
-  // Ref for the active recorder
-  const recorderRef = useRef<MediaRecorder | null>(null);
-
-  // Load saved mode on component mount
-  useEffect(() => {
-    const savedMode = localStorage.getItem('selectedMode');
-    if (savedMode && ['standard', 'alphabet', 'numbers', 'actions', 'grandparent'].includes(savedMode)) {
-      setCurrentMode(savedMode as typeof currentMode);
+  const speak = useCallback((text: string) => {
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.7;
+      utterance.pitch = 1.2;
+      speechSynthesis.speak(utterance);
     }
   }, []);
 
-  // Toast notification system
-  const showToastNotification = useCallback((message: string) => {
-    setToastMessage(message);
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000);
+  const nextCard = useCallback(() => {
+    setCurrentIndex((prev) => (prev + 1) % letters.length);
+    setShowLetter(true);
+  }, [letters.length]);
+
+  const prevCard = useCallback(() => {
+    setCurrentIndex((prev) => (prev - 1 + letters.length) % letters.length);
+    setShowLetter(true);
+  }, [letters.length]);
+
+  const toggleView = useCallback(() => {
+    setShowLetter(prev => !prev);
   }, []);
-
-  // Handle mode-specific actions to avoid TDZ
-  useEffect(() => {
-    if (currentMode === 'actions') {
-      // Reset when switching to actions mode
-      setName('');
-      setRecordings({});
-    }
-  }, [currentMode]);
-
-
-  // Helper to stop active recording (prevents mic lockups)
-  const stopActiveRecording = useCallback(() => {
-    try {
-      const tracks = (navigator.mediaDevices as any)?._activeStream?.getTracks?.();
-      tracks?.forEach((track: any) => track.stop());
-    } catch (e) {
-      // Ignore errors - just cleanup attempt
-    }
-  }, []);
-
-  // Start Over for Action mode
-  const startOverAction = useCallback(() => {
-    // Stop any active recording
-    if (recorderRef.current?.state === 'recording') {
-      recorderRef.current.stop();
-    }
-
-    // Helper to revoke object URLs (prevent memory leaks)
-    const revokeAllObjectUrls = useCallback((map: Record<string, string>) => {
-      Object.values(map).forEach(url => {
-        try {
-          URL.revokeObjectURL(url);
-        } catch (e) {
-          // Ignore errors for already revoked URLs
-        }
-      });
-    }, []);
-
-    // Revoke object URLs to prevent memory leaks
-    revokeAllObjectUrls(savedWordClips);
-
-    setIngView('grid');
-    setIngQueue([]);
-    setIngIndex(0);
-    setComposeSentence('');
-    setComposeRhyme('');
-    setRecordTarget('word');
-    setSavedWordClips({});
-    showToastNotification('🔁 Reset Action Words');
-  }, [savedWordClips, showToastNotification]);
-
-  // Mode management with proper dependency handling
-  const setMode = useCallback((mode: string) => {
-    setCurrentMode(mode as any);
-    sessionStorage.setItem('mode', mode);
-    showToastNotification(`📱 ${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode activated!`);
-
-    // Handle actions mode reset (moved to useEffect to avoid TDZ)
-    if (mode === 'actions') {
-      setName('');
-      setRecordings({});
-    }
-  }, [showToastNotification]);
-
-  // Helper to parse -ING words from user input
-  const parseIngWords = useCallback((input: string) => {
-    return input
-      .split(/[,\s]+/)
-      .map(word => word.replace(/[^\w]$/, '').toLowerCase())
-      .filter(word => /ing$/i.test(word));
-  }, []);
-
-  // Magic word detection
-  useEffect(() => {
-    const value = name.trim().toUpperCase();
-    if (value === 'ING' || value === 'ACTIONS') {
-      handleModeChange('actions');
-    } else if (value === 'ALPHABET' || value === 'ABC') {
-      handleModeChange('alphabet');
-    } else if (value === 'NUMBERS' || value === '123') {
-      handleModeChange('numbers');
-    }
-  }, [name, handleModeChange]);
-
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleNextClick();
-    }
-  };
-
-  const handleNextClick = () => {
-    const value = name.trim();
-    const canRecordTypedWord = currentMode === 'actions' && value.length > 0 && /ing$/i.test(value);
-
-    if (!value && currentMode !== 'actions') {
-      alert('Please enter a name or word first');
-      return;
-    }
-
-    if (currentMode === 'actions') {
-      if (canRecordTypedWord) {
-        chooseWord(value); // Jump directly to recording
-      } else if (ingView === 'grid') {
-        // If in grid view, do nothing until a category is selected
-        return;
-      } else if (ingView === 'record') {
-        // This case should ideally not be reached directly from the main button
-        // but is handled within RecordClip.
-        return;
-      } else if (ingView === 'words') {
-        // If in words view, the button should trigger recording all or typed word
-        // For now, this path might need refinement based on exact UX desired.
-        // The input field's onKeyDown handles direct recording.
-        showToastNotification('Select or type a word to record.');
-        return;
-      }
-    } else {
-      onNext(name.toUpperCase());
-    }
-  };
-
-  const ING = {
-    daily: ['eating', 'drinking', 'brushing', 'washing', 'sleeping', 'waking'],
-    movement: ['running', 'jumping', 'walking', 'crawling', 'rolling', 'spinning'],
-    hands: ['clapping', 'waving', 'grabbing', 'throwing', 'catching', 'pointing'],
-    emotions: ['laughing', 'smiling', 'crying', 'hugging', 'kissing', 'loving'],
-    creative: ['drawing', 'painting', 'singing', 'dancing', 'building', 'making'],
-    playing: ['hiding', 'seeking', 'climbing', 'sliding', 'swinging', 'bouncing'],
-  };
-
-  // Open category view
-  const openCategory = useCallback((cat: keyof typeof ING) => {
-    setIngCategory(cat);
-    setIngView('words');
-  }, []);
-
-  // Helper to prime compose fields
-  const primeCompose = useCallback((w: string) => {
-    setComposeSentence(`We are ${w}.`);
-    setComposeRhyme(`${w} ${w}, ${w} all day — ${w} ${w}, hip-hip-hooray!`);
-  }, []);
-
-
-
-  // Choose word for recording - now goes to compose first
-  const chooseWord = useCallback((word: string) => {
-    const w = word.toLowerCase();
-    setIngQueue([w]);
-    setIngIndex(0);
-    primeCompose(w);
-    setIngView('compose');
-  }, [primeCompose]);
-
-  // Choose all words in category - starts at compose for first word
-  const chooseAllInCategory = useCallback(() => {
-    if (!ingCategory) return;
-    const list = [...ING[ingCategory]];
-    setIngQueue(list);
-    setIngIndex(0);
-    primeCompose(list[0]);
-    setIngView('compose');
-  }, [ingCategory, primeCompose]);
-
-
-  // Helper to get the correct emoji for categories
-  const getCategoryEmoji = (catKey: string) => {
-    switch (catKey) {
-      case 'daily': return '🍽️';
-      case 'movement': return '🏃';
-      case 'hands': return '✋';
-      case 'emotions': return '😊';
-      case 'creative': return '🎨';
-      case 'playing': return '🎮';
-      default: return '❓';
-    }
-  };
-
-  // Enhanced mode selection with immediate feedback
-  const handleModeChange = useCallback((mode: typeof currentMode) => {
-    setCurrentMode(mode);
-    setShowSecretMenu(false);
-    setIsLongPress(false);
-
-    // Store the selected mode in localStorage for persistence
-    localStorage.setItem('selectedMode', mode);
-    sessionStorage.setItem('mode', mode);
-
-    // Mode-specific immediate feedback
-    const modeMessages = {
-      actions: '🎬 Action Words Mode - Categories ready!',
-      alphabet: '🔤 Alphabet Mode - Ready to learn A-Z!',
-      numbers: '🔢 Numbers Mode - Ready to learn 0-9!',
-      grandparent: '👴 Grandparent Mode - Simplified interface active',
-      standard: '🏠 Standard Mode - Name recording ready'
-    };
-
-    showToastNotification(modeMessages[mode] || 'Mode changed');
-
-    // Mode-specific state reset and initial setup
-    if (mode === 'actions') {
-      startOverAction();
-    } else {
-      setIngView('grid');
-      setIngCategory(null);
-      setIngQueue([]);
-      setIngIndex(0);
-      if (mode === 'alphabet') {
-        setName('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-      } else if (mode === 'numbers') {
-        setName('0123456789');
-      } else {
-        setName('');
-      }
-    }
-  }, [showToastNotification, startOverAction]);
-
-
-  return (
-    <div className="flex items-center justify-center min-h-screen p-4" style={{
-      backgroundColor: currentMode === 'actions' ? 'rgba(255, 0, 255, 0.05)' :
-                       currentMode === 'alphabet' ? 'rgba(0, 123, 255, 0.05)' :
-                       currentMode === 'numbers' ? 'rgba(0, 255, 0, 0.05)' :
-                       currentMode === 'grandparent' ? 'rgba(255, 165, 0, 0.05)' : 'transparent',
-      transition: 'background-color 0.3s ease'
-    }}>
-      {/* Mode Banner */}
-      {currentMode !== 'standard' && (
-        <div className="fixed top-0 left-0 right-0 z-50 p-3 text-center text-white font-bold animate-pulse" style={{
-          background: currentMode === 'actions' ? '#ff00ff' :
-                     currentMode === 'alphabet' ? '#007bff' :
-                     currentMode === 'numbers' ? '#00ff00' :
-                     currentMode === 'grandparent' ? '#ffa500' : '#333',
-          animation: 'slideDown 0.3s ease'
-        }}>
-          {currentMode === 'actions' && '🎬 ACTION WORDS MODE ACTIVE'}
-          {currentMode === 'alphabet' && '🔤 ALPHABET MODE ACTIVE'}
-          {currentMode === 'numbers' && '🔢 NUMBERS MODE ACTIVE'}
-          {currentMode === 'grandparent' && '👴 GRANDPARENT MODE ACTIVE'}
-        </div>
-      )}
-
-      <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-2xl relative" style={{
-        marginTop: currentMode !== 'standard' ? '60px' : '0'
-      }}>
-        <button
-          onClick={() => !showSecretMenu && onGuide()}
-          onMouseDown={handleInfoMouseDown}
-          onMouseUp={handleInfoMouseUp}
-          onMouseLeave={handleInfoMouseLeave}
-          onTouchStart={handleInfoTouchStart}
-          onTouchEnd={handleInfoTouchEnd}
-          className={`absolute top-4 right-4 p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-all ${infoPressing ? 'bg-purple-500 text-white' : ''}`}
-          aria-label="Open parent guide"
-        >
-          <Info size={20} aria-hidden="true" />
-        </button>
-
-        {/* Secret Dropdown Menu */}
-        {showSecretMenu && (
-          <div className="absolute top-16 right-4 bg-white rounded-xl shadow-xl border-2 border-gray-100 p-4 z-50 min-w-[260px]">
-            <div className="space-y-2">
-              <div className="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-3">Secret Features</div>
-
-              <button
-                onClick={() => handleModeChange('actions')}
-                className={`w-full text-left p-2 rounded-lg hover:bg-purple-50 flex items-center gap-2 ${currentMode === 'actions' ? 'bg-purple-100 text-purple-700' : ''}`}
-              >
-                🎬 Action Words Mode
-                {currentMode === 'actions' && <span className="ml-auto text-xs bg-purple-500 text-white px-2 py-1 rounded">ACTIVE</span>}
-              </button>
-
-              <button
-                onClick={() => handleModeChange('alphabet')}
-                className={`w-full text-left p-2 rounded-lg hover:bg-blue-50 flex items-center gap-2 ${currentMode === 'alphabet' ? 'bg-blue-100 text-blue-700' : ''}`}
-              >
-                🔤 Alphabet Mode
-                {currentMode === 'alphabet' && <span className="ml-auto text-xs bg-blue-500 text-white px-2 py-1 rounded">ACTIVE</span>}
-              </button>
-
-              <button
-                onClick={() => handleModeChange('numbers')}
-                className={`w-full text-left p-2 rounded-lg hover:bg-orange-50 flex items-center gap-2 ${currentMode === 'numbers' ? 'bg-orange-100 text-orange-700' : ''}`}
-              >
-                🔢 Numbers Mode
-                {currentMode === 'numbers' && <span className="ml-auto text-xs bg-orange-500 text-white px-2 py-1 rounded">ACTIVE</span>}
-              </button>
-
-              <button
-                onClick={() => handleModeChange('grandparent')}
-                className={`w-full text-left p-2 rounded-lg hover:bg-yellow-50 flex items-center gap-2 ${currentMode === 'grandparent' ? 'bg-yellow-100 text-yellow-700' : ''}`}
-              >
-                👴 Grandparent Mode
-                {currentMode === 'grandparent' && <span className="ml-auto text-xs bg-yellow-500 text-white px-2 py-1 rounded">ACTIVE</span>}
-              </button>
-
-
-
-              <div className="border-t pt-2 mt-3">
-                <button
-                  onClick={() => {
-                    setShowSecretMenu(false);
-                    setCurrentMode('standard');
-                    showToastNotification('🏠 Standard Mode Restored');
-                  }}
-                  className="w-full text-left p-2 rounded-lg hover:bg-gray-50 text-gray-600 text-sm"
-                >
-                  🏠 Back to Standard
-                </button>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setShowSecretMenu(false)}
-              className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600 rounded-full"
-            >
-              ×
-            </button>
-          </div>
-        )}
-
-        <div className="mb-6">
-          <BoredMamaLogo />
-        </div>
-        <h1 className="text-4xl font-bold text-gray-800 mb-2">
-          My Name Is
-          {currentMode !== 'standard' && (
-            <span className="text-sm block text-purple-600 font-medium mt-1">
-              {currentMode === 'actions' && '🎬 Action Words Mode'}
-              {currentMode === 'alphabet' && '🔤 Alphabet Mode'}
-              {currentMode === 'numbers' && '🔢 Numbers Mode'}
-              {currentMode === 'grandparent' && '👴 Grandparent Mode'}
-            </span>
-          )}
-        </h1>
-        <p className="text-gray-600 mb-2">
-          {currentMode === 'actions' ? 'Learn action words ending in -ING with YOUR voice!' :
-           currentMode === 'alphabet' ? 'Master the alphabet A-Z with YOUR voice!' :
-           currentMode === 'numbers' ? 'Count and learn 0-9 with YOUR voice!' :
-           currentMode === 'grandparent' ? 'Simplified learning at a comfortable pace' :
-           'Teach your child their name with YOUR voice'}
-        </p>
-        <p className="text-purple-600 text-sm font-medium mb-4">
-          {currentMode === 'actions' ? '⭐ "My toddler loves learning action words!" - Happy parent' :
-           currentMode === 'alphabet' ? '⭐ "Perfect for learning letter sounds!" - Parent' :
-           currentMode === 'numbers' ? '⭐ "Counting made fun and personal!" - Parent' :
-           currentMode === 'grandparent' ? '⭐ "Easy for grandparents to use!" - Family' :
-           '⭐ "My 18-month-old learned all letters phonetically!" - Real parent'}
-        </p>
-
-        {/* Main Content for Action Words Mode */}
-        {currentMode === 'actions' ? (
-          <>
-            {ingView === 'grid' && (
-              <div>
-                <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>
-                  🎬 Choose a Category
-                </h2>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                  {Object.keys(ING).map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => openCategory(cat as keyof typeof ING)}
-                      style={{
-                        padding: '20px',
-                        background: 'white',
-                        border: '2px solid #ff00ff',
-                        borderRadius: '10px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        textAlign: 'center',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#ff00ff';
-                        e.currentTarget.style.color = 'white';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'white';
-                        e.currentTarget.style.color = 'black';
-                      }}
-                    >
-                      <div style={{ fontSize: '30px', marginBottom: '10px' }}>
-                        {getCategoryEmoji(cat)}
-                      </div>
-                      <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>
-                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                      </div>
-                      <div style={{ fontSize: '12px', opacity: '0.7' }}>
-                        {ING[cat as keyof typeof ING].slice(0, 3).join(', ')}...
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {ingView === 'words' && ingCategory && (
-              <div>
-                <button
-                  onClick={() => setIngView('grid')}
-                  className="absolute top-4 left-4 p-2 text-gray-600 hover:bg-gray-100 rounded-full"
-                  aria-label="Back to categories"
-                >
-                  <ArrowLeft size={20} aria-hidden="true" />
-                </button>
-                <h3 style={{ textAlign: 'center', marginBottom: '20px', marginTop: '30px' }}>
-                  {ingCategory.charAt(0).toUpperCase() + ingCategory.slice(1)} Actions
-                </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: '10px', marginBottom: '20px' }}>
-                  {ING[ingCategory].map((w) => (
-                    <button
-                      key={w}
-                      onClick={() => chooseWord(w)}
-                      style={{
-                        padding: '10px',
-                        background: '#f0f0f0',
-                        border: '1px solid #ddd',
-                        borderRadius: '15px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#ff00ff';
-                        e.currentTarget.style.color = 'white';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = '#f0f0f0';
-                        e.currentTarget.style.color = 'black';
-                      }}
-                    >
-                      {w}
-                    </button>
-                  ))}
-                </div>
-                <div style={{ textAlign: 'center', marginBottom: '10px', color: '#666' }}>or</div>
-                <input
-                  placeholder="Type -ING words (e.g., clapping, jumping)"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-                      const words = parseIngWords(e.currentTarget.value.trim());
-                      if (words.length > 0) {
-                        if (words.length === 1) {
-                          chooseWord(words[0]);
-                        } else {
-                          setIngQueue(words);
-                          setIngIndex(0);
-                          primeCompose(words[0]);
-                          setIngView('compose');
-                        }
-                      }
-                    }
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '2px solid #ddd',
-                    borderRadius: '10px',
-                    marginBottom: '10px',
-                    boxSizing: 'border-box',
-                  }}
-                />
-                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                  <button
-                    onClick={() => {
-                      if (name.trim()) chooseWord(name.trim());
-                    }}
-                    style={{
-                      padding: '10px 20px',
-                      background: '#ff00ff',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '10px',
-                      cursor: 'pointer',
-                      fontWeight: 'bold',
-                    }}
-                  >
-                    Record Typed Word →
-                  </button>
-                  <button
-                    onClick={chooseAllInCategory}
-                    style={{
-                      padding: '10px 15px',
-                      background: '#4CAF50',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '10px',
-                      cursor: 'pointer',
-                      fontWeight: 'bold',
-                    }}
-                  >
-                    Record All in Category →
-                  </button>
-                </div>
-                <button
-                  onClick={() => {
-                    stopActiveRecording();
-                    startOverAction();
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    background: '#ff4444',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '10px',
-                    cursor: 'pointer',
-                    marginTop: '20px',
-                  }}
-                >
-                  Start Over
-                </button>
-              </div>
-            )}
-
-            {ingView === 'compose' && ingQueue.length > 0 && (
-              <div>
-                <button
-                  onClick={() => {
-                    stopActiveRecording();
-                    setIngView('words');
-                  }}
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    fontSize: '24px',
-                    cursor: 'pointer',
-                    marginBottom: '16px',
-                  }}
-                >
-                  ← Back
-                </button>
-                <h3 style={{ textAlign: 'center', margin: '6px 0 14px' }}>
-                  Record word: <strong>{ingQueue[ingIndex]}</strong> ({ingIndex + 1}/{ingQueue.length})
-                </h3>
-                <div style={{ display: 'grid', gap: '12px' }}>
-                  <button
-                    onClick={() => { setRecordTarget('word'); setIngView('record'); }}
-                    style={{
-                      padding: '14px',
-                      background: '#ff00ff',
-                      color: '#fff',
-                      border: 'none',
-                      borderRadius: '12px',
-                      fontWeight: 'bold',
-                    }}
-                  >
-                    🎤 Record WORD →
-                  </button>
-                  <label style={{ fontWeight: 'bold', marginTop: '8px' }}>Sentence</label>
-                  <input
-                    value={composeSentence}
-                    onChange={(e) => setComposeSentence(e.target.value)}
-                    placeholder={`e.g., Sam is ${ingQueue[ingIndex]}`}
-                    style={{ padding: '12px', border: '2px solid #ddd', borderRadius: '12px' }}
-                  />
-                  <button
-                    onClick={() => { setRecordTarget('sentence'); setIngView('record'); }}
-                    style={{
-                      padding: '14px',
-                      background: '#7c4dff',
-                      color: '#fff',
-                      border: 'none',
-                      borderRadius: '12px',
-                      fontWeight: 'bold',
-                    }}
-                  >
-                    🎤 Record SENTENCE →
-                  </button>
-                  <label style={{ fontWeight: 'bold', marginTop: '8px' }}>Rhyme</label>
-                  <textarea
-                    value={composeRhyme}
-                    onChange={(e) => setComposeRhyme(e.target.value)}
-                    rows={3}
-                    style={{ padding: '12px', border: '2px solid #ddd', borderRadius: '12px' }}
-                  />
-                  <button
-                    onClick={() => { setRecordTarget('rhyme'); setIngView('record'); }}
-                    style={{
-                      padding: '14px',
-                      background: '#4CAF50',
-                      color: '#fff',
-                      border: 'none',
-                      borderRadius: '12px',
-                      fontWeight: 'bold',
-                    }}
-                  >
-                    🎤 Record RHYME →
-                  </button>
-                  {savedWordClips[ingQueue[ingIndex]] && (
-                    <button
-                      onClick={() => {
-                        const audio = new Audio(savedWordClips[ingQueue[ingIndex]]);
-                        audio.play().catch(err => {
-                          console.error('Playback failed:', err);
-                          showToastNotification('Playback failed - check volume');
-                        });
-                      }}
-                      style={{
-                        padding: 12,
-                        background: '#8e44ad',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: 12,
-                        fontWeight: 'bold',
-                      }}
-                    >
-                      ▶︎ Play "{ingQueue[ingIndex]}"
-                    </button>
-                  )}
-                  <button
-                    onClick={() => {
-                      const next = ingIndex + 1;
-                      if (next < ingQueue.length) {
-                        setIngIndex(next);
-                        primeCompose(ingQueue[next]);
-                      } else {
-                        setIngQueue([]);
-                        setIngIndex(0);
-                        setIngView('words');
-                        showToastNotification('✅ Finished this set!');
-                      }
-                    }}
-                    style={{
-                      padding: '12px',
-                      background: '#eee',
-                      border: '1px solid #ddd',
-                      borderRadius: '12px',
-                    }}
-                  >
-                    Next Word →
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {ingView === 'record' && ingQueue.length > 0 && (
-              <RecordClip
-                key={`${recordTarget}:${ingQueue[ingIndex]}`}
-                title={
-                  recordTarget === 'word'
-                    ? `Record word: ${ingQueue[ingIndex]}`
-                    : recordTarget === 'sentence'
-                      ? 'Record sentence'
-                      : 'Record rhyme'
-                }
-                text={
-                  recordTarget === 'word'
-                    ? ingQueue[ingIndex]
-                    : recordTarget === 'sentence'
-                      ? composeSentence
-                      : composeRhyme
-                }
-                onSaved={(url) => {
-                  if (recordTarget === 'word') {
-                    setSavedWordClips(prev => {
-                      const w = ingQueue[ingIndex];
-                      if (prev[w]) URL.revokeObjectURL(prev[w]); // free memory
-                      return { ...prev, [w]: url };
-                    });
-                  }
-                  setIngView('compose'); // Return to compose to add sentence/rhyme or go next
-                }}
-                onBack={() => {
-                  stopActiveRecording();
-                  setIngView('compose');
-                }}
-              />
-            )}
-          </>
-        ) : (
-          // Standard and other modes content
-          <>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => {
-                if (currentMode === 'numbers') {
-                  setName(e.target.value.replace(/[^0-9]/g, ''));
-                } else {
-                  setName(e.target.value.replace(/[^a-zA-Z]/g, ''));
-                }
-              }}
-              onKeyPress={handleKeyPress}
-              placeholder={
-                currentMode === 'standard' ? "Enter your child's name" :
-                currentMode === 'actions' ? "Type an -ING word (e.g., clapping)" :
-                currentMode === 'alphabet' ? "Enter letters (A-Z)" :
-                currentMode === 'numbers' ? "Enter numbers (0-9)" :
-                currentMode === 'grandparent' ? "TYPE THE CHILD'S NAME" :
-                "Enter a value"
-              }
-              className={`w-full p-4 text-center border-2 border-purple-200 rounded-xl text-gray-800 mb-6 ${
-                currentMode === 'grandparent' ? 'text-3xl' : 'text-2xl'
-              }`}
-              maxLength={currentMode === 'alphabet' ? 26 : currentMode === 'numbers' ? 10 : 12}
-              autoFocus
-              aria-label="Input field"
-            />
-
-            {name.length >= 10 && currentMode === 'standard' && (
-              <p className="text-xs text-orange-600 -mt-4 mb-4 text-center">
-                {12 - name.length} characters left
-              </p>
-            )}
-
-            <button
-              onClick={handleNextClick}
-              className={`w-full py-4 rounded-xl font-bold text-xl transition-all flex items-center justify-center gap-2 ${
-                currentMode === 'actions' && name.trim().length > 0 && /ing$/i.test(name.trim())
-                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white'
-                  : currentMode === 'actions' ? 'bg-purple-300 text-white'
-                  : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white'
-              }`}
-              aria-label="Proceed to next step"
-              disabled={
-                (currentMode === 'actions' && ingView === 'grid') || // Cannot proceed from grid without selecting category
-                (currentMode === 'actions' && ingView === 'words' && !name.trim() && ingQueue.length === 0) // Cannot proceed from words without selecting or typing
-              }
-            >
-              {currentMode === 'actions' && name.trim().length > 0 && /ing$/i.test(name.trim()) ? 'Start Recording →' :
-               currentMode === 'actions' ? 'Show Categories →' : 'Next →'}
-              {currentMode !== 'actions' && <ChevronRight />}
-            </button>
-          </>
-        )}
-
-        <button
-          onClick={onGuide}
-          className="mt-4 text-purple-600 underline text-sm"
-          aria-label="View parent guide"
-        >
-          Need help? Read 4-minute guide
-        </button>
-
-        <ShareButton className="mt-6" />
-
-        {/* Toast Notification */}
-        {showToast && (
-          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-white rounded-xl shadow-lg border-2 border-purple-200 px-6 py-3 z-50 animate-bounce">
-            <div className="text-sm font-medium text-gray-800">{toastMessage}</div>
-          </div>
-        )}
-
-        {/* Global click handler to close dropdown */}
-        {showSecretMenu && (
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setShowSecretMenu(false)}
-          />
-        )}
-      </div>
-    </div>
-  );
-});
-
-// RecordingStage Component
-const RecordingStage: React.FC<RecordingStageProps> = memo(({ stage, isActive, isComplete, isNext, onRecord, onClick, onReRecord, recordings }) => {
-  const [isRecording, setIsRecording] = useState(false);
-  const [isStopping, setIsStopping] = useState(false);
-  const [countdown, setCountdown] = useState<number | null>(null);
-  const [tempRecording, setTempRecording] = useState<string | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    return () => {
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-        mediaRecorderRef.current.stop();
-      }
-    };
-  }, []);
-
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      if (!stream) throw new Error('No audio stream available');
-
-      const possibleTypes = [
-        'audio/webm;codecs=opus',
-        'audio/webm',
-        'audio/mp4',
-        'audio/mpeg',
-        'audio/ogg;codecs=opus',
-      ];
-      const mimeType = possibleTypes.find(type => MediaRecorder.isTypeSupported(type)) || 'audio/webm';
-
-      mediaRecorderRef.current = new MediaRecorder(stream, { mimeType });
-      audioChunksRef.current = [];
-
-      mediaRecorderRef.current.ondataavailable = (e) => {
-        if (e.data.size > 0) {
-          audioChunksRef.current.push(e.data);
-        }
-      };
-
-      mediaRecorderRef.current.onstop = () => {
-        stream.getTracks().forEach(track => track.stop());
-        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
-        const reader = new FileReader();
-        reader.onload = () => {
-          const audioData = reader.result as string;
-          setTempRecording(audioData);
-          setIsRecording(false);
-          setIsStopping(false);
-          setCountdown(null);
-          // Auto-save after 2 seconds delay
-          setTimeout(() => {
-            onRecord(audioData);
-            setTempRecording(null);
-          }, 2000);
-        };
-        reader.readAsDataURL(audioBlob);
-      };
-
-      mediaRecorderRef.current.start();
-      setIsRecording(true);
-    } catch (err) {
-      console.error('Recording error:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      alert(`Recording failed: ${errorMessage}. Please ensure microphone access is granted.`);
-      setIsRecording(false);
-      setIsStopping(false);
-      setCountdown(null);
+    if (mode === 'auditory') {
+      const letter = letters[currentIndex];
+      speak(`The letter ${letter}`);
     }
-  };
+  }, [currentIndex, letters, mode, speak]);
 
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      setIsStopping(true);
-      mediaRecorderRef.current.stop();
-    }
-  };
-
-  const toggleRecording = () => {
-    if (isRecording) {
-      stopRecording();
-    } else {
-      setTempRecording(null);
-      setCountdown(1);
-      setTimeout(() => {
-        startRecording();
-      }, 1000);
-    }
-  };
-
-  const playRecording = () => {
-    if (tempRecording && audioRef.current) {
-      audioRef.current.src = tempRecording;
-      audio.play().catch(err => {
-        console.error('Preview playback failed:', err);
-        alert('Unable to play preview. Check your device volume or silent mode.');
-      });
-    }
-  };
-
-  const saveRecording = () => {
-    if (tempRecording) {
-      onRecord(tempRecording);
-      setTempRecording(null);
-    }
-  };
+  const currentLetter = letters[currentIndex];
 
   return (
-    <div
-      onClick={onClick}
-      className={`p-3 rounded-xl cursor-pointer transition-all flex items-center justify-between ${
-        isActive
-          ? 'bg-blue-100 border-2 border-blue-300'
-          : isNext && !isComplete
-          ? 'bg-yellow-50 border-2 border-yellow-300'
-          : 'bg-gray-100 hover:bg-gray-200'
-      }`}
-      role="button"
-      tabIndex={0}
-      aria-label={`Record ${stage.label}`}
-      onKeyPress={(e) => e.key === 'Enter' && onClick()}
-    >
-      <div className="flex items-center gap-2">
-        {stage.icon}
-        <span className="text-sm font-medium">{stage.label}</span>
+    <div className={`min-h-screen p-4 ${mode === 'visual' ? 'bg-gradient-to-br from-green-100 to-blue-100' : 'bg-gradient-to-br from-purple-100 to-pink-100'}`}>
+      {/* Mode indicator banner */}
+      <div className="fixed top-0 left-0 right-0 bg-purple-600 text-white text-center py-2 z-50">
+        <span className="text-sm font-medium">
+          {mode.charAt(0).toUpperCase() + mode.slice(1)} Mode Active
+        </span>
       </div>
-      <div className="flex items-center gap-2 relative">
-        {countdown !== null && (
-          <span className="absolute -top-6 text-xs text-blue-600 font-bold">
-            Recording in {countdown}...
-          </span>
-        )}
-        {tempRecording ? (
-          <div className="flex gap-2">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                playRecording();
-              }}
-              className="p-2 bg-purple-500 rounded-full hover:bg-purple-600 text-white"
-              aria-label={`Play preview of ${stage.label}`}
-            >
-              <Play size={20} aria-hidden="true" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                saveRecording();
-              }}
-              className="p-2 bg-green-500 rounded-full hover:bg-green-600 text-white"
-              aria-label={`SAVE recording for ${stage.label}`}
-            >
-              <CheckCircle size={20} aria-hidden="true" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleRecording();
-              }}
-              className="p-2 bg-blue-500 rounded-full hover:bg-blue-600 text-white"
-              aria-label={`Re-record ${stage.label}`}
-            >
-              <RefreshCw size={20} aria-hidden="true" />
-            </button>
-            <audio ref={audioRef} className="hidden" />
-          </div>
-        ) : isComplete ? (
-          <div className="flex gap-2 items-center">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (recordings[stage.key]) {
-                  const audio = new Audio(recordings[stage.key]);
-                  audio.play().catch(err => {
-                    console.error('Playback failed:', err);
-                    alert('Unable to play audio. Check your device volume or silent mode.');
-                  });
-                }
-              }}
-              className="p-2 bg-purple-500 rounded-full hover:bg-purple-600 text-white"
-              aria-label={`Play ${stage.label} recording`}
-            >
-              <Play size={20} aria-hidden="true" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onReRecord();
-              }}
-              className="p-2 bg-blue-500 rounded-full hover:bg-blue-600 text-white"
-              aria-label={`Re-record ${stage.label}`}
-            >
-              <RefreshCw size={20} aria-hidden="true" />
-            </button>
-            <CheckCircle size={20} className="text-green-500" aria-hidden="true" />
-          </div>
-        ) : isActive && isRecording ? (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleRecording();
-            }}
-            className={`p-2 rounded-full ${isStopping ? 'bg-gray-400' : 'bg-red-500 hover:bg-red-600'} text-white`}
-            aria-label={isStopping ? 'Stopping recording' : 'Stop recording'}
-            disabled={isStopping}
-          >
-            {isStopping ? <Loader2 size={20} className="animate-spin" aria-hidden="true" /> : <Square size={20} aria-hidden="true" />}
-          </button>
-        ) : isActive ? (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleRecording();
-            }}
-            className="p-2 bg-orange-500 rounded-full hover:bg-orange-600 text-white"
-            aria-label="Start recording"
-            disabled={countdown !== null}
-          >
-            <Mic size={20} aria-hidden="true" />
-          </button>
-        ) : null}
-      </div>
-    </div>
-  );
-});
 
-// RecordingScreen Component
-const RecordingScreen: React.FC<RecordingScreenProps> = memo(({ name, recordings, setRecordings, onComplete, onBack }) => {
-  const [currentStage, setCurrentStage] = useState(0);
-
-  const letters = name.split('');
-
-  const stages: Stage[] = [
-    {
-      id: 'fullname',
-      label: `Full Name: "${name}"`,
-      key: 'fullname',
-      instruction: `Say their name clearly: "${name}"`,
-      icon: <Volume2 size={20} />
-    },
-    {
-      id: 'question',
-      label: 'Name Question',
-      key: 'question',
-      instruction: `Ask: "What is your name?" (pause for response)`,
-      icon: <Volume2 size={20} />
-    },
-    ...letters.map((letter, i) => ({
-      id: `letter-${i}`,
-      label: `Letter ${i + 1}: "${letter}"`,
-      key: `letter-${i}`,
-      instruction: `Say the SOUND of "${letter}" (not the letter name)\nExample: B = "buh" not "bee"`,
-      icon: <BookOpen size={20} />
-    })),
-    {
-      id: 'sentence',
-      label: 'Say a sentence with name',
-      key: 'sentence',
-      instruction: `Say a sentence using "${name}" - be creative!`,
-      icon: <Moon size={20} />
-    },
-    {
-      id: 'rhyme',
-      label: `Say a fun rhyme with name`,
-      key: 'rhyme',
-      instruction: `Make a fun rhyme with "${name}"\nExample: "${name} is sweet, from head to feet!"`,
-      icon: <Music size={20} />
-    }
-  ];
-
-  const isComplete = stages.every(stage => recordings[stage.key]);
-  const nextUnrecordedStage = stages.findIndex(stage => !recordings[stage.key]);
-
-  const handleBack = () => {
-    if (window.confirm('Going back will clear all recordings and the name. Are you sure?')) {
-      onBack();
-    }
-  };
-
-  return (
-    <div className="min-h-screen p-4 flex items-center justify-center">
-      <div className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl relative">
+      <div className="max-w-md mx-auto pt-16">
         <button
-          onClick={handleBack}
-          className="absolute top-4 left-4 p-2 text-gray-600 hover:bg-gray-100 rounded-full"
-          aria-label="Go back to name entry and clear recordings"
+          onClick={onBack}
+          className="mb-6 flex items-center text-purple-600 hover:text-purple-800"
         >
-          <ArrowLeft size={20} aria-hidden="true" />
+          ← Back to Start
         </button>
-
-        <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-          Record Your Voice for {name}
-        </h2>
-
-        {Object.keys(recordings).length > 0 && Object.keys(recordings).length < stages.length && (
-          <div className="bg-purple-50 border border-purple-200 p-2 rounded-lg mb-3 text-center">
-            <p className="text-xs text-purple-700">
-              💜 Even partial recordings help! You can always add more later.
-            </p>
-          </div>
-        )}
-
-        <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-4 relative">
-          <div className="flex items-center gap-2 text-blue-800">
-            <Info size={16} aria-hidden="true" />
-            <p className="text-sm font-medium">How to Record:</p>
-          </div>
-          <ol className="text-sm text-blue-700 mt-1 ml-6 list-decimal">
-            <li>Tap any item to select it</li>
-            <li>Tap the RED microphone to START recording</li>
-            <li>Say the word/sound clearly</li>
-            <li>Tap the SQUARE to STOP</li>
-            <li>Recording auto-saves after 2 seconds - no need to click SAVE!</li>
-            <li><strong>To re-record: Tap the BLUE refresh icon</strong></li>
-          </ol>
-        </div>
-
-        <div className="mb-4">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm text-gray-600 font-medium">Your Progress</span>
-            <span className="text-sm text-gray-600 font-medium">
-              {Object.keys(recordings).length} of {stages.length} done
-            </span>
-          </div>
-          <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500"
-              style={{ width: `${(Object.keys(recordings).length / stages.length) * 100}%` }}
-            />
-          </div>
-          {Object.keys(recordings).length > 0 && (
-            <p className="text-xs text-gray-500 mt-1 text-center">
-              Storage used: ~{((JSON.stringify(recordings).length / 1024 / 1024) * 2).toFixed(1)}MB
-            </p>
-          )}
-        </div>
-
-        <div className="space-y-2 mb-6 max-h-80 overflow-y-auto">
-          {stages.map((stage, index) => (
-            <div key={stage.id} className="relative">
-              <RecordingStage
-                stage={stage}
-                isActive={index === currentStage}
-                isComplete={!!recordings[stage.key]}
-                isNext={index === nextUnrecordedStage}
-                onRecord={(audioData: string) => {
-                  setRecordings(prev => ({
-                    ...prev,
-                    [stage.key]: audioData
-                  }));
-                  // Auto-advance to next unrecorded stage after successful recording
-                  if (index < stages.length - 1) {
-                    setTimeout(() => setCurrentStage(index + 1), 1000);
-                  }
-                }}
-                onClick={() => setCurrentStage(index)}
-                onReRecord={() => {
-                  setRecordings(prev => {
-                    const newRecordings = { ...prev };
-                    delete newRecordings[stage.key];
-                    return newRecordings;
-                  });
-                  setCurrentStage(index);
-                }}
-                recordings={recordings}
-              />
-            </div>
-          ))}
-        </div>
-
-        <button
-          onClick={onComplete}
-          disabled={!isComplete}
-          className={`w-full py-4 rounded-xl font-bold text-xl transition-all ${
-            isComplete
-              ? 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700'
-              : 'bg-gray-300 text-gray-500'
-          }`}
-          aria-label={isComplete ? "Create flashcards" : "Complete all recordings to proceed"}
-        >
-          {isComplete ? '🎉 All Done! Create Flashcards' : `📝 ${stages.length - Object.keys(recordings).length} recordings left`}
-        </button>
-
-        {isComplete && (
-          <p className="text-xs text-gray-500 text-center mt-2">
-            💡 Tip: Test audio playback in flashcards. If no sound, check volume/silent mode.
-          </p>
-        )}
-      </div>
-    </div>
-  );
-});
-
-// FlashcardScreen Component
-const FlashcardScreen: React.FC<FlashcardScreenProps> = memo(({ name, recordings, onReset }) => {
-  const [currentLetterIndex, setCurrentLetterIndex] = useState(0);
-  const letters = name.split('');
-
-  const playAudio = (key: string) => {
-    if (!recordings[key]) {
-      console.warn(`No recording found for key: ${key}`);
-      return;
-    }
-    const audio = new Audio(recordings[key]);
-    audio.play().catch(err => {
-      console.error('Audio playback failed:', err);
-      alert('Unable to play audio. Check your device volume or silent mode.');
-    });
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'ArrowRight' && currentLetterIndex < letters.length - 1) {
-      setCurrentLetterIndex(currentLetterIndex + 1);
-    } else if (e.key === 'ArrowLeft' && currentLetterIndex > 0) {
-      setCurrentLetterIndex(currentLetterIndex - 1);
-    } else if (e.key === 'Enter') {
-      playAudio(`letter-${currentLetterIndex}`);
-    }
-  };
-
-  return (
-    <div
-      className="min-h-screen p-4 flex items-center justify-center"
-      tabIndex={0}
-      onKeyDown={handleKeyPress}
-      aria-label="Flashcard navigation"
-    >
-      <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-          {name}'s Flashcards
-        </h2>
 
         <div className="text-center mb-8">
-          <span
-            className="text-9xl font-bold text-purple-600 animate-pulse"
-            aria-label={`Current letter: ${letters[currentLetterIndex]}`}
-          >
-            {letters[currentLetterIndex]}
-          </span>
+          <h1 className="text-2xl font-bold text-gray-800">Learning: {name}</h1>
+          <p className="text-gray-600">Letter {currentIndex + 1} of {letters.length}</p>
         </div>
 
-        <div className="flex justify-center gap-4 mb-6">
-          <button
-            onClick={() => playAudio('fullname')}
-            className="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 flex items-center gap-2"
-            aria-label="Play full name"
+        <div className="bg-white rounded-3xl shadow-2xl p-8 text-center mb-6">
+          <div
+            className="w-48 h-48 mx-auto flex items-center justify-center bg-gradient-to-br from-purple-200 to-pink-200 rounded-2xl cursor-pointer mb-6"
+            onClick={toggleView}
           >
-            <Volume2 size={20} aria-hidden="true" /> Name
-          </button>
-
-          <button
-            onClick={() => playAudio(`letter-${currentLetterIndex}`)}
-            className="px-4 py-2 bg-purple-500 text-white rounded-xl hover:bg-purple-600 flex items-center gap-2"
-            aria-label="Play letter sound"
-          >
-            <Volume2 size={20} aria-hidden="true" />
-            <span>Play Letter Sound</span>
-          </button>
-        </div>
-
-        <div className="flex justify-center gap-4 mb-6">
-          <button
-            onClick={() => playAudio('question')}
-            className="px-4 py-2 bg-purple-500 text-white rounded-xl hover:bg-purple-600 flex items-center gap-2"
-            aria-label="Play name question"
-          >
-            <Volume2 size={20} aria-hidden="true" /> Question
-          </button>
-
-          <button
-            onClick={() => playAudio('sentence')}
-            className="px-4 py-2 bg-green-500 text-white rounded-xl hover:bg-green-600 flex items-center gap-2"
-            aria-label="Play sentence"
-          >
-            <Moon size={20} aria-hidden="true" /> Sentence
-          </button>
-
-          <button
-            onClick={() => playAudio('rhyme')}
-            className="px-4 py-2 bg-pink-500 text-white rounded-xl hover:bg-pink-600 flex items-center gap-2"
-            aria-label="Play fun rhyme"
-          >
-            <Music size={20} aria-hidden="true" /> Rhyme
-          </button>
-        </div>
-
-        <div className="flex justify-between mb-6">
-          <div className="flex flex-col items-center">
-            <button
-              onClick={() => setCurrentLetterIndex(currentLetterIndex - 1)}
-              disabled={currentLetterIndex === 0}
-              className={`p-3 rounded-xl ${
-                currentLetterIndex === 0
-                  ? 'bg-gray-300 text-gray-500'
-                  : 'bg-gray-500 text-white hover:bg-gray-600'
-              }`}
-              aria-label="Previous letter"
-            >
-              <ChevronLeft size={24} aria-hidden="true" />
-            </button>
-            <span className="text-sm text-gray-600 mt-2 font-medium">Previous Letter</span>
+            {showLetter ? (
+              <span className="text-8xl font-bold text-purple-800">{currentLetter}</span>
+            ) : (
+              <span className="text-4xl">👆 Tap to see letter</span>
+            )}
           </div>
 
-          <div className="flex flex-col items-center">
+          <div className="space-y-4">
             <button
-              onClick={() => setCurrentLetterIndex(currentLetterIndex + 1)}
-              disabled={currentLetterIndex === letters.length - 1}
-              className={`p-3 rounded-xl ${
-                currentLetterIndex === letters.length - 1
-                  ? 'bg-gray-300 text-gray-500'
-                  : 'bg-purple-500 text-white hover:bg-purple-600'
-              }`}
-              aria-label="Next letter"
+              onClick={() => speak(`The letter ${currentLetter}`)}
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-xl text-lg font-semibold"
             >
-              <ArrowRight size={24} aria-hidden="true" />
+              🔊 Say Letter
             </button>
-            <span className="text-sm text-gray-600 mt-2 font-medium">Next Letter</span>
+
+            <button
+              onClick={() => speak(`${currentLetter} says ${currentLetter.toLowerCase()}`)}
+              className="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl text-lg font-semibold"
+            >
+              🎵 Say Sound
+            </button>
           </div>
         </div>
 
-        <button
-          onClick={onReset}
-          className="w-full py-3 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 mb-4"
-          aria-label="Start over and clear all data"
-        >
-          Start Over
-        </button>
+        <div className="flex space-x-4">
+          <button
+            onClick={prevCard}
+            disabled={letters.length <= 1}
+            className="flex-1 bg-gray-500 hover:bg-gray-600 disabled:opacity-50 text-white py-3 rounded-xl font-semibold"
+          >
+            ← Previous
+          </button>
+          <button
+            onClick={nextCard}
+            disabled={letters.length <= 1}
+            className="flex-1 bg-purple-500 hover:bg-purple-600 disabled:opacity-50 text-white py-3 rounded-xl font-semibold"
+          >
+            Next →
+          </button>
+        </div>
 
-        <ShareButton />
+        <div className="mt-6 flex justify-center">
+          <div className="flex space-x-2">
+            {letters.map((_, index) => (
+              <div
+                key={index}
+                className={`w-3 h-3 rounded-full ${
+                  index === currentIndex ? 'bg-purple-500' : 'bg-purple-200'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
 });
+
+// ParentGuideScreen Component
+const ParentGuideScreen: React.FC<{ onBack: () => void }> = memo(({ onBack }) => (
+  <div className="min-h-screen bg-gradient-to-br from-blue-100 to-indigo-100 p-4">
+    <div className="max-w-2xl mx-auto bg-white rounded-3xl shadow-2xl p-8">
+      <button
+        onClick={onBack}
+        className="mb-6 flex items-center text-blue-600 hover:text-blue-800"
+      >
+        ← Back
+      </button>
+
+      <h1 className="text-3xl font-bold text-gray-800 mb-6">Parent Guide</h1>
+
+      <div className="space-y-6 text-gray-700">
+        <section>
+          <h2 className="text-xl font-semibold mb-3">How It Works</h2>
+          <p>My Name Is creates personalized phonics flashcards using your child's name. This helps them connect with the letters and sounds in a meaningful way.</p>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-semibold mb-3">Privacy First</h2>
+          <p>All data stays on your device. No personal information is sent to servers. The app works completely offline after initial load.</p>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-semibold mb-3">Age Range</h2>
+          <p>Designed for children aged 3-7, but can be enjoyed by learners of all ages discovering phonics.</p>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-semibold mb-3">Tips for Success</h2>
+          <ul className="list-disc list-inside space-y-2">
+            <li>Practice for 5-10 minutes at a time</li>
+            <li>Celebrate every attempt, not just correct answers</li>
+            <li>Let your child tap the cards to hear sounds</li>
+            <li>Make it playful and stress-free</li>
+          </ul>
+        </section>
+      </div>
+    </div>
+  </div>
+));
+
 
 // App Component
 const App = () => {
-  const [step, setStep] = useState<'welcome' | 'recording' | 'flashcards'>('welcome');
-  const [name, setName] = useState<string | null>(null);
-  const [recordings, setRecordings] = useState<Record<string, string>>({});
-  const [showGuide, setShowGuide] = useState(false);
-  const [showGitHubModal, setShowGitHubModal] = useState(false);
-  const [showLicenseModal, setShowLicenseModal] = useState(false);
+  const [currentScreen, setCurrentScreen] = useState<'welcome' | 'guide' | 'flashcards'>('welcome');
+  const [childName, setChildName] = useState('');
+  const [currentMode, setCurrentMode] = useState('standard');
 
+  // Load saved data on mount
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        let loadedRecordings: Record<string, string> = {};
+    const savedName = localStorage.getItem('childName');
+    const savedMode = localStorage.getItem('selectedMode');
 
-        try {
-          const db = await openDB('MyNameIsDB', 1, {
-            upgrade(db) {
-              db.createObjectStore('recordings');
-            },
-          });
-          const savedRecordings = await db.getAll('recordings');
-          for (const { key, value } of savedRecordings) {
-            loadedRecordings[key] = value;
-          }
-        } catch (idbError) {
-          console.warn('IndexedDB failed, trying localStorage:', idbError);
-          const savedRecordings = localStorage.getItem('recordings');
-          if (savedRecordings) {
-            try {
-              loadedRecordings = JSON.parse(savedRecordings);
-            } catch (parseError) {
-              console.error('Failed to parse localStorage recordings:', parseError);
-              loadedRecordings = {};
-            }
-          }
-        }
-
-        setRecordings(loadedRecordings);
-
-        const savedName = localStorage.getItem('childName');
-        if (savedName && savedName.length <= 12 && Object.keys(loadedRecordings).length > 0) {
-          setName(savedName);
-          setStep('flashcards');
-        } else if (savedName && savedName.length > 12) {
-          localStorage.removeItem('childName');
-          setRecordings({});
-          try {
-            const db = await openDB('MyNameIsDB', 1);
-            const tx = db.transaction('recordings', 'readwrite');
-            await tx.objectStore('recordings').clear();
-            await tx.done;
-          } catch (error) {
-            console.log('Cleanup completed');
-          }
-        }
-      } catch (err) {
-        console.error('Failed to load data:', err);
-      }
-    };
-    loadData();
+    if (savedName) {
+      setChildName(savedName);
+    }
+    if (savedMode) {
+      setCurrentMode(savedMode);
+    }
   }, []);
 
+  // Handle mode changes with useEffect to avoid TDZ
   useEffect(() => {
-    if (name) localStorage.setItem('childName', name);
-  }, [name]);
-
-  useEffect(() => {
-    const saveRecordings = async () => {
-      if (Object.keys(recordings).length === 0) return;
-
-      try {
-        try {
-          const db = await openDB('MyNameIsDB', 1);
-          const tx = db.transaction('recordings', 'readwrite');
-          const store = tx.objectStore('recordings');
-          for (const [key, value] of Object.entries(recordings)) {
-            await store.put({ key, value });
-          }
-          await tx.done;
-        } catch (idbError) {
-          console.warn('IndexedDB failed, using localStorage:', idbError);
-          localStorage.setItem('recordings', JSON.stringify(recordings));
-        }
-      } catch (err) {
-        console.error('Failed to save recordings:', err);
-        localStorage.setItem('recordings', JSON.stringify(recordings));
-      }
-    };
-    saveRecordings();
-  }, [recordings]);
-
-  const handleReset = async () => {
-    if (window.confirm('This will clear all recordings and data. Are you sure?')) {
-      try {
-        try {
-          const db = await openDB('MyNameIsDB', 1);
-          const tx = db.transaction('recordings', 'readwrite');
-          await tx.objectStore('recordings').clear();
-          await tx.done;
-        } catch (idbError) {
-          console.warn('IndexedDB clear failed:', idbError);
-        }
-        localStorage.removeItem('recordings');
-        localStorage.removeItem('childName');
-        localStorage.removeItem('tooltipsDismissed');
-        setRecordings({});
-        setName(null);
-        setStep('welcome');
-      } catch (err) {
-        console.error('Failed to clear data:', err);
-        setRecordings({});
-        setName(null);
-        setStep('welcome');
-      }
+    if (currentMode === 'actions') {
+      // Reset to welcome when actions mode is selected
+      setCurrentScreen('welcome');
+      setChildName('');
+      localStorage.removeItem('childName');
+      localStorage.removeItem('selectedMode');
+      setCurrentMode('standard');
     }
-  };
+  }, [currentMode]);
+
+  const handleNext = useCallback(() => {
+    const name = localStorage.getItem('childName');
+    if (name) {
+      setChildName(name);
+      setCurrentScreen('flashcards');
+    }
+  }, []);
+
+  const handleBack = useCallback(() => {
+    setCurrentScreen('welcome');
+  }, []);
+
+  const handleGuide = useCallback(() => {
+    setCurrentScreen('guide');
+  }, []);
+
+  if (currentScreen === 'guide') {
+    return <ParentGuideScreen onBack={handleBack} />;
+  }
+
+  if (currentScreen === 'flashcards' && childName) {
+    return (
+      <FlashcardsScreen
+        name={childName}
+        onBack={handleBack}
+        mode={currentMode}
+      />
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-100 to-pink-100">
-      {showGuide && <ParentGuide onClose={() => setShowGuide(false)} />}
-
-      {step === 'welcome' && (
-        <WelcomeScreen
-          onNext={(newName) => {
-            setName(newName);
-            setRecordings({});
-            setStep('recording');
-          }}
-          onGuide={() => setShowGuide(true)}
-        />
-      )}
-
-      {step === 'recording' && name && (
-        <RecordingScreen
-          name={name}
-          recordings={recordings}
-          setRecordings={setRecordings}
-          onComplete={() => setStep('flashcards')}
-          onBack={() => {
-            handleReset();
-          }}
-        />
-      )}
-
-      {step === 'flashcards' && name && (
-        <FlashcardScreen
-          name={name}
-          recordings={recordings}
-          onReset={handleReset}
-        />
-      )}
-
-      <footer className="text-center text-xs text-gray-500 py-6 px-4 mt-8">
-        <div className="space-y-3">
-          <div>
-            <p className="text-gray-700 text-sm">The phonics app that doesn't exist on your phone</p>
-            <p className="text-gray-500 text-xs">No App • No Account • No Tracking</p>
-          </div>
-
-          <div>
-            <p className="text-gray-600 text-xs">First Multi-AI Endorsed App • August 2025</p>
-            <p className="text-sm">🇵🇭 🇮🇳 🇳🇬 🇵🇰 🇸🇬 🇲🇾</p>
-          </div>
-
-          <div>
-            <p className="text-gray-600 text-xs">
-              <button
-                onClick={() => setShowGitHubModal(true)}
-                className="text-gray-600 underline hover:text-purple-600 transition-colors"
-              >
-                Open Source on GitHub
-              </button> •
-              <button
-                onClick={() => setShowLicenseModal(true)}
-                className="text-gray-600 underline hover:text-purple-600 transition-colors"
-              >
-                CC BY-NC-SA 4.0
-              </button>
-            </p>
-            <p className="text-gray-600 text-xs mt-1">Created with ❤️ by BoredMama</p>
-          </div>
-
-          <div>
-            <p className="text-purple-600 text-sm font-medium">Revolutionising Motherhood</p>
-          </div>
-        </div>
-      </footer>
-
-      {showGitHubModal && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-          onClick={() => setShowGitHubModal(false)}
-        >
-          <div
-            className="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
-                    <span className="text-white text-sm font-bold">🔗</span>
-                  </div>
-                  <h2 className="text-xl font-bold text-gray-900">Open Source</h2>
-                </div>
-                <button
-                  onClick={() => setShowGitHubModal(false)}
-                  className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
-                  aria-label="Close"
-                >
-                  ×
-                </button>
-              </div>
-            </div>
-
-            <div className="p-6 space-y-4">
-              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 mb-2">MyNameIsApp on GitHub</h3>
-                <p className="text-gray-700 text-sm mb-4">
-                  Explore the complete source code, contribute features, or learn how we built this privacy-first app.
-                </p>
-                <a
-                  href="https://github.com/Respect4Code/my-name-is-app"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
-                >
-                  <span className="mr-2">🔗</span>
-                  Visit GitHub Repository
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showLicenseModal && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-          onClick={() => setShowLicenseModal(false)}
-        >
-          <div
-            className="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                    <span className="text-white text-sm font-bold">⚖️</span>
-                  </div>
-                  <h2 className="text-xl font-bold text-gray-900">License</h2>
-                </div>
-                <button
-                  onClick={() => setShowLicenseModal(false)}
-                  className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
-                  aria-label="Close"
-                >
-                  ×
-                </button>
-              </div>
-            </div>
-
-            <div className="p-6 space-y-4">
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 mb-2">Creative Commons BY-NC-SA 4.0</h3>
-                <p className="text-gray-700 text-sm mb-4">
-                  This app is licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0.
-                </p>
-                <a
-                  href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                >
-                  <span className="mr-2">🔗</span>
-                  Read Full License
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    <WelcomeScreen
+      onNext={handleNext}
+      onGuide={handleGuide}
+    />
   );
 };
 
