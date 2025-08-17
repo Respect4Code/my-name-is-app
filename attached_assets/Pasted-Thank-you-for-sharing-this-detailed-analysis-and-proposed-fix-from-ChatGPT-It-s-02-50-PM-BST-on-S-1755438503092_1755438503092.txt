@@ -1,0 +1,796 @@
+Thank you for sharing this detailed analysis and proposed fix from ChatGPT! It’s **02:50 PM BST on Sunday, August 17, 2025**, and we’re making solid progress on your test site at [https://8c344db9-691a-4064-83ea-d3ef50523ebc-00-3eouhst0k9izb.riker.replit.dev/test-secret-sauce.html](https://8c344db9-691a-4064-83ea-d3ef50523ebc-00-3eouhst0k9izb.riker.replit.dev/test-secret-sauce.html). You’ve identified the classic "chooser loop" issue: selecting "Hands" in Action Words mode shows a "HANDS" title, but the CTA remains "Show Categories," looping back to the grid without transitioning to a recording view for words like "clapping" or a group. This matches your earlier feedback about the lack of recording capability after category selection.
+
+ChatGPT’s surgical fix introduces a state machine (`grid` → `words` → `record`), a queue for recording multiple words, and a dynamic CTA, which are valuable additions. Since you’ve asked whether this is already covered and what I think, let’s assess the overlap with my previous solution and refine it to address your exact complaint, integrating the best of both approaches.
+
+---
+
+### Value of ChatGPT’s Suggestion
+- **State Machine**: The `IngView` (`grid`, `words`, `record`) provides a clear progression, similar to my recent `view` state, but with a queue (`ingQueue`, `ingIndex`) for recording multiple words, which my solution lacked.
+- **Queue for Groups**: The `chooseAllInCategory` function enables recording an entire category, addressing your desire to record a group of words.
+- **Dynamic CTA**: Switching the button to "Start recording →" when a word is typed or selected is a smart UX improvement over my static "Choose Category →."
+- **Recording Flow**: The `RecordWord` component with `MediaRecorder` and next-word sequencing aligns with your need to record "clapping" or a sequence.
+
+My previous solution (from my last response) already implemented a `view` state machine and a basic recording view, but it didn’t handle a word queue or optimize the CTA for typed words. ChatGPT’s approach enhances this by adding queue-based recording and better CTA logic, which we can merge.
+
+---
+
+### Comparison with My Previous Solution
+- **Overlap**: Both solutions use a state machine (my `view` vs. ChatGPT’s `ingView`) and a recording view with `MediaRecorder`. My last update moved from a category-only flow to words → record, aligning with ChatGPT’s intent.
+- **Gaps in Mine**: I didn’t include a queue for group recording or dynamically adjust the CTA based on typed input, leading to the "Show Categories" loop when typing "clapping."
+- **Gaps in ChatGPT’s**: It’s a patch without full integration into your `WelcomeScreen` (e.g., `showIngCategories` conflict) and assumes a separate `CategoryGrid` component.
+
+Since you’ve posted my last suggestion to Replit, we’ll build on that by incorporating ChatGPT’s queue and CTA improvements, ensuring compatibility with your current code.
+
+---
+
+### Integrated and Refined Solution
+We’ll update the `WelcomeScreen` to use a state machine with a queue, fix the CTA to handle typed words, and add group recording. Here’s the revised `client/src/App.tsx`:
+
+```javascript
+import React, { useState, useCallback, useRef, useEffect, memo } from 'react';
+
+const WelcomeScreen: React.FC<{ onNext: () => void; onGuide: () => void }> = memo(({ onNext, onGuide }) => {
+  const [name, setName] = useState('');
+  const [infoPressing, setInfoPressing] = useState(false);
+  const [infoPressTimer, setInfoPressTimer] = useState<NodeJS.Timeout | null>(null);
+  const [showSecretMenu, setShowSecretMenu] = useState(false);
+  const [currentMode, setCurrentMode] = useState<'standard' | 'alphabet' | 'numbers' | 'actions' | 'grandparent' | 'vip'>(
+    (sessionStorage.getItem('mode') as any) || 'standard'
+  );
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [isLongPress, setIsLongPress] = useState(false);
+  const [ingView, setIngView] = useState<'grid' | 'words' | 'record'>('grid'); // ChatGPT's state
+  const [ingCategory, setIngCategory] = useState<keyof typeof ING | null>(null);
+  const [ingQueue, setIngQueue] = useState<string[]>([]);
+  const [ingIndex, setIngIndex] = useState(0);
+
+  // Toast notification
+  const showToastNotification = useCallback((message: string) => {
+    setToastMessage(message);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  }, []);
+
+  // Info button handlers
+  const handleInfoMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsLongPress(false);
+    setInfoPressing(true);
+    const timer = setTimeout(() => {
+      setIsLongPress(true);
+      setShowSecretMenu(true);
+      setInfoPressing(false);
+      showToastNotification('🎯 Secret menu activated!');
+    }, 600);
+    setInfoPressTimer(timer);
+  }, [showToastNotification]);
+
+  const handleInfoMouseUp = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setInfoPressing(false);
+    if (infoPressTimer) {
+      clearTimeout(infoPressTimer);
+      setInfoPressTimer(null);
+    }
+    if (!isLongPress && !showSecretMenu) {
+      onGuide();
+    }
+    setIsLongPress(false);
+  }, [infoPressTimer, isLongPress, showSecretMenu, onGuide]);
+
+  const handleInfoTouchStart = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    handleInfoMouseDown(e as any);
+  }, [handleInfoMouseDown]);
+
+  const handleInfoTouchEnd = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    handleInfoMouseUp(e as any);
+  }, [handleInfoMouseUp]);
+
+  // Mode selection
+  const setMode = useCallback((mode: typeof currentMode) => {
+    setCurrentMode(mode);
+    setShowSecretMenu(false);
+    if (mode === 'vip') {
+      sessionStorage.clear();
+      localStorage.clear();
+    } else {
+      sessionStorage.setItem('mode', mode);
+    }
+    const messages = {
+      standard: '🏠 Standard Mode Active - Enter a name to begin',
+      actions: '🎬 Action Words Mode Active - Choose a category',
+      alphabet: '🔤 Alphabet Mode Active - Enter letters to begin',
+      numbers: '🔢 Numbers Mode Active - Enter numbers to begin',
+      grandparent: '👴 Grandparent Mode Active - Larger text enabled',
+      vip: '🔒 VIP Mode Active - Maximum privacy enabled',
+    };
+    showToastNotification(messages[mode]);
+    if (mode === 'actions') {
+      setIngView('grid');
+      setIngCategory(null);
+      setIngQueue([]);
+      setIngIndex(0);
+    }
+    setIsLongPress(false);
+  }, [showToastNotification]);
+
+  // Proceed next
+  const proceedNext = useCallback(() => {
+    const value = name.trim();
+    const canRecordTypedWord = currentMode === 'actions' && value.length > 0;
+    if (!value && currentMode !== 'actions') {
+      alert('Please enter a name or word first');
+      return;
+    }
+    if (currentMode === 'actions') {
+      if (ingView === 'grid' && !canRecordTypedWord) {
+        setIngView('grid'); // Stay in grid if no action
+      } else if (canRecordTypedWord) {
+        chooseWord(value); // Record typed word directly
+      } else if (ingView === 'words' && !ingQueue.length) {
+        alert('Please select a word or type one to record');
+      } else if (ingView === 'record') {
+        // Move to next word or finish
+        const nextIndex = ingIndex + 1;
+        if (nextIndex < ingQueue.length) {
+          setIngIndex(nextIndex);
+        } else {
+          setIngView('words');
+          setIngQueue([]);
+          setIngIndex(0);
+          showToastNotification('Recording complete!');
+        }
+      }
+    } else {
+      onNext();
+    }
+  }, [currentMode, name, ingView, ingQueue.length, ingIndex, onNext]);
+
+  // Action Words data (ChatGPT's ING)
+  const ING = {
+    daily: ['eating', 'drinking', 'brushing', 'washing', 'sleeping', 'waking'],
+    movement: ['running', 'jumping', 'walking', 'crawling', 'rolling', 'spinning'],
+    hands: ['clapping', 'waving', 'grabbing', 'throwing', 'catching', 'pointing'],
+    emotions: ['laughing', 'smiling', 'crying', 'hugging', 'kissing', 'loving'],
+    creative: ['drawing', 'painting', 'singing', 'dancing', 'building', 'making'],
+    playing: ['hiding', 'seeking', 'climbing', 'sliding', 'swinging', 'bouncing'],
+  };
+
+  // Open category
+  const openCategory = useCallback((cat: keyof typeof ING) => {
+    setIngCategory(cat);
+    setIngView('words');
+  }, []);
+
+  // Choose word or all in category
+  const chooseWord = useCallback((word: string) => {
+    setIngQueue([word.toLowerCase()]);
+    setIngIndex(0);
+    setIngView('record');
+  }, []);
+
+  const chooseAllInCategory = useCallback(() => {
+    if (!ingCategory) return;
+    setIngQueue([...ING[ingCategory]]);
+    setIngIndex(0);
+    setIngView('record');
+  }, [ingCategory]);
+
+  // Magic words detection
+  useEffect(() => {
+    const value = name.trim().toUpperCase();
+    if (value === 'ING' || value === 'ACTIONS') {
+      setMode('actions');
+      setName('');
+    } else if (value === 'ALPHABET' || value === 'ABC') {
+      setMode('alphabet');
+      setName('');
+    } else if (value === 'NUMBERS' || value === '123') {
+      setMode('numbers');
+      setName('');
+    } else if (value === 'GRANDPA' || value === 'GRANDPARENT') {
+      setMode('grandparent');
+      setName('');
+    } else if (value === 'VIP') {
+      setMode('vip');
+      setName('');
+    }
+  }, [name, setMode]);
+
+  // Mode-specific styling
+  const getModeStyle = () => {
+    switch (currentMode) {
+      case 'actions': return { background: 'linear-gradient(135deg, #fff0ff, #ffe0ff)' };
+      case 'alphabet': return { background: 'linear-gradient(135deg, #e0f0ff, #d0e8ff)' };
+      case 'numbers': return { background: 'linear-gradient(135deg, #e0ffe0, #d0ffd0)' };
+      case 'grandparent': return { background: 'linear-gradient(135deg, #fff8e0, #fff0d0)', fontSize: '18px' };
+      case 'vip': return { background: 'linear-gradient(135deg, #fffde0, #fff8d0)' };
+      default: return { background: 'white' };
+    }
+  };
+
+  // Pretty print category
+  const pretty = (cat: string) => cat.charAt(0).toUpperCase() + cat.slice(1);
+
+  return (
+    <div className="app-wrapper" style={{ minHeight: '100vh', padding: '20px' }}>
+      {/* Mode Banner */}
+      {currentMode !== 'standard' && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          padding: '12px',
+          background: currentMode === 'actions' ? '#ff00ff' :
+                     currentMode === 'alphabet' ? '#007bff' :
+                     currentMode === 'numbers' ? '#00cc00' :
+                     currentMode === 'grandparent' ? '#ff8800' :
+                     currentMode === 'vip' ? '#ffcc00' : '#333',
+          color: 'white',
+          textAlign: 'center',
+          fontSize: '16px',
+          fontWeight: 'bold',
+          zIndex: 1000,
+          boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+        }}>
+          {currentMode === 'actions' && '🎬 ACTION WORDS MODE ACTIVE'}
+          {currentMode === 'alphabet' && '🔤 ALPHABET MODE ACTIVE'}
+          {currentMode === 'numbers' && '🔢 NUMBERS MODE ACTIVE'}
+          {currentMode === 'grandparent' && '👴 GRANDPARENT MODE ACTIVE'}
+          {currentMode === 'vip' && '🔒 VIP MODE - MAXIMUM SECURITY'}
+        </div>
+      )}
+
+      <div className="app-container" style={{
+        ...getModeStyle(),
+        borderRadius: '24px',
+        padding: currentMode !== 'standard' ? '60px 30px 30px' : '40px 30px',
+        maxWidth: '480px',
+        margin: '0 auto',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.1)',
+        position: 'relative',
+        transition: 'all 0.3s ease',
+      }}>
+        {/* Info Button */}
+        <button
+          className={`info-btn ${infoPressing ? 'pressing' : ''}`}
+          style={{
+            position: 'absolute',
+            top: '20px',
+            right: '20px',
+            background: infoPressing ? '#ddd' : 'transparent',
+            border: '2px solid #666',
+            borderRadius: '50%',
+            width: '40px',
+            height: '40px',
+            fontSize: '20px',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+          }}
+          onMouseDown={handleInfoMouseDown}
+          onMouseUp={handleInfoMouseUp}
+          onMouseLeave={() => {
+            if (infoPressTimer) {
+              clearTimeout(infoPressTimer);
+              setInfoPressTimer(null);
+            }
+            setInfoPressing(false);
+            setIsLongPress(false);
+          }}
+          onTouchStart={handleInfoTouchStart}
+          onTouchEnd={handleInfoTouchEnd}
+          aria-label="Information"
+        >
+          ℹ️
+        </button>
+
+        {/* Secret Menu Dropdown */}
+        {showSecretMenu && (
+          <div className="dropdown-menu" style={{
+            position: 'absolute',
+            top: '70px',
+            right: '20px',
+            background: 'white',
+            border: '2px solid #333',
+            borderRadius: '10px',
+            padding: '10px',
+            zIndex: 1001,
+            minWidth: '250px',
+            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+          }}>
+            <div style={{ fontSize: '12px', color: '#666', marginBottom: '10px' }}>
+              SECRET FEATURES
+            </div>
+            {['standard', 'actions', 'alphabet', 'numbers', 'grandparent', 'vip'].map((mode) => (
+              <button
+                key={mode}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setMode(mode as any);
+                }}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  padding: '10px',
+                  margin: '5px 0',
+                  background: currentMode === mode ? '#4CAF50' : '#f0f0f0',
+                  color: currentMode === mode ? 'white' : 'black',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'all 0.2s',
+                }}
+              >
+                {mode === 'standard' && '🏠 Standard Mode'}
+                {mode === 'actions' && '🎬 Action Words Mode'}
+                {mode === 'alphabet' && '🔤 Alphabet Mode'}
+                {mode === 'numbers' && '🔢 Numbers Mode'}
+                {mode === 'grandparent' && '👴 Grandparent Mode'}
+                {mode === 'vip' && '🔒 VIP Mode'}
+                {currentMode === mode && ' ✓'}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Main Content */}
+        {currentMode === 'actions' ? (
+          <>
+            {ingView === 'grid' && (
+              <div>
+                <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>
+                  🎬 Choose a Category
+                </h2>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                  {Object.keys(ING).map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => openCategory(cat as keyof typeof ING)}
+                      style={{
+                        padding: '20px',
+                        background: 'white',
+                        border: '2px solid #ff00ff',
+                        borderRadius: '10px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        textAlign: 'center',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#ff00ff';
+                        e.currentTarget.style.color = 'white';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'white';
+                        e.currentTarget.style.color = 'black';
+                      }}
+                    >
+                      <div style={{ fontSize: '30px', marginBottom: '10px' }}>
+                        {cat === 'daily' ? '🍽️' : cat === 'movement' ? '🏃' : cat === 'hands' ? '✋' :
+                         cat === 'emotions' ? '😊' : cat === 'creative' ? '🎨' : '🎮'}
+                      </div>
+                      <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>
+                        {pretty(cat)}
+                      </div>
+                      <div style={{ fontSize: '12px', opacity: '0.7' }}>
+                        {ING[cat as keyof typeof ING].slice(0, 3).join(', ')}...
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {ingView === 'words' && ingCategory && (
+              <div>
+                <button
+                  onClick={() => setIngView('grid')}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    fontSize: '24px',
+                    cursor: 'pointer',
+                    marginBottom: '20px',
+                  }}
+                >
+                  ← Back
+                </button>
+                <h3 style={{ textAlign: 'center', marginBottom: '20px' }}>
+                  {pretty(ingCategory)} Actions
+                </h3>
+                <div className="chip-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: '10px', marginBottom: '20px' }}>
+                  {ING[ingCategory].map((w) => (
+                    <button
+                      key={w}
+                      className="chip"
+                      onClick={() => chooseWord(w)}
+                      style={{
+                        padding: '10px',
+                        background: '#f0f0f0',
+                        border: '1px solid #ddd',
+                        borderRadius: '15px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#ff00ff';
+                        e.currentTarget.style.color = 'white';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#f0f0f0';
+                        e.currentTarget.style.color = 'black';
+                      }}
+                    >
+                      {w}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ textAlign: 'center', marginBottom: '10px', color: '#666' }}>or</div>
+                <input
+                  placeholder="Type your own -ING word (e.g., clapping)"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                      chooseWord(e.currentTarget.value.trim());
+                    }
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    border: '2px solid #ddd',
+                    borderRadius: '10px',
+                    marginBottom: '10px',
+                    boxSizing: 'border-box',
+                  }}
+                />
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                  <button
+                    onClick={() => {
+                      const v = document.querySelector<HTMLInputElement>('input')?.value?.trim();
+                      if (v) chooseWord(v);
+                    }}
+                    style={{
+                      padding: '10px 20px',
+                      background: '#ff00ff',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '10px',
+                      cursor: 'pointer',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    Record Typed Word →
+                  </button>
+                  <button
+                    onClick={chooseAllInCategory}
+                    style={{
+                      padding: '10px 20px',
+                      background: '#4CAF50',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '10px',
+                      cursor: 'pointer',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    Record All in Category →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {ingView === 'record' && ingQueue.length > 0 && (
+              <RecordWord
+                word={ingQueue[ingIndex]}
+                onNext={() => {
+                  const next = ingIndex + 1;
+                  if (next < ingQueue.length) setIngIndex(next);
+                  else {
+                    setIngView('words');
+                    setIngQueue([]);
+                    setIngIndex(0);
+                    showToastNotification('Recording complete!');
+                  }
+                }}
+                onBack={() => setIngView('words')}
+              />
+            )}
+          </>
+        ) : (
+          <>
+            <div className="logo" style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <span style={{
+                background: 'linear-gradient(45deg, #ff00ff, #00ffff)',
+                color: 'white',
+                padding: '10px 20px',
+                borderRadius: '20px',
+                fontWeight: 'bold',
+              }}>BoredMama</span>
+            </div>
+            <h1 style={{ textAlign: 'center', fontSize: '32px', margin: '20px 0' }}>
+              My Name Is
+            </h1>
+            <p style={{ textAlign: 'center', color: '#666', marginBottom: '20px' }}>
+              {currentMode === 'standard' && 'Teach your child their name with YOUR voice'}
+              {currentMode === 'actions' && 'Teach action words with YOUR voice (-ING verbs)'}
+              {currentMode === 'alphabet' && 'Teach the alphabet with YOUR voice'}
+              {currentMode === 'numbers' && 'Teach numbers with YOUR voice'}
+              {currentMode === 'grandparent' && 'Easy mode with larger text'}
+              {currentMode === 'vip' && 'Maximum privacy - no data stored'}
+            </p>
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <span className="star">⭐</span>
+              <span>
+                {currentMode === 'standard' && '"My 18-month-old learned all letters phonetically!" - Real parent'}
+                {currentMode === 'actions' && '"My toddler loves recording -ING verbs!" - Happy parent'}
+                {currentMode === 'alphabet' && '"Great for letter sounds!" - Parent'}
+                {currentMode === 'numbers' && '"Counting made fun!" - Parent'}
+                {currentMode === 'grandparent' && '"Easy for grandparents to use!" - Family'}
+                {currentMode === 'vip' && '"Perfect privacy for my child!" - Parent'}
+              </span>
+            </div>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={
+                currentMode === 'standard' ? "Enter your child's name" :
+                currentMode === 'actions' ? "Type an -ING word (e.g., clapping)" :
+                currentMode === 'alphabet' ? "Enter letters (A-Z)" :
+                currentMode === 'numbers' ? "Enter numbers (0-9)" :
+                currentMode === 'grandparent' ? "TYPE THE CHILD'S NAME" :
+                currentMode === 'vip' ? "Enter name (Privacy Mode)" :
+                "Enter a value"
+              }
+              style={{
+                width: '100%',
+                padding: currentMode === 'grandparent' ? '20px' : '15px',
+                fontSize: currentMode === 'grandparent' ? '24px' : '18px',
+                border: '2px solid #ddd',
+                borderRadius: '10px',
+                marginBottom: '20px',
+                boxSizing: 'border-box',
+              }}
+              autoComplete="off"
+            />
+            <button
+              onClick={proceedNext}
+              style={{
+                width: '100%',
+                padding: currentMode === 'grandparent' ? '20px' : '15px',
+                fontSize: currentMode === 'grandparent' ? '24px' : '18px',
+                background: currentMode === 'actions' && name.trim().length > 0 ? '#ff00ff' : '#4CAF50',
+                color: 'white',
+                border: 'none',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+              }}
+            >
+              {currentMode === 'actions' && name.trim().length > 0 ? 'Start Recording →' :
+               currentMode === 'actions' ? 'Show Categories →' : 'Next →'}
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* Toast Notification */}
+      {showToast && (
+        <div style={{
+          position: 'fixed',
+          bottom: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: '#333',
+          color: 'white',
+          padding: '15px 30px',
+          borderRadius: '30px',
+          zIndex: '1002',
+          animation: 'fadeIn 0.3s ease',
+        }}>
+          {toastMessage}
+        </div>
+      )}
+    </div>
+  );
+}, (prevProps, nextProps) => prevProps.onNext === nextProps.onNext && prevProps.onGuide === nextProps.onGuide);
+
+export default WelcomeScreen;
+
+// RecordWord component (from ChatGPT, integrated)
+function RecordWord({ word, onNext, onBack }: { word: string; onNext: () => void; onBack: () => void }) {
+  const [rec, setRec] = useState<MediaRecorder | null>(null);
+  const [audioURL, setAudioURL] = useState<string>('');
+  const chunksRef = useRef<Blob[]>([]);
+
+  async function start() {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const r = new MediaRecorder(stream);
+    chunksRef.current = [];
+    r.ondataavailable = (e) => e.data.size && chunksRef.current.push(e.data);
+    r.onstop = () => {
+      const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+      setAudioURL(URL.createObjectURL(blob));
+      stream.getTracks().forEach((t) => t.stop());
+    };
+    r.start();
+    setRec(r);
+    setTimeout(() => r.state === 'recording' && r.stop(), 15000); // 15s max
+  }
+
+  function stop() {
+    rec?.stop();
+    setRec(null);
+  }
+
+  return (
+    <div>
+      <button
+        onClick={onBack}
+        style={{
+          background: 'transparent',
+          border: 'none',
+          fontSize: '24px',
+          cursor: 'pointer',
+          marginBottom: '20px',
+        }}
+      >
+        ← Back
+      </button>
+      <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Recording: {word}</h2>
+      <p style={{ textAlign: 'center', marginBottom: '20px', color: '#666' }}>
+        Say the word, then a short sentence, e.g., “We are {word}!”
+      </p>
+      {!rec && (
+        <button
+          className="record"
+          onClick={start}
+          style={{
+            width: '100%',
+            padding: '15px',
+            background: '#ff00ff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '10px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+          }}
+        >
+          🎤 Record (15s max)
+        </button>
+      )}
+      {rec && (
+        <button
+          className="stop"
+          onClick={stop}
+          style={{
+            width: '100%',
+            padding: '15px',
+            background: '#ff4444',
+            color: 'white',
+            border: 'none',
+            borderRadius: '10px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+          }}
+        >
+          ■ Stop
+        </button>
+      )}
+      {audioURL && (
+        <div style={{ textAlign: 'center', marginTop: '20px' }}>
+          <audio src={audioURL} controls style={{ width: '100%', marginBottom: '10px' }} />
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+            <button
+              onClick={() => {
+                setAudioURL('');
+                start();
+              }}
+              style={{
+                padding: '10px 20px',
+                background: '#ff00ff',
+                color: 'white',
+                border: 'none',
+                borderRadius: '10px',
+                cursor: 'pointer',
+              }}
+            >
+              Re-record
+            </button>
+            <button
+              onClick={onNext}
+              style={{
+                padding: '10px 20px',
+                background: '#4CAF50',
+                color: 'white',
+                border: 'none',
+                borderRadius: '10px',
+                cursor: 'pointer',
+              }}
+            >
+              Next Word →
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+---
+
+### Key Changes
+1. **State Machine with Queue**:
+   - Replaced `showIngCategories` with `ingView` (`grid`, `words`, `record`) and added `ingCategory`, `ingQueue`, and `ingIndex` for queue-based recording.
+   - `ingQueue` holds the words to record (single word or full category).
+
+2. **Category → Words → Record Flow**:
+   - `openCategory` moves to the "words" view with the category’s word list.
+   - `chooseWord` sets a single word in `ingQueue` and moves to "record."
+   - `chooseAllInCategory` loads the entire category into `ingQueue` for sequential recording.
+
+3. **Dynamic CTA Fix**:
+   - The button now checks `canRecordTypedWord` (typed "clapping") and switches to "Start Recording →" when applicable, otherwise "Show Categories →."
+   - Typing "clapping" and clicking the button jumps to recording, breaking the loop.
+
+4. **Words View**:
+   - Shows word chips and an input for custom words, with "Record Typed Word →" and "Record All in Category →" buttons.
+
+5. **Recording View**:
+   - Uses `RecordWord` to record the current word in `ingQueue`, advancing with "Next Word →" or returning to "words" when done.
+
+6. **Placeholder Update**:
+   - Changed to "Type an -ING word (e.g., clapping)" to encourage direct input.
+
+---
+
+### Testing Instructions
+1. **Deploy the Changes**:
+   - Update `client/src/App.tsx` with the revised code.
+   - Commit and push in Replit:
+     ```bash
+     git add .
+     git commit -m "Fix chooser loop with queue-based recording and dynamic CTA"
+     git push
+     ```
+   - Verify redeployment on the test site.
+
+2. **Test the Flow**:
+   - **Long-Press (ℹ️)**: Hold for 600ms—confirm the dropdown appears.
+   - **Select Action Words**: Click "🎬 Action Words Mode"—verify the grid appears with "Show Categories →."
+   - **Type "clapping"**: Enter "clapping," click the button—confirm it jumps to the recording view for "clapping."
+   - **Select Category**: Click "hands"—verify the words view shows chips and input.
+   - **Select Word**: Click "clapping"—confirm the recording view opens.
+   - **Record**: Click "🎤 Record," speak, click "■ Stop," play audio, then "Next Word →"—verify it completes or loops back.
+   - **Record All**: In the words view, click "Record All in Category →"—confirm it records the first word (e.g., "clapping"), then advances.
+   - **Back**: Click "← Back" from any view—return to the previous step.
+   - **Magic Word**: Type "ING"—confirm it switches to Action Words.
+
+3. **Debugging**:
+   - If the CTA doesn’t change, add `console.log(name, canRecordTypedWord)` in `proceedNext`.
+   - If recording fails, ensure microphone access and check console errors.
+
+---
+
+### Why This Fixes Your Complaint
+- **No Chooser Loop**: Typing "clapping" or selecting a category word triggers recording, not "Show Categories."
+- **Record "clapping"**: The recording view handles individual words.
+- **Group Recording**: "Record All in Category →" enables recording the whole set.
+- **Dynamic CTA**: Switches to "Start Recording →" for typed words, improving UX.
+
+---
+
+### If Issues Persist
+- **Loop Persists**: Verify `canRecordTypedWord` logic and `setIngView` calls.
+- **Recording Issues**: Ensure HTTPS context and microphone permissions on Replit.
+- **Group Recording**: If sequencing is off, debug `ingIndex` and `ingQueue` updates.
+
+---
+
+### Next Steps
+This should resolve the loop and add recording for "clapping" or groups. Test on the test site, then deploy to `mynameisapp.co.uk`. Want to persist recordings or add a "record session" feature? What’s your next move? 🚀

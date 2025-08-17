@@ -1,0 +1,176 @@
+You’ve built the category UI (looks great!) but you’re stuck in a **chooser loop**:
+
+* Category → “HANDS” screen → **Show Categories** → back to grid
+* There’s **no branch that enters a “record word” view**, so you can’t record “clapping”, “waving”, etc.
+
+## What to change (high-level)
+
+1. Add a **recording view** for a single word.
+2. Wire category → word → recording (and allow custom typed word).
+3. Swap the CTA on the “Action Words” screen from **Show Categories** to **Start Recording** whenever a word is selected/typed.
+
+---
+
+## Minimal patch (drop into your Action Words flow)
+
+```tsx
+// 1) Data
+const ACTION_WORDS: Record<string, string[]> = {
+  daily: ['eating','drinking','brushing','washing','sleeping','waking'],
+  movement: ['running','jumping','walking','crawling','rolling','spinning'],
+  hands: ['clapping','waving','grabbing','throwing','catching','pointing'],
+  emotions: ['laughing','smiling','crying','hugging','kissing','loving'],
+  creative: ['drawing','painting','singing','dancing','building','making'],
+  playing: ['hiding','seeking','climbing','sliding','swinging','bouncing'],
+};
+
+// 2) State machine
+type View = 'categories' | 'words' | 'record';
+const [view, setView] = useState<View>('categories');
+const [category, setCategory] = useState<keyof typeof ACTION_WORDS | null>(null);
+const [word, setWord] = useState<string>('');
+
+// 3) Go to words list when a category tile is clicked
+function openCategory(cat: keyof typeof ACTION_WORDS) {
+  setCategory(cat);
+  setWord('');
+  setView('words');
+}
+
+// 4) Select a word (chip) OR accept custom typed word, then go record
+function chooseWord(w: string) {
+  setWord(w.toLowerCase());
+  setView('record');
+}
+```
+
+### Categories view → Words view
+
+```tsx
+{view === 'categories' && (
+  <CategoryGrid onSelect={openCategory} /> // your existing grid
+)}
+
+{view === 'words' && category && (
+  <div>
+    <button onClick={()=>setView('categories')}>← Back</button>
+    <h3>{pretty(category)} actions</h3>
+
+    <div className="chip-grid">
+      {ACTIONS_WORDS[category].map(w =>
+        <button key={w} className="chip" onClick={()=>chooseWord(w)}>{w}</button>
+      )}
+    </div>
+
+    <div className="or">or</div>
+
+    <input
+      placeholder="Type your own -ING word (e.g., clapping)"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+          chooseWord(e.currentTarget.value.trim());
+        }
+      }}
+    />
+    <button
+      disabled={!document.querySelector<HTMLInputElement>('input')?.value.trim()}
+      onClick={()=>{
+        const v = document.querySelector<HTMLInputElement>('input')!.value.trim();
+        if (v) chooseWord(v);
+      }}
+    >
+      Start recording →
+    </button>
+  </div>
+)}
+```
+
+### Recording view (simple, 15s max, ephemeral)
+
+This reuses the browser `MediaRecorder`. If you already have recording helpers, call those instead where marked.
+
+```tsx
+{view === 'record' && (
+  <RecordWord
+    word={word}
+    onDone={() => setView('words')}
+    onNext={(nextWord) => chooseWord(nextWord)} // optional “next” sequencing
+  />
+)}
+```
+
+```tsx
+function RecordWord({
+  word, onDone, onNext
+}: { word: string; onDone: ()=>void; onNext?:(w:string)=>void }) {
+  const [rec, setRec] = useState<MediaRecorder|null>(null);
+  const [audioURL, setAudioURL] = useState<string>('');
+  const chunksRef = useRef<Blob[]>([]);
+
+  async function start() {
+    // If you already have startRecording(word), call that here and return.
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const r = new MediaRecorder(stream);
+    chunksRef.current = [];
+    r.ondataavailable = e => e.data.size && chunksRef.current.push(e.data);
+    r.onstop = () => {
+      const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+      setAudioURL(URL.createObjectURL(blob));
+      stream.getTracks().forEach(t => t.stop());
+    };
+    r.start();
+    setRec(r);
+    // hard stop at 15s
+    setTimeout(()=> r.state === 'recording' && r.stop(), 15000);
+  }
+  function stop() { rec?.stop(); setRec(null); }
+
+  return (
+    <div>
+      <button onClick={onDone}>← Back to {/** category words **/}</button>
+      <h2>Recording: {word}</h2>
+      <p className="hint">Say the word, then a short sentence, e.g. “We are {word}!”</p>
+
+      {!rec && (
+        <button className="record" onClick={start}>🎤 Record (15s max)</button>
+      )}
+      {rec && (
+        <button className="stop" onClick={stop}>■ Stop</button>
+      )}
+
+      {audioURL && (
+        <div className="preview">
+          <audio src={audioURL} controls />
+          <div className="row">
+            <button onClick={()=>{ setAudioURL(''); start(); }}>Re-record</button>
+            <button onClick={onDone}>Done</button>
+            {/* Optional sequencing to the next word in the category */}
+            {/* <button onClick={()=> onNext?.(getNextWord(word))}>Next word →</button> */}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+### CTA logic on the “Action Words Mode” header
+
+Replace your existing single CTA with something that **switches** based on `view`:
+
+```tsx
+{/* In your Action Words header card */}
+{view === 'categories' && <Button onClick={()=>setView('categories')}>Choose category →</Button>}
+{view === 'words' && <Button onClick={()=>chooseWord(/* from input value */)}>Start recording →</Button>}
+{view === 'record' && <Button onClick={()=>setView('words')}>Back to words</Button>}
+```
+
+---
+
+## Why this fixes your exact issue
+
+* Clicking a **category** now transitions to a **list of words** (chips + custom input).
+* Clicking a **word chip** (or pressing Enter on a typed word) **enters a recording screen** for that single word—no more loop back to “Show Categories”.
+* The recording screen is **ephemeral** (no persistence unless you add it), respects the 15-second limit, and gives the parent **Play / Re-record / Done** controls.
+
+If you want “record a whole category in one go,” add a “Start session” button in the words view that sets `sessionWords = ACTION_WORDS[category]` and advances through them with “Next word →” in `RecordWord`.

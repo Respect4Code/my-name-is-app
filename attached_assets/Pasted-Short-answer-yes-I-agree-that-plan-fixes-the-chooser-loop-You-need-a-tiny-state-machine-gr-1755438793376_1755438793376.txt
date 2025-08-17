@@ -1,0 +1,49 @@
+Short answer: **yes, I agree**—that plan fixes the “chooser loop.”
+You need a tiny state machine (grid → words → record), a queue for multi-word sessions, and a **CTA that becomes “Start recording →”** when a valid -ING word is present. That’s the missing link between “Hands” and actually recording “clapping”.
+
+Here’s the lean checklist I’d apply so it works exactly as you expect:
+
+1. **Introduce Action-mode state**
+
+* `ingView: 'grid' | 'words' | 'record'`
+* `ingCategory: keyof typeof ING | null`
+* `ingQueue: string[]` and `ingIndex: number`
+
+2. **Wire navigation**
+
+* Category tile → `openCategory(cat)` → `ingView='words'`
+* Word chip OR typed word → `chooseWord(word)` → `ingQueue=[word]`, `ingIndex=0`, `ingView='record'`
+* “Record all” → `ingQueue=[...ING[cat]]`, `ingIndex=0`, `ingView='record'`
+
+3. **Fix the big button logic**
+
+* If `currentMode==='actions'` and `name.trim()` is an -ING word, set label **Start recording →** and call `chooseWord(name.trim())`.
+* Otherwise show **Show Categories →** (opens the grid).
+
+4. **Recording screen**
+
+* Show current word: `ingQueue[ingIndex]`
+* Buttons: **Record (15s)** / **Stop**, **Re-record**, **Next word →** (increment index or finish).
+
+5. **Remove the old toggles** that cause loops
+
+* Retire `showIngCategories`/“Show Categories” branches that don’t consult `ingView`. Keep all Action mode UI driven by `ingView` only.
+
+6. **Little robustness touches (worth doing now)**
+
+* Long-press guard: reset the timer on `pointerleave`/`touchcancel` so the parent guide doesn’t pop after a long-press.
+* MediaRecorder MIME pick (iOS Safari support):
+
+  ```ts
+  const mime =
+    MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' :
+    MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' :
+    '';
+  const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+  // use the same `mime` when building the Blob
+  ```
+* When switching modes, stop any active recorder and clear `ingQueue`.
+
+If you’ve already dropped in ChatGPT’s version, the only extra bits I’d add are (a) the **dynamic CTA** on the home card, and (b) the **MIME detection** above so recordings play nicely on iOS.
+
+Want me to turn this into a tiny diff against your current `WelcomeScreen` so you can paste it in directly?

@@ -1,0 +1,223 @@
+You’ve got a classic **chooser loop**:
+
+* Action Words → pick **Hands** → you see a page with the title “HANDS”
+* The big CTA still says **Show Categories** (because that’s what your current logic forces)
+* There’s **no transition into a “record this word” view**, so you can’t record “clapping” or a whole group
+
+### Why it happens
+
+1. Your CTA logic in Action mode is something like:
+
+```ts
+label = currentMode==='actions' && !showIngCategories ? 'Show Categories' : 'Next'
+```
+
+…so even when the user types **clapping**, clicking the button just opens the grid again.
+
+2. You don’t have a **recording view/state** for a single word or a queue of words. Selecting a category only changes the heading (“HANDS”); it doesn’t move into a record flow.
+
+---
+
+## Surgical fix (minimal, drop-in)
+
+### 1) Add an -ING flow state
+
+```ts
+type IngView = 'grid' | 'words' | 'record';
+const [ingView, setIngView] = useState<IngView>('grid');
+const [ingCategory, setIngCategory] = useState<keyof typeof ING | null>(null);
+const [ingQueue, setIngQueue] = useState<string[]>([]);
+const [ingIndex, setIngIndex] = useState(0);
+```
+
+### 2) Your category data
+
+```ts
+const ING = {
+  daily:     ['eating','drinking','brushing','washing','sleeping','waking'],
+  movement:  ['running','jumping','walking','crawling','rolling','spinning'],
+  hands:     ['clapping','waving','grabbing','throwing','catching','pointing'],
+  emotions:  ['laughing','smiling','crying','hugging','kissing','loving'],
+  creative:  ['drawing','painting','singing','dancing','building','making'],
+  playing:   ['hiding','seeking','climbing','sliding','swinging','bouncing'],
+} as const;
+```
+
+### 3) Wire the tiles → words → record
+
+```ts
+function openCategory(cat: keyof typeof ING) {
+  setIngCategory(cat);
+  setIngView('words');             // show chips + custom input
+}
+
+function chooseWord(word: string) {
+  setIngQueue([word.toLowerCase()]);
+  setIngIndex(0);
+  setIngView('record');            // go record THIS word
+}
+
+function chooseAllInCategory() {
+  if (!ingCategory) return;
+  setIngQueue([...ING[ingCategory]]);
+  setIngIndex(0);
+  setIngView('record');            // go record the whole set
+}
+```
+
+### 4) Fix the big CTA on the welcome card
+
+Make it do the right thing for Action mode:
+
+```tsx
+const canRecordTypedWord =
+  currentMode==='actions' &&
+  !showIngCategories &&
+  name.trim().length>0;            // e.g., "clapping"
+
+<button
+  onClick={()=>{
+    if (currentMode!=='actions') return onNext();
+
+    if (!showIngCategories) {
+      if (canRecordTypedWord) {
+        chooseWord(name.trim());   // jump straight into recording
+      } else {
+        setShowIngCategories(true); // open grid
+        setIngView('grid');
+      }
+      return;
+    }
+    // if you're already in categories/words views, keep current handlers
+  }}
+>
+  { canRecordTypedWord
+      ? 'Start recording →'
+      : (!showIngCategories ? 'Show Categories →' : 'Next →') }
+</button>
+```
+
+### 5) Render the three views
+
+**Grid (categories)**
+
+```tsx
+{currentMode==='actions' && showIngCategories && ingView==='grid' && (
+  <CategoryGrid
+    items={Object.keys(ING)}
+    onSelect={(cat)=>openCategory(cat as keyof typeof ING)}
+  />
+)}
+```
+
+**Words (chips + custom)**
+
+```tsx
+{currentMode==='actions' && showIngCategories && ingView==='words' && ingCategory && (
+  <div>
+    <button onClick={()=>setIngView('grid')}>← Back</button>
+    <h3>{ingCategory[0].toUpperCase()+ingCategory.slice(1)} actions</h3>
+
+    <div className="chip-grid">
+      {ING[ingCategory].map(w =>
+        <button key={w} className="chip" onClick={()=>chooseWord(w)}>{w}</button>
+      )}
+    </div>
+
+    <div className="or">or</div>
+
+    <input
+      placeholder="Type your own -ING word (e.g., clapping)"
+      onKeyDown={e=>{
+        if (e.key==='Enter' && e.currentTarget.value.trim())
+          chooseWord(e.currentTarget.value.trim());
+      }}
+    />
+    <div className="row">
+      <button onClick={()=> {
+        const v = (document.activeElement as HTMLInputElement)?.value?.trim();
+        if (v) chooseWord(v);
+      }}>Record typed word →</button>
+
+      <button onClick={chooseAllInCategory}>Record ALL in this category →</button>
+    </div>
+  </div>
+)}
+```
+
+**Record view (one word at a time)**
+Hook this into your existing 15-second recorder (replace the stubs with your `startRecording/stopRecording` if you already have them):
+
+```tsx
+{currentMode==='actions' && ingView==='record' && (
+  <RecordWord
+    word={ingQueue[ingIndex]}
+    onReRecord={()=>{/* call startRecording again */}}
+    onNext={()=>{
+      const next = ingIndex+1;
+      if (next < ingQueue.length) setIngIndex(next);
+      else {
+        setIngView('words');       // finished the queue
+        setIngQueue([]);
+        setIngIndex(0);
+      }
+    }}
+    onBack={()=>setIngView('words')}
+  />
+)}
+```
+
+A minimal `RecordWord` (uses `MediaRecorder`; swap for your own if you have it):
+
+```tsx
+function RecordWord({ word, onNext, onBack, onReRecord }:{
+  word:string; onNext:()=>void; onBack:()=>void; onReRecord:()=>void;
+}) {
+  const [rec, setRec] = useState<MediaRecorder|null>(null);
+  const [url, setUrl] = useState<string>('');
+  const chunks = useRef<Blob[]>([]);
+
+  async function start() {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+    const r = new MediaRecorder(stream);
+    chunks.current = [];
+    r.ondataavailable = e=> e.data.size && chunks.current.push(e.data);
+    r.onstop = ()=> {
+      const blob = new Blob(chunks.current, { type:'audio/webm' });
+      setUrl(URL.createObjectURL(blob));
+      stream.getTracks().forEach(t=>t.stop());
+    };
+    r.start(); setRec(r);
+    setTimeout(()=> r.state==='recording' && r.stop(), 15000);
+  }
+
+  return (
+    <div>
+      <button onClick={onBack}>← Back</button>
+      <h2>Recording: {word}</h2>
+      {!rec && <button onClick={start}>🎤 Record (15s max)</button>}
+      {rec && <button onClick={()=>{ rec.stop(); setRec(null); }}>■ Stop</button>}
+      {url && (
+        <>
+          <audio controls src={url} />
+          <div className="row">
+            <button onClick={()=>{ setUrl(''); start(); }}>Re-record</button>
+            <button onClick={onNext}>Next word →</button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+```
+
+---
+
+## Why this fixes your exact complaint
+
+* **Typing “clapping”** then pressing the main button now **records “clapping” immediately** (no jump back to categories).
+* **Tapping a chip** goes straight to a **record-this-word** screen.
+* **“Record ALL in this category”** lets you do the whole set in one flow.
+* The CTA text switches to **“Start recording →”** when it can act on the typed word, so parents aren’t bounced back to the grid.
+
+If you share the exact component/file where your Action mode logic lives, I can turn the above into a tighter diff tailored to your structure.
