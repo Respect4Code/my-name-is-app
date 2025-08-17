@@ -1,0 +1,480 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { Info, ChevronRight, Share2, X } from 'lucide-react';
+
+const SecretSauceApp = () => {
+  // State for secret menu
+  const [showSecretMenu, setShowSecretMenu] = useState(false);
+  const [isLongPressing, setIsLongPressing] = useState(false);
+  const [currentMode, setCurrentMode] = useState('standard');
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  
+  // State for main app
+  const [name, setName] = useState('');
+  
+  // Refs for long press
+  const longPressTimer = useRef(null);
+  
+  // Mode configurations
+  const modes = {
+    standard: { bg: 'linear-gradient(135deg, #8B7FD4 0%, #9B8FD4 100%)', label: 'Standard Mode' },
+    actions: { bg: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', label: 'Action Words Mode' },
+    alphabet: { bg: 'linear-gradient(135deg, #56CCF2 0%, #2F80ED 100%)', label: 'Alphabet Mode' },
+    numbers: { bg: 'linear-gradient(135deg, #FDC830 0%, #F37335 100%)', label: 'Numbers Mode' },
+    grandparent: { bg: 'linear-gradient(135deg, #FFEAA7 0%, #DFE6E9 100%)', label: 'Grandparent Mode' },
+    vip: { bg: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)', label: 'VIP Mode' }
+  };
+  
+  // Apply background based on mode
+  useEffect(() => {
+    document.body.style.background = modes[currentMode].bg;
+    return () => {
+      document.body.style.background = '';
+    };
+  }, [currentMode]);
+  
+  // Toast notification function
+  const showToastNotification = (message) => {
+    setToastMessage(message);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
+  
+  // Long press handlers
+  const handleInfoMouseDown = () => {
+    setIsLongPressing(true);
+    longPressTimer.current = setTimeout(() => {
+      setShowSecretMenu(true);
+      setIsLongPressing(false);
+      showToastNotification('🎯 Secret menu activated!');
+      // Haptic feedback if available
+      if (navigator.vibrate) {
+        navigator.vibrate(50);
+      }
+    }, 600);
+  };
+  
+  const handleInfoMouseUp = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+    setIsLongPressing(false);
+    
+    // If it wasn't a long press and menu isn't open, show info modal
+    if (!showSecretMenu && longPressTimer.current !== null) {
+      setShowInfoModal(true);
+    }
+  };
+  
+  const handleInfoTouchStart = (e) => {
+    e.preventDefault();
+    handleInfoMouseDown();
+  };
+  
+  const handleInfoTouchEnd = (e) => {
+    e.preventDefault();
+    handleInfoMouseUp();
+  };
+  
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
+      }
+    };
+  }, []);
+  
+  // Mode change handler
+  const handleModeChange = (mode) => {
+    setCurrentMode(mode);
+    setShowSecretMenu(false);
+    showToastNotification(`✨ ${modes[mode].label} Activated!`);
+    
+    // Update URL without reload
+    const url = new URL(window.location);
+    if (mode !== 'standard') {
+      url.searchParams.set('mode', mode);
+    } else {
+      url.searchParams.delete('mode');
+    }
+    window.history.replaceState({}, '', url);
+  };
+  
+  // Check for magic words
+  useEffect(() => {
+    const upperName = name.toUpperCase();
+    const magicWords = {
+      'ING': 'actions',
+      'ALPHABET': 'alphabet',
+      'NUMBERS': 'numbers',
+      'GRANDPA': 'grandparent',
+      'VIP': 'vip'
+    };
+    
+    if (magicWords[upperName]) {
+      handleModeChange(magicWords[upperName]);
+      setName(''); // Clear the input
+    }
+  }, [name]);
+  
+  // Check URL on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const mode = params.get('mode');
+    if (mode && modes[mode]) {
+      setCurrentMode(mode);
+    }
+  }, []);
+  
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+      <div style={{ 
+        background: 'white', 
+        borderRadius: '24px', 
+        padding: '40px 30px', 
+        maxWidth: '480px', 
+        width: '100%',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.1)',
+        position: 'relative',
+        fontSize: currentMode === 'grandparent' ? '120%' : '100%'
+      }}>
+        {/* Info Button */}
+        <button
+          onMouseDown={handleInfoMouseDown}
+          onMouseUp={handleInfoMouseUp}
+          onMouseLeave={handleInfoMouseUp}
+          onTouchStart={handleInfoTouchStart}
+          onTouchEnd={handleInfoTouchEnd}
+          style={{
+            position: 'absolute',
+            top: '20px',
+            right: '20px',
+            width: '36px',
+            height: '36px',
+            borderRadius: '50%',
+            background: isLongPressing ? 'linear-gradient(45deg, #9b59b6, #8e44ad)' : 'white',
+            border: '2px solid #e0e0e0',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '18px',
+            color: isLongPressing ? 'white' : '#666',
+            transition: 'all 0.3s ease'
+          }}
+          aria-label="Information and settings"
+        >
+          ℹ️
+        </button>
+        
+        {/* Secret Menu Dropdown */}
+        {showSecretMenu && (
+          <>
+            {/* Backdrop to close menu */}
+            <div 
+              style={{
+                position: 'fixed',
+                inset: 0,
+                zIndex: 40
+              }}
+              onClick={() => setShowSecretMenu(false)}
+            />
+            
+            {/* Menu */}
+            <div style={{
+              position: 'absolute',
+              top: '65px',
+              right: '20px',
+              background: 'white',
+              borderRadius: '16px',
+              boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
+              padding: '8px',
+              minWidth: '260px',
+              zIndex: 50
+            }}>
+              <div style={{ padding: '8px 12px 4px', fontSize: '11px', color: '#999', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>
+                Learning Modes
+              </div>
+              
+              {Object.entries(modes).map(([key, config]) => (
+                <button
+                  key={key}
+                  onClick={() => handleModeChange(key)}
+                  style={{
+                    width: '100%',
+                    textAlign: 'left',
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: currentMode === key ? '#f0e6ff' : 'transparent',
+                    color: currentMode === key ? '#8e44ad' : '#333',
+                    fontWeight: currentMode === key ? 600 : 400,
+                    cursor: 'pointer',
+                    fontSize: '15px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (currentMode !== key) {
+                      e.target.style.background = '#f5f5f5';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (currentMode !== key) {
+                      e.target.style.background = 'transparent';
+                    }
+                  }}
+                >
+                  {key === 'actions' && '🎬'}
+                  {key === 'alphabet' && '🔤'}
+                  {key === 'numbers' && '🔢'}
+                  {key === 'grandparent' && '👴'}
+                  {key === 'vip' && '🔒'}
+                  {key === 'standard' && '🏠'}
+                  {config.label}
+                  {key === 'actions' && (
+                    <span style={{
+                      marginLeft: 'auto',
+                      background: '#ff4757',
+                      color: 'white',
+                      padding: '2px 6px',
+                      borderRadius: '8px',
+                      fontSize: '10px',
+                      fontWeight: 'bold'
+                    }}>
+                      NEW!
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+        
+        {/* Info Modal */}
+        {showInfoModal && (
+          <>
+            <div 
+              style={{
+                position: 'fixed',
+                inset: 0,
+                background: 'rgba(0,0,0,0.5)',
+                zIndex: 60,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '20px'
+              }}
+              onClick={() => setShowInfoModal(false)}
+            >
+              <div 
+                style={{
+                  background: 'white',
+                  borderRadius: '20px',
+                  padding: '30px',
+                  maxWidth: '400px',
+                  width: '100%'
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h2 style={{ marginBottom: '15px' }}>About MyNameIs</h2>
+                <p>The phonics app that doesn't exist on your phone. Like drawing in the sand - it appears when needed and disappears when done.</p>
+                
+                <div style={{
+                  background: '#f0f9ff',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  marginTop: '15px',
+                  fontSize: '13px',
+                  color: '#0288d1',
+                  fontStyle: 'italic'
+                }}>
+                  💡 Psst... Long-press the ℹ️ button for advanced features 😉
+                </div>
+                
+                <button
+                  onClick={() => setShowInfoModal(false)}
+                  style={{
+                    width: '100%',
+                    marginTop: '20px',
+                    padding: '12px 24px',
+                    background: '#9b59b6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '10px',
+                    fontSize: '16px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Got it!
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+        
+        {/* Mode Chip */}
+        {currentMode !== 'standard' && (
+          <div style={{
+            position: 'absolute',
+            top: '-10px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: currentMode === 'actions' ? '#f5576c' : 
+                       currentMode === 'alphabet' ? '#2F80ED' :
+                       currentMode === 'numbers' ? '#F37335' :
+                       currentMode === 'grandparent' ? '#DFE6E9' :
+                       currentMode === 'vip' ? '#FFD700' : '#9b59b6',
+            color: (currentMode === 'grandparent' || currentMode === 'vip') ? '#333' : 'white',
+            padding: '4px 12px',
+            borderRadius: '12px',
+            fontSize: '11px',
+            fontWeight: 600
+          }}>
+            {currentMode === 'actions' && '🎬 Actions'}
+            {currentMode === 'alphabet' && '🔤 ABC'}
+            {currentMode === 'numbers' && '🔢 123'}
+            {currentMode === 'grandparent' && '👴 Easy'}
+            {currentMode === 'vip' && '🔒 VIP'}
+          </div>
+        )}
+        
+        {/* Logo */}
+        <div style={{
+          background: 'linear-gradient(135deg, #B794D4, #9B7BC4)',
+          color: 'white',
+          padding: '12px 30px',
+          borderRadius: '30px',
+          display: 'inline-block',
+          fontWeight: 'bold',
+          fontSize: '18px',
+          marginBottom: '30px'
+        }}>
+          BoredMama
+        </div>
+        
+        {/* Title */}
+        <h1 style={{ 
+          color: '#2c3e50', 
+          fontSize: currentMode === 'grandparent' ? '56px' : '48px',
+          fontWeight: 700,
+          marginBottom: '15px'
+        }}>
+          My Name Is
+        </h1>
+        
+        <p style={{ color: '#7f8c8d', fontSize: '18px', marginBottom: '30px' }}>
+          Teach your child their name with YOUR voice
+        </p>
+        
+        {/* Input */}
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder={
+            currentMode === 'actions' ? "Type 'ING' or enter name" :
+            currentMode === 'alphabet' ? "Enter letters A-Z" :
+            currentMode === 'numbers' ? "Enter numbers 0-10" :
+            currentMode === 'grandparent' ? "TYPE THE CHILD'S NAME" :
+            currentMode === 'vip' ? "Enter name (Maximum Privacy)" :
+            "Enter your child's name"
+          }
+          style={{
+            width: '100%',
+            padding: currentMode === 'grandparent' ? '22px' : '18px 20px',
+            border: '2px solid #e8e8f0',
+            borderRadius: '16px',
+            fontSize: currentMode === 'grandparent' ? '22px' : '18px',
+            background: '#fafafa',
+            marginBottom: '20px'
+          }}
+        />
+        
+        {/* Next Button */}
+        <button
+          style={{
+            width: '100%',
+            padding: currentMode === 'grandparent' ? '22px' : '18px',
+            background: name.length >= 2 ? '#9b59b6' : '#d5d8dc',
+            color: name.length >= 2 ? 'white' : '#666',
+            border: 'none',
+            borderRadius: '16px',
+            fontSize: currentMode === 'grandparent' ? '22px' : '18px',
+            fontWeight: 600,
+            cursor: name.length >= 2 ? 'pointer' : 'default',
+            marginBottom: '25px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px'
+          }}
+          disabled={name.length < 2}
+          onClick={() => {
+            if (name.length >= 2) {
+              showToastNotification(`Starting ${currentMode} mode with: ${name}`);
+            }
+          }}
+        >
+          Next <ChevronRight />
+        </button>
+        
+        {/* Help Link */}
+        <a href="#" style={{
+          color: '#9b59b6',
+          textDecoration: 'none',
+          fontSize: '16px',
+          display: 'block',
+          textAlign: 'center',
+          marginBottom: '20px'
+        }}>
+          Need help? Read 4-minute guide
+        </a>
+        
+        {/* Share Button */}
+        <button style={{
+          width: '100%',
+          background: 'white',
+          border: '2px solid #e8e8f0',
+          padding: '15px',
+          borderRadius: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '10px',
+          color: '#9b59b6',
+          fontSize: '16px',
+          cursor: 'pointer'
+        }}>
+          Share with friends & family
+          <Share2 size={16} />
+        </button>
+        
+        {/* Toast */}
+        {showToast && (
+          <div style={{
+            position: 'fixed',
+            top: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'rgba(0,0,0,0.8)',
+            color: 'white',
+            padding: '12px 24px',
+            borderRadius: '20px',
+            fontSize: '14px',
+            zIndex: 100
+          }}>
+            {toastMessage}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default SecretSauceApp;

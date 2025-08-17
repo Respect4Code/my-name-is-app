@@ -1,0 +1,60 @@
+Looking at your Replit conversation, the main issue is clear:
+
+## The Core Problem: 🚨
+
+**You have TWO different app architectures:**
+1. **React App** (your main production app) - Running on port 5000
+2. **Standalone HTML** (test-secret-sauce.html) - A simple HTML file
+
+The Replit assistant is trying to add the secret sauce features to your React app, but keeps making the **SAME CRITICAL ERROR**: defining functions inside one component but trying to use them in another.
+
+## The Specific Error:
+
+```
+ReferenceError: Can't find variable: handleInfoMouseDown
+```
+
+This happens because the functions are being defined in the wrong place in the React component structure.
+
+## The Solution: 🎯
+
+Tell Replit this:
+
+```
+STOP trying to fix the React app. Let's focus on the working test file first.
+
+The issue is that you're mixing React component code with standalone HTML code. These are COMPLETELY DIFFERENT systems.
+
+Please do this:
+1. Leave the main React app (App.tsx) COMPLETELY ALONE for now
+2. Focus on the test-secret-sauce.html file which already works
+3. The test file at /test-secret-sauce.html should have the secret sauce features working
+
+Once I confirm the HTML test file works perfectly, THEN we can discuss properly integrating these features into the React app using proper React patterns (hooks, state, props).
+
+The current error is happening because you're trying to use functions that aren't in scope. In React, we need to:
+- Define state with useState
+- Define handlers at the component level
+- Pass them down as props if needed
+- Use proper React event handling
+
+But FIRST, let's make sure the standalone HTML test file works. Can you confirm that test-secret-sauce.html has all the secret sauce code and is accessible at /test-secret-sauce.html?
+```
+
+## Why This Keeps Happening:
+
+1. **Replit is confusing two different systems** - React components vs vanilla JavaScript
+2. **Function scope issues** - Trying to use functions defined in one place from another place
+3. **Wrong integration approach** - Copy-pasting HTML/vanilla JS code into React without converting it
+
+## The Right Approach:
+
+1. ✅ Test everything in the standalone HTML file FIRST
+2. ✅ Make sure it works perfectly
+3. ✅ THEN properly convert to React patterns:
+   - Convert vanilla JS to React hooks
+   - Use useState for state management
+   - Define event handlers properly
+   - Pass props correctly
+
+Would you like me to provide the correct React implementation that would actually work, or should we focus on getting the HTML test file working first?
