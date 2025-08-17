@@ -1,0 +1,55 @@
+Great! I can see you have a test site running at that Replit URL. This is perfect for testing the secret sauce functionality without affecting your production site at mynameisapp.co.uk.
+
+To help you fix the issues with the dropdown menu and mode selection, I need to:
+
+1. **Test the current behavior** on your test site
+2. **Identify the specific problem** in the code
+3. **Provide the exact fix** for your App.tsx
+
+## Quick Test Checklist
+
+Can you confirm these behaviors on your test site:
+
+1. **Long-press (ℹ️) button** → Does the dropdown appear? ✅ (Based on your screenshots, yes)
+2. **Select "Action Words Mode"** → Does it return to homepage? (Problem #1)
+3. **Long-press again** → Does it show Parent Guide instead of dropdown? (Problem #2)
+4. **Any visual confirmation** when mode changes? (Missing feature)
+
+## The Fix You Need
+
+Based on the issues described, here's the specific code to add to your `client/src/App.tsx`:## What This Fix Does
+
+1. **Proper Long-Press Detection** ✅
+   - Uses `isLongPress` flag to prevent guide from showing after long-press
+   - Clean separation between tap (guide) and long-press (menu)
+
+2. **Visual Mode Confirmation** ✅
+   - Background tint changes with mode
+   - Banner at top shows active mode
+   - Toast notification on mode change
+   - Active mode highlighted in dropdown
+
+3. **Persistent Mode Selection** ✅
+   - Mode stays selected after closing menu
+   - Input placeholder updates based on mode
+   - Visual indicators remain until mode is changed
+
+4. **Smooth User Experience** ✅
+   - Menu closes after selection
+   - Clear feedback for every action
+   - No confusing behavior with multiple presses
+
+## Testing Instructions
+
+1. Visit your test site
+2. **Long-press** the ℹ️ button (hold for 600ms)
+3. Select **Action Words Mode**
+4. You should see:
+   - Purple background tint
+   - "ACTION WORDS MODE ACTIVE" banner at top
+   - Toast notification
+   - Updated placeholder text
+5. Long-press again - dropdown should appear (not guide)
+6. Short tap - guide should appear
+
+Once you confirm this works on your test site, we can apply the same fixes to your production App.tsx! 🚀

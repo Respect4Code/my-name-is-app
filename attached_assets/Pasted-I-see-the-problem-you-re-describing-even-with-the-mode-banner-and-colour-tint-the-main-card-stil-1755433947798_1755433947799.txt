@@ -1,0 +1,39 @@
+I see the problem you’re describing: even with the “mode banner” and colour tint, the main card still looks and behaves like the standard name-entry flow, which can mislead parents into thinking they should type their child’s name again when they’ve actually switched to Action Words or Numbers mode. That’s happening because your test build hasn’t yet implemented any mode-specific UI changes beyond the banner and background colour. In other words, the state variable `currentMode` is getting updated, but the rest of the page ignores it.
+
+To clear up the confusion, you should update the welcome screen so the input and call‑to‑action adapt when a different mode is active. Two simple ways to do this:
+
+1. **Mode‑specific placeholders and instructions.** In the code snippet I provided earlier, note the conditional placeholder logic:
+
+   ```tsx
+   placeholder={
+     currentMode === 'actions' ? "Type 'ING' or click Next for categories" :
+     currentMode === 'alphabet' ? "Type a letter (A–Z)" :
+     currentMode === 'numbers' ? "Type a number (0–9)" :
+     currentMode === 'grandparent' ? "TYPE CHILD'S NAME" :
+     currentMode === 'vip' ? "Enter name (Privacy Mode)" :
+     "Enter your child's name"
+   }
+   ```
+
+   and a banner or toast indicating “Action Words Mode Active.” If you integrate this into your production code, parents will immediately see that they’re in a special mode and that the input expects something different.
+
+2. **Skip the name field entirely in certain modes.** For Action Words or Numbers, it might be clearer to hide the name input and “Next” button and instead show the -ING categories or number buttons straight away. For example:
+
+   ```tsx
+   {currentMode === 'actions' && (
+     <div>
+       <h3>Select an action word category:</h3>
+       <button onClick={() => startRecording('daily')}>Daily Life</button>
+       <button onClick={() => startRecording('movement')}>Movement</button>
+       {/* …other categories… */}
+     </div>
+   )}
+   {currentMode === 'numbers' && (
+     <div>
+       <h3>Record numbers 0–9:</h3>
+       {/* number recording UI here */}
+     </div>
+   )}
+   ```
+
+By structuring the UI around the selected mode, the colour change becomes a cue instead of a cosmetic effect. Until you make those changes, the test site will always default to the standard “Enter your child’s name” flow, even when the mode state has changed, which is why it currently feels inconsistent.
