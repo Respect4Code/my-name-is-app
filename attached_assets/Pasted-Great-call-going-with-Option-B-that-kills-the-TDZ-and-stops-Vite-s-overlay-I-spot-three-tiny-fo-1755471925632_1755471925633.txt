@@ -1,0 +1,109 @@
+Great call going with Option B — that kills the TDZ and stops Vite’s overlay. I spot **three tiny follow-ups** in your pasted file + one privacy tweak:
+
+---
+
+## 1) Tick mark never shows (string vs variable)
+
+You’ve got `'mode'` as a string.
+
+**Replace**
+
+```tsx
+{currentMode === 'mode' && ' ✓'}
+```
+
+**with**
+
+```tsx
+{currentMode === mode && ' ✓'}
+```
+
+---
+
+## 2) `pickMime` is out of scope for `RecordClip`
+
+`RecordClip` is defined **outside** `WelcomeScreen`, but `pickMime` is inside the component, so it’ll throw `pickMime is not defined`.
+
+**Move `pickMime` to module scope (top of file):**
+
+```ts
+// put this above both components
+const pickMime = () => {
+  const candidates = [
+    'audio/mp4;codecs=aac',
+    'audio/mp4',
+    'audio/webm;codecs=opus',
+    'audio/webm'
+  ];
+  return (window as any).MediaRecorder
+    ? candidates.find(t => MediaRecorder.isTypeSupported(t)) || ''
+    : '';
+};
+```
+
+---
+
+## 3) Don’t revoke the URL you just saved
+
+Right now you revoke the **newly saved** URL, so your stored clip goes dead.
+
+**In `RecordClip` (Save button), remove the revoke:**
+
+```tsx
+<button
+  onClick={() => { onSaved(url); /* remove revoke here */ }}
+  ...
+>
+  ✓ Save
+</button>
+```
+
+**In the parent `onSaved`, revoke the OLD url (if any) before replacing:**
+
+```tsx
+onSaved={(newUrl) => {
+  const word = ingQueue[ingIndex];
+  setSavedWordClips(prev => {
+    const old = prev[word];
+    if (old && old !== newUrl) URL.revokeObjectURL(old);
+    return { ...prev, [word]: newUrl };
+  });
+  setIngView('compose');
+}}
+```
+
+---
+
+## 4) Privacy tweak: remove “Play All Words”
+
+Since you don’t want aggregated playback, delete the Play-All button block in **Compose**:
+
+**Remove this block entirely:**
+
+```tsx
+{Object.keys(savedWordClips).length > 0 && (
+  <button
+    onClick={() => playAllSequential(ingQueue)}
+    ...
+  >
+    ▶︎ Play All Words ...
+  </button>
+)}
+```
+
+*(Optional) You can also delete `playAllSequential` if nothing else calls it.*
+
+This keeps audio **ephemeral in-memory only**, per session, no uploads, no aggregation.
+
+---
+
+## Git commands
+
+```bash
+git checkout -b fix/post-tdz-cleanups
+git add -A
+git commit -m "Fix dropdown check; move pickMime to module scope; correct URL revoke; remove Play All for privacy"
+git push -u origin fix/post-tdz-cleanups
+```
+
+Refresh and you should be golden. If anything else trips Vite, tell me the exact line/stack and I’ll patch it straight away.

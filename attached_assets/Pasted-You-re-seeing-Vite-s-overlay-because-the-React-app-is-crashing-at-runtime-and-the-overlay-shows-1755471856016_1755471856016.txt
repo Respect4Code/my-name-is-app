@@ -1,0 +1,130 @@
+You’re seeing Vite’s overlay because the **React app is crashing at runtime**, and the overlay shows on **every** page the dev server serves (including your standalone `test-secret-sauce.html`).
+The root cause isn’t the static test page — it’s a **TDZ (temporal dead zone)** bug in `App.tsx`: a `const`/`useCallback` is referenced **before it’s initialized**.
+
+### What’s actually breaking
+
+In the versions you pasted earlier, `setMode`’s `useCallback(...)` references `startOverAction` (both in its body and in its dependency array) but **`startOverAction` is declared later** in the component:
+
+```ts
+// ❌ This creates a TDZ crash: startOverAction is still uninitialized here
+const setMode = useCallback((mode) => {
+  ...
+  if (mode === 'actions') {
+    ...;
+    startOverAction(); // <-- TDZ
+  }
+}, [showToastNotification, startOverAction]); // <-- TDZ when deps are evaluated
+```
+
+That produces the Vite overlay: **“Cannot access uninitialized variable.”**
+
+---
+
+## Two clean fixes (pick one)
+
+### Option A — Move the definition (one-liner fix)
+
+Just **declare `startOverAction` above `setMode`** so it’s initialized first. Hook order stays consistent; you’re only reordering top-level hooks.
+
+```ts
+// 1) Define this FIRST
+const startOverAction = useCallback(() => {
+  // stopActiveRecorder();
+  // revokeAll(savedWordClips);
+  setSavedWordClips({});
+  setIngView('grid');
+  setIngQueue([]);
+  setIngIndex(0);
+  setComposeSentence('');
+  setComposeRhyme('');
+  setRecordTarget('word');
+  showToastNotification('🔁 Reset Action Words');
+}, [showToastNotification]);
+
+// 2) Then define setMode (now safe to reference startOverAction)
+const setMode = useCallback((mode: typeof currentMode) => {
+  setCurrentMode(mode);
+  setShowSecretMenu(false);
+  sessionStorage.setItem('mode', mode);
+  const messages = { /* ... */ };
+  showToastNotification(messages[mode]);
+
+  if (mode === 'actions') {
+    setIngView('grid');
+    setIngCategory(null);
+    if (recorderRef.current?.state === 'recording') recorderRef.current.stop();
+    startOverAction();  // ✅ safe
+  }
+  setIsLongPress(false);
+}, [showToastNotification, startOverAction]);
+```
+
+### Option B — Don’t call it from `setMode` (my preferred)
+
+Remove the reference from `setMode` completely, and trigger the reset with an effect when the mode changes. This avoids TDZ entirely and keeps responsibilities separate.
+
+```ts
+// setMode no longer references startOverAction
+const setMode = useCallback((mode: typeof currentMode) => {
+  setCurrentMode(mode);
+  setShowSecretMenu(false);
+  sessionStorage.setItem('mode', mode);
+  const messages = { /* ... */ };
+  showToastNotification(messages[mode]);
+  setIsLongPress(false);
+}, [showToastNotification]);
+
+// Define startOverAction anywhere above this effect
+const startOverAction = useCallback(() => {
+  setSavedWordClips({});
+  setIngView('grid');
+  setIngQueue([]);
+  setIngIndex(0);
+  setComposeSentence('');
+  setComposeRhyme('');
+  setRecordTarget('word');
+  showToastNotification('🔁 Reset Action Words');
+}, [showToastNotification]);
+
+// Reset when mode flips to actions
+useEffect(() => {
+  if (currentMode === 'actions') {
+    // best effort: stop any active recorder if you have a helper for that
+    if (recorderRef.current?.state === 'recording') recorderRef.current.stop();
+    startOverAction();
+  }
+}, [currentMode, startOverAction]);
+```
+
+Either change will remove the TDZ, the React app will stop crashing, and **your `test-secret-sauce.html` will render** normally.
+
+---
+
+## If you still want to see the test page while the app is broken
+
+(temporary, optional)
+
+In `vite.config.js`:
+
+```ts
+export default defineConfig({
+  server: {
+    hmr: { overlay: false }  // disable error overlay
+  }
+});
+```
+
+This only hides the overlay; you should still fix the TDZ as above.
+
+---
+
+## Quick Replit commands (after editing)
+
+```bash
+git checkout -b fix/tdz-app
+git add -A
+git commit -m "Fix TDZ: avoid referencing startOverAction before init; app no longer crashes"
+git push -u origin fix/tdz-app
+```
+
+Then refresh your test URL. If anything else pops up, tell me which line Vite highlights and I’ll patch it right away.
