@@ -442,7 +442,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
   const [infoPressing, setInfoPressing] = useState(false);
   const [infoPressTimer, setInfoPressTimer] = useState<NodeJS.Timeout | null>(null);
   const [showSecretMenu, setShowSecretMenu] = useState(false);
-  const [currentMode, setCurrentMode] = useState<'standard' | 'alphabet' | 'numbers' | 'actions' | 'grandparent' | 'vip'>(
+  const [currentMode, setCurrentMode] = useState<'standard' | 'alphabet' | 'numbers' | 'actions' | 'grandparent'>(
     (sessionStorage.getItem('mode') as any) || 'standard'
   );
   const [showToast, setShowToast] = useState(false);
@@ -463,7 +463,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
   // Load saved mode on component mount
   useEffect(() => {
     const savedMode = localStorage.getItem('selectedMode');
-    if (savedMode && ['standard', 'alphabet', 'numbers', 'actions', 'grandparent', 'vip'].includes(savedMode)) {
+    if (savedMode && ['standard', 'alphabet', 'numbers', 'actions', 'grandparent'].includes(savedMode)) {
       setCurrentMode(savedMode as typeof currentMode);
     }
   }, []);
@@ -560,19 +560,13 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
   const setMode = useCallback((mode: typeof currentMode) => {
     setCurrentMode(mode);
     setShowSecretMenu(false);
-    if (mode === 'vip') {
-      sessionStorage.clear();
-      localStorage.clear();
-    } else {
-      sessionStorage.setItem('mode', mode);
-    }
+    sessionStorage.setItem('mode', mode);
     const messages = {
       standard: '🏠 Standard Mode Active - Enter a name to begin',
       actions: '🎬 Action Words Mode Active - Choose a category',
       alphabet: '🔤 Alphabet Mode Active - Enter letters to begin',
       numbers: '🔢 Numbers Mode Active - Enter numbers to begin',
       grandparent: '👴 Grandparent Mode Active - Larger text enabled',
-      vip: '🔒 VIP Mode Active - Maximum privacy enabled',
     };
     showToastNotification(messages[mode]);
     if (mode === 'actions') {
@@ -659,30 +653,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
     setComposeRhyme(`${w} ${w}, ${w} all day — ${w} ${w}, hip-hip-hooray!`);
   }, []);
 
-  // Sequential playback of saved word clips with safety checks
-  const playAllSequential = useCallback((words: string[]) => {
-    const urls = words.map(w => savedWordClips[w]).filter(Boolean);
-    if (!urls.length) {
-      showToastNotification('No recorded words to play');
-      return;
-    }
-
-    let i = 0;
-    const audio = new Audio(urls[i]);
-    audio.addEventListener('ended', () => {
-      i++;
-      if (i < urls.length) {
-        audio.src = urls[i];
-        audio.play().catch(err => {
-          console.error('Sequential playback failed:', err);
-        });
-      }
-    });
-    audio.play().catch(err => {
-      console.error('Sequential playback failed:', err);
-      showToastNotification('Playback failed - check volume');
-    });
-  }, [savedWordClips, showToastNotification]);
+  
 
   // Choose word for recording - now goes to compose first
   const chooseWord = useCallback((word: string) => {
@@ -732,14 +703,9 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
     setShowSecretMenu(false);
     setIsLongPress(false);
 
-    // Store the selected mode in localStorage for persistence (except VIP)
-    if (mode === 'vip') {
-      sessionStorage.clear();
-      localStorage.clear();
-    } else {
-      localStorage.setItem('selectedMode', mode);
-      sessionStorage.setItem('mode', mode);
-    }
+    // Store the selected mode in localStorage for persistence
+    localStorage.setItem('selectedMode', mode);
+    sessionStorage.setItem('mode', mode);
 
     // Mode-specific immediate feedback
     const modeMessages = {
@@ -747,7 +713,6 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
       alphabet: '🔤 Alphabet Mode - Ready to learn A-Z!',
       numbers: '🔢 Numbers Mode - Ready to learn 0-9!',
       grandparent: '👴 Grandparent Mode - Simplified interface active',
-      vip: '🔒 VIP Mode - Maximum privacy enabled',
       standard: '🏠 Standard Mode - Name recording ready'
     };
 
@@ -777,8 +742,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
       backgroundColor: currentMode === 'actions' ? 'rgba(255, 0, 255, 0.05)' :
                        currentMode === 'alphabet' ? 'rgba(0, 123, 255, 0.05)' :
                        currentMode === 'numbers' ? 'rgba(0, 255, 0, 0.05)' :
-                       currentMode === 'grandparent' ? 'rgba(255, 165, 0, 0.05)' :
-                       currentMode === 'vip' ? 'rgba(255, 215, 0, 0.05)' : 'transparent',
+                       currentMode === 'grandparent' ? 'rgba(255, 165, 0, 0.05)' : 'transparent',
       transition: 'background-color 0.3s ease'
     }}>
       {/* Mode Banner */}
@@ -787,15 +751,13 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
           background: currentMode === 'actions' ? '#ff00ff' :
                      currentMode === 'alphabet' ? '#007bff' :
                      currentMode === 'numbers' ? '#00ff00' :
-                     currentMode === 'grandparent' ? '#ffa500' :
-                     currentMode === 'vip' ? '#ffd700' : '#333',
+                     currentMode === 'grandparent' ? '#ffa500' : '#333',
           animation: 'slideDown 0.3s ease'
         }}>
           {currentMode === 'actions' && '🎬 ACTION WORDS MODE ACTIVE'}
           {currentMode === 'alphabet' && '🔤 ALPHABET MODE ACTIVE'}
           {currentMode === 'numbers' && '🔢 NUMBERS MODE ACTIVE'}
           {currentMode === 'grandparent' && '👴 GRANDPARENT MODE ACTIVE'}
-          {currentMode === 'vip' && '🔒 VIP MODE - Maximum Security'}
         </div>
       )}
 
@@ -853,13 +815,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
                 {currentMode === 'grandparent' && <span className="ml-auto text-xs bg-yellow-500 text-white px-2 py-1 rounded">ACTIVE</span>}
               </button>
 
-              <button
-                onClick={() => handleModeChange('vip')}
-                className={`w-full text-left p-2 rounded-lg hover:bg-gray-50 flex items-center gap-2 ${currentMode === 'vip' ? 'bg-gray-100 text-gray-700' : ''}`}
-              >
-                🔒 VIP Mode
-                {currentMode === 'vip' && <span className="ml-auto text-xs bg-gray-500 text-white px-2 py-1 rounded">ACTIVE</span>}
-              </button>
+              
 
               <div className="border-t pt-2 mt-3">
                 <button
@@ -895,7 +851,6 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
               {currentMode === 'alphabet' && '🔤 Alphabet Mode'}
               {currentMode === 'numbers' && '🔢 Numbers Mode'}
               {currentMode === 'grandparent' && '👴 Grandparent Mode'}
-              {currentMode === 'vip' && '🔒 VIP Mode'}
             </span>
           )}
         </h1>
@@ -904,7 +859,6 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
            currentMode === 'alphabet' ? 'Master the alphabet A-Z with YOUR voice!' :
            currentMode === 'numbers' ? 'Count and learn 0-9 with YOUR voice!' :
            currentMode === 'grandparent' ? 'Simplified learning at a comfortable pace' :
-           currentMode === 'vip' ? 'Maximum privacy phonics experience' :
            'Teach your child their name with YOUR voice'}
         </p>
         <p className="text-purple-600 text-sm font-medium mb-4">
@@ -912,7 +866,6 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
            currentMode === 'alphabet' ? '⭐ "Perfect for learning letter sounds!" - Parent' :
            currentMode === 'numbers' ? '⭐ "Counting made fun and personal!" - Parent' :
            currentMode === 'grandparent' ? '⭐ "Easy for grandparents to use!" - Family' :
-           currentMode === 'vip' ? '⭐ "Perfect privacy for my child!" - Parent' :
            '⭐ "My 18-month-old learned all letters phonetically!" - Real parent'}
         </p>
 
@@ -1156,27 +1109,27 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
                   >
                     🎤 Record RHYME →
                   </button>
-                  {(() => {
-                    const recorded = ingQueue.filter(w => Boolean(savedWordClips[w]));
-                    const canPlayAll = recorded.length > 0;
-                    return (
-                      <button
-                        onClick={() => playAllSequential(ingQueue)}
-                        style={{
-                          padding: 12,
-                          background: canPlayAll ? '#8e44ad' : '#ccc',
-                          color: '#fff',
-                          border: 'none',
-                          borderRadius: 12,
-                          cursor: canPlayAll ? 'pointer' : 'not-allowed',
-                        }}
-                        disabled={!canPlayAll}
-                        title={canPlayAll ? 'Play all recorded words' : 'No words recorded yet'}
-                      >
-                        ▶︎ Play All Words ({recorded.length}/{ingQueue.length})
-                      </button>
-                    );
-                  })()}
+                  {savedWordClips[ingQueue[ingIndex]] && (
+                    <button
+                      onClick={() => {
+                        const audio = new Audio(savedWordClips[ingQueue[ingIndex]]);
+                        audio.play().catch(err => {
+                          console.error('Playback failed:', err);
+                          showToastNotification('Playback failed - check volume');
+                        });
+                      }}
+                      style={{
+                        padding: 12,
+                        background: '#8e44ad',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: 12,
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      ▶︎ Play "{ingQueue[ingIndex]}"
+                    </button>
+                  )}
                   <button
                     onClick={() => {
                       const next = ingIndex + 1;
@@ -1222,7 +1175,11 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
                 }
                 onSaved={(url) => {
                   if (recordTarget === 'word') {
-                    setSavedWordClips(prev => ({ ...prev, [ingQueue[ingIndex]]: url }));
+                    setSavedWordClips(prev => {
+                      const w = ingQueue[ingIndex];
+                      if (prev[w]) URL.revokeObjectURL(prev[w]); // free memory
+                      return { ...prev, [w]: url };
+                    });
                   }
                   setIngView('compose'); // Return to compose to add sentence/rhyme or go next
                 }}
@@ -1253,7 +1210,6 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
                 currentMode === 'alphabet' ? "Enter letters (A-Z)" :
                 currentMode === 'numbers' ? "Enter numbers (0-9)" :
                 currentMode === 'grandparent' ? "TYPE THE CHILD'S NAME" :
-                currentMode === 'vip' ? "Enter name (Privacy Mode)" :
                 "Enter a value"
               }
               className={`w-full p-4 text-center border-2 border-purple-200 rounded-xl text-gray-800 mb-6 ${
