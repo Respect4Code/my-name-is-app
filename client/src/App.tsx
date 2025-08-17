@@ -82,9 +82,11 @@ interface RecordingStageProps {
 // RecordWord Component for Action Words mode with MIME detection
 const RecordWord: React.FC<{
   word: string;
+  index?: number;
+  total?: number;
   onNext: () => void;
   onBack: () => void;
-}> = memo(({ word, onNext, onBack }) => {
+}> = memo(({ word, index, total, onNext, onBack }) => {
   const [rec, setRec] = useState<MediaRecorder | null>(null);
   const [audioURL, setAudioURL] = useState<string>('');
   const chunksRef = useRef<Blob[]>([]);
@@ -137,7 +139,7 @@ const RecordWord: React.FC<{
         ← Back
       </button>
       <h2 style={{ textAlign: 'center', marginBottom: '20px', fontSize: '28px', fontWeight: 'bold', color: '#ff00ff' }}>
-        Recording: {word}
+        Recording: {word} {index && total ? `(${index}/${total})` : ''}
       </h2>
       <p style={{ textAlign: 'center', marginBottom: '20px', color: '#666', fontSize: '18px' }}>
         Say the word, then a short sentence, e.g., "We are {word}!"
@@ -926,7 +928,10 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
 
             {ingView === 'record' && ingQueue.length > 0 && (
               <RecordWord
+                key={ingQueue[ingIndex]}
                 word={ingQueue[ingIndex]}
+                index={ingIndex + 1}
+                total={ingQueue.length}
                 onNext={() => {
                   const next = ingIndex + 1;
                   if (next < ingQueue.length) {
@@ -935,7 +940,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
                     setIngView('words');
                     setIngQueue([]);
                     setIngIndex(0);
-                    showToastNotification('Recording complete!');
+                    showToastNotification('✅ All words recorded!');
                   }
                 }}
                 onBack={() => setIngView('words')}
