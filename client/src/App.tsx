@@ -275,6 +275,14 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
   const [toastMessage, setToastMessage] = useState('');
   const longPressRef = useRef(false);
 
+  // Load saved mode on component mount
+  useEffect(() => {
+    const savedMode = localStorage.getItem('selectedMode');
+    if (savedMode && ['standard', 'alphabet', 'numbers', 'actions', 'grandparent', 'vip'].includes(savedMode)) {
+      setCurrentMode(savedMode as typeof currentMode);
+    }
+  }, []);
+
   // Toast notification
   const showToastNotification = useCallback((message: string) => {
     setToastMessage(message);
@@ -320,7 +328,27 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
   const handleModeChange = (mode: typeof currentMode) => {
     setCurrentMode(mode);
     setShowSecretMenu(false);
-    showToastNotification(`✨ ${mode.toUpperCase()} Mode Activated!`);
+    
+    // Store the selected mode in localStorage for persistence
+    localStorage.setItem('selectedMode', mode);
+    
+    // Update the input placeholder and behavior based on mode
+    if (mode === 'actions') {
+      setName('ING');
+      showToastNotification('🎬 Action Words Mode - Type words ending in -ING!');
+    } else if (mode === 'alphabet') {
+      setName('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+      showToastNotification('🔤 Alphabet Mode - Learning A-Z!');
+    } else if (mode === 'numbers') {
+      setName('0123456789');
+      showToastNotification('🔢 Numbers Mode - Learning 0-9!');
+    } else if (mode === 'grandparent') {
+      showToastNotification('👴 Grandparent Mode - Slower pace, larger text!');
+    } else if (mode === 'vip') {
+      showToastNotification('🔒 VIP Mode - Premium features unlocked!');
+    } else {
+      showToastNotification('🏠 Standard Mode - Learning names!');
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -416,8 +444,26 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
         <div className="mb-6">
           <BoredMamaLogo />
         </div>
-        <h1 className="text-4xl font-bold text-gray-800 mb-2">My Name Is</h1>
-        <p className="text-gray-600 mb-2">Teach your child their name with YOUR voice</p>
+        <h1 className="text-4xl font-bold text-gray-800 mb-2">
+          My Name Is
+          {currentMode !== 'standard' && (
+            <span className="text-sm block text-purple-600 font-medium mt-1">
+              {currentMode === 'actions' && '🎬 Action Words Mode'}
+              {currentMode === 'alphabet' && '🔤 Alphabet Mode'}
+              {currentMode === 'numbers' && '🔢 Numbers Mode'}
+              {currentMode === 'grandparent' && '👴 Grandparent Mode'}
+              {currentMode === 'vip' && '🔒 VIP Mode'}
+            </span>
+          )}
+        </h1>
+        <p className="text-gray-600 mb-2">
+          {currentMode === 'actions' ? 'Learn action words ending in -ING!' :
+           currentMode === 'alphabet' ? 'Master the alphabet A-Z!' :
+           currentMode === 'numbers' ? 'Count and learn 0-9!' :
+           currentMode === 'grandparent' ? 'Learning at a comfortable pace' :
+           currentMode === 'vip' ? 'Premium phonics experience' :
+           'Teach your child their name with YOUR voice'}
+        </p>
         <p className="text-purple-600 text-sm font-medium mb-4">
           ⭐ "My 18-month-old learned all letters phonetically!" - Real parent
         </p>
@@ -425,11 +471,24 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
         <input
           type="text"
           value={name}
-          onChange={(e) => setName(e.target.value.replace(/[^a-zA-Z]/g, ''))}
+          onChange={(e) => {
+            if (currentMode === 'numbers') {
+              setName(e.target.value.replace(/[^0-9]/g, ''));
+            } else {
+              setName(e.target.value.replace(/[^a-zA-Z]/g, ''));
+            }
+          }}
           onKeyPress={handleKeyPress}
-          placeholder="Enter your child's name"
+          placeholder={
+            currentMode === 'actions' ? 'Enter words ending in -ING' :
+            currentMode === 'alphabet' ? 'Type ALPHABET for A-Z' :
+            currentMode === 'numbers' ? 'Type NUMBERS for 0-9' :
+            currentMode === 'grandparent' ? 'Enter name (Grandparent mode)' :
+            currentMode === 'vip' ? 'Enter name (VIP access)' :
+            'Enter your child\'s name'
+          }
           className="w-full p-4 text-2xl text-center border-2 border-purple-200 rounded-xl text-gray-800 mb-6"
-          maxLength={12}
+          maxLength={currentMode === 'alphabet' ? 26 : currentMode === 'numbers' ? 10 : 12}
           autoFocus
           aria-label="Child's name"
         />
