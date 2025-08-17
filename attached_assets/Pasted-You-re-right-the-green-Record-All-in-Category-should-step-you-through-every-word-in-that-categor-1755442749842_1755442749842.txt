@@ -1,0 +1,95 @@
+You’re right—the green **Record All in Category** should step you through every word in that category.
+Right now it’s treating the whole list like one “word” (or it isn’t advancing), which is why you either see one word only, or a single line with all the words and no per-word progression.
+
+Here’s the minimal, surgical fix.
+
+---
+
+# What’s wrong
+
+* The handler for the green button is passing the **entire array** to your recorder view as one string (or not keeping an index).
+* The recorder view doesn’t iterate `word → next word` using an index.
+
+---
+
+# Fix (tiny patches)
+
+### 1) State for a queue + index
+
+```ts
+// at top of WelcomeScreen
+const [ingQueue, setIngQueue] = useState<string[]>([]);
+const [ingIndex, setIngIndex] = useState(0);
+```
+
+### 2) Single-word vs all-in-category selection
+
+```ts
+// when a chip is tapped
+const chooseWord = (word: string) => {
+  setIngQueue([word.toLowerCase()]);
+  setIngIndex(0);
+  setIngView('record');   // go to recorder for that one word
+};
+
+// when the green button is tapped
+const chooseAllInCategory = () => {
+  if (!ingCategory) return;
+  setIngQueue([...ING[ingCategory]]); // array of words
+  setIngIndex(0);
+  setIngView('record');               // start with the first word
+};
+```
+
+### 3) Render the recorder for the **current** word only
+
+```tsx
+{ingView === 'record' && ingQueue.length > 0 && (
+  <RecordWord
+    key={ingQueue[ingIndex]}              // force fresh recorder per word
+    word={ingQueue[ingIndex]}
+    index={ingIndex + 1}
+    total={ingQueue.length}
+    onNext={() => {
+      const next = ingIndex + 1;
+      if (next < ingQueue.length) setIngIndex(next);   // advance to next word
+      else {
+        setIngView('words');           // done → back to word list (or grid if you prefer)
+        setIngQueue([]);
+        setIngIndex(0);
+        showToastNotification('✅ All words recorded!');
+      }
+    }}
+    onBack={() => setIngView('words')}
+  />
+)}
+```
+
+### 4) Make the recorder header show progress (optional but helpful)
+
+```tsx
+// RecordWord props: { word, index, total, onNext, onBack }
+<h2 style={{ textAlign:'center' }}>
+  Record: {word} ({index}/{total})
+</h2>
+```
+
+### 5) Recorder hygiene (prevents mic lock)
+
+Inside `RecordWord`:
+
+```ts
+useEffect(() => () => {
+  if (rec?.state === 'recording') rec.stop();
+}, [rec]);
+```
+
+---
+
+# UX notes
+
+* The **pink** button stays for “record typed word”.
+* The **green** button now reliably walks through **every word** in the chosen category, one by one, with a visible counter.
+* If no category is selected, keep the green button disabled.
+
+That’s it—no redesign, just corrects the flow so “Record All in Category” actually records **all** words sequentially.
