@@ -1,0 +1,298 @@
+Love where you’re taking this. Two things you want:
+
+1. a tiny **“Compose” step** before recording so a parent can add a quick **sentence** and/or a fun **rhyme** for a word like *climbing* (“Sam is climbing”, “We are climbing”, etc.) — with record + playback for each.
+
+2. clear **navigation**: after “Start Over”, where do we land?
+
+Below is a **surgical add-on** to Action Mode that gives you that extra page (like your Standard mode flow) without ripping up what already works.
+
+---
+
+# UX (quick + consistent)
+
+* **Grid → Words → Compose → Record**
+
+  * *Compose* (new): shows the chosen word, lets you edit a **Sentence** and a **Rhyme**, and has three record buttons:
+
+    * Record **Word**
+    * Record **Sentence**
+    * Record **Rhyme**
+  * If you tap **Record All in Category** (green), you still step through **each word**; from the recorder you can jump to Compose for that current word if you want to add a sentence/rhyme.
+
+* **Back** on Compose → returns to **Words** (pink/green page).
+
+* **Back to Categories** (existing) → returns to **Grid**.
+
+* **Start Over** (if you show it in Action Mode) → resets Action Mode and returns to **Grid**.
+  (This mirrors Standard mode’s “Start Over” = reset the whole sequence.)
+
+---
+
+# Minimal code patches
+
+## 1) Add new view + compose state
+
+```ts
+// add one more view
+type IngView = 'grid' | 'words' | 'compose' | 'record';
+
+// state
+const [ingView, setIngView] = useState<IngView>('grid');
+const [ingQueue, setIngQueue] = useState<string[]>([]);
+const [ingIndex, setIngIndex] = useState(0);
+
+// compose fields
+const [composeSentence, setComposeSentence] = useState('');
+const [composeRhyme, setComposeRhyme] = useState('');
+const [recordTarget, setRecordTarget] = useState<'word' | 'sentence' | 'rhyme'>('word');
+
+// a simple default rhyme maker (cute, not clever)
+const makeSimpleRhyme = (w: string) =>
+  `${w} ${w}, ${w} all day — ${w} ${w}, hip-hip-hooray!`;
+```
+
+## 2) Single word vs. whole category
+
+```ts
+// when a chip is tapped
+const chooseWord = (word: string) => {
+  const w = word.toLowerCase();
+  setIngQueue([w]);
+  setIngIndex(0);
+  setComposeSentence(`We are ${w}.`);
+  setComposeRhyme(makeSimpleRhyme(w));
+  setIngView('compose');              // NEW: go to Compose first
+};
+
+// when green "Record All" is tapped
+const chooseAllInCategory = () => {
+  if (!ingCategory) return;
+  const list = [...ING[ingCategory]]; // existing list of -ing words
+  setIngQueue(list);
+  setIngIndex(0);
+  setIngView('record');               // still goes straight to Record
+  setRecordTarget('word');            // default: record words only
+};
+```
+
+## 3) Compose view UI (new page)
+
+```tsx
+{currentMode === 'actions' && ingView === 'compose' && ingQueue.length > 0 && (
+  <div>
+    <button onClick={() => setIngView('words')}
+            style={{ background:'transparent', border:'none', fontSize:24, cursor:'pointer', marginBottom:20 }}>
+      ← Back
+    </button>
+
+    <h3 style={{ textAlign:'center', marginBottom:10 }}>
+      Word: <strong>{ingQueue[ingIndex]}</strong>
+    </h3>
+
+    <label style={{ display:'block', margin:'10px 0 6px' }}>Sentence</label>
+    <input
+      value={composeSentence}
+      onChange={(e) => setComposeSentence(e.target.value)}
+      placeholder={`e.g., Sam is ${ingQueue[ingIndex]}`}
+      style={{ width:'100%', padding:12, border:'2px solid #ddd', borderRadius:10 }}
+    />
+
+    <label style={{ display:'block', margin:'14px 0 6px' }}>Rhyme</label>
+    <textarea
+      value={composeRhyme}
+      onChange={(e) => setComposeRhyme(e.target.value)}
+      rows={3}
+      placeholder={makeSimpleRhyme(ingQueue[ingIndex])}
+      style={{ width:'100%', padding:12, border:'2px solid #ddd', borderRadius:10 }}
+    />
+
+    <div style={{ display:'grid', gap:10, gridTemplateColumns:'1fr', marginTop:16 }}>
+      <button
+        onClick={() => { setRecordTarget('word'); setIngView('record'); }}
+        style={{ padding:14, background:'#ff00ff', color:'#fff', border:'none', borderRadius:10, fontWeight:'bold' }}>
+        🎤 Record WORD →
+      </button>
+
+      <button
+        onClick={() => { setRecordTarget('sentence'); setIngView('record'); }}
+        style={{ padding:14, background:'#7c4dff', color:'#fff', border:'none', borderRadius:10, fontWeight:'bold' }}>
+        🎤 Record SENTENCE →
+      </button>
+
+      <button
+        onClick={() => { setRecordTarget('rhyme'); setIngView('record'); }}
+        style={{ padding:14, background:'#4CAF50', color:'#fff', border:'none', borderRadius:10, fontWeight:'bold' }}>
+        🎤 Record RHYME →
+      </button>
+    </div>
+  </div>
+)}
+```
+
+## 4) Recorder now records **word / sentence / rhyme**
+
+Use your current recorder but let it display/record arbitrary text:
+
+```tsx
+{ingView === 'record' && ingQueue.length > 0 && (
+  <RecordClip
+    key={`${ingQueue[ingIndex]}-${recordTarget}`} // fresh UI per change
+    header={
+      recordTarget === 'word'
+        ? `Record word: ${ingQueue[ingIndex]}`
+        : recordTarget === 'sentence'
+          ? 'Record sentence'
+          : 'Record rhyme'
+    }
+    text={
+      recordTarget === 'word'
+        ? ingQueue[ingIndex]
+        : recordTarget === 'sentence'
+          ? composeSentence
+          : composeRhyme
+    }
+    onDone={() => {
+      // when done recording, come back to Compose for this word
+      setIngView('compose');
+    }}
+    onNextWord={() => {
+      // advance to next word if you came from green "Record All"
+      const next = ingIndex + 1;
+      if (next < ingQueue.length) {
+        setIngIndex(next);
+        // optional: reset compose helpers for next word
+        const w = ingQueue[next];
+        setComposeSentence(`We are ${w}.`);
+        setComposeRhyme(makeSimpleRhyme(w));
+        setIngView('compose'); // show compose so parent can add sentence/rhyme if desired
+      } else {
+        setIngView('words');
+        setIngQueue([]);
+        setIngIndex(0);
+        showToastNotification('✅ Finished this category!');
+      }
+    }}
+    onBack={() => setIngView('compose')}
+  />
+)}
+```
+
+## 5) Generic recorder component
+
+This is a drop-in replacement for your existing `RecordWord`. It records **whatever text you pass** in `text`, so you can reuse it for word / sentence / rhyme:
+
+```tsx
+function RecordClip({
+  header, text, onDone, onNextWord, onBack
+}: {
+  header: string;
+  text: string;
+  onDone: () => void;      // after saving this clip
+  onNextWord: () => void;  // go to next word (only used in batch)
+  onBack: () => void;
+}) {
+  const [rec, setRec] = useState<MediaRecorder | null>(null);
+  const [audioURL, setAudioURL] = useState<string>('');
+  const chunksRef = useRef<Blob[]>([]);
+
+  async function start() {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus'
+               : MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4'
+               : '';
+    const r = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+    chunksRef.current = [];
+    r.ondataavailable = (e) => e.data.size && chunksRef.current.push(e.data);
+    r.onstop = () => {
+      const blob = new Blob(chunksRef.current, { type: mime || 'audio/webm' });
+      setAudioURL(URL.createObjectURL(blob));
+      stream.getTracks().forEach((t) => t.stop());
+    };
+    r.start();
+    setRec(r);
+    setTimeout(() => r.state === 'recording' && r.stop(), 15000);
+  }
+  function stop() { rec?.stop(); setRec(null); }
+  useEffect(() => () => { if (rec?.state === 'recording') rec.stop(); }, [rec]);
+
+  return (
+    <div>
+      <button onClick={onBack}
+              style={{ background:'transparent', border:'none', fontSize:24, cursor:'pointer', marginBottom:20 }}>
+        ← Back
+      </button>
+
+      <h2 style={{ textAlign:'center', marginBottom:10 }}>{header}</h2>
+      <p style={{ textAlign:'center', color:'#666', marginBottom:20 }}>{text}</p>
+
+      {!rec && !audioURL && (
+        <button onClick={start}
+                style={{ width:'100%', padding:15, background:'#ff00ff', color:'#fff', border:'none', borderRadius:10, fontWeight:'bold' }}>
+          🎤 Record (15s max)
+        </button>
+      )}
+      {rec && (
+        <button onClick={stop}
+                style={{ width:'100%', padding:15, background:'#ff4444', color:'#fff', border:'none', borderRadius:10, fontWeight:'bold' }}>
+          ■ Stop
+        </button>
+      )}
+      {audioURL && (
+        <div style={{ textAlign:'center', marginTop:20 }}>
+          <audio src={audioURL} controls style={{ width:'100%', marginBottom:10 }} />
+          <div style={{ display:'flex', gap:10, justifyContent:'center' }}>
+            <button onClick={() => { setAudioURL(''); start(); }}
+                    style={{ padding:'10px 20px', background:'#ff00ff', color:'#fff', border:'none', borderRadius:10 }}>
+              Re-record
+            </button>
+            <button onClick={onDone}
+                    style={{ padding:'10px 20px', background:'#4CAF50', color:'#fff', border:'none', borderRadius:10 }}>
+              ✓ Save
+            </button>
+            <button onClick={onNextWord}
+                    style={{ padding:'10px 20px', background:'#7c4dff', color:'#fff', border:'none', borderRadius:10 }}>
+              Next Word →
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+> Tip: if you don’t want *Next Word →* on single-word recordings, render that button only when `ingQueue.length > 1`.
+
+---
+
+## “Start Over” in Action Mode — what should it do?
+
+* **My recommendation:** the red **Start Over** in Action Mode should **reset Action Mode** and land you at the **Category Grid** (top level).
+  It mirrors Standard mode (reset the run), is easy to explain, and avoids ambiguity (pink/green page is a *child* of a category).
+
+If you want both:
+
+* “← Back to Categories” (already present on the words page)
+* **Start Over** (from anywhere) → wipes queue, index, compose fields, and returns to Grid.
+
+Implementation is one line wherever you place the button:
+
+```ts
+const startOverActionMode = () => {
+  setIngView('grid'); setIngQueue([]); setIngIndex(0); setComposeSentence(''); setComposeRhyme('');
+};
+```
+
+---
+
+## Nice-to-haves (optional)
+
+* When using **Record All**, after each word’s **word** clip is saved, auto-open **Compose** with prefilled sentence/rhyme so parents can optionally add them, then “Next Word →”. Toggle via a little switch “Also record sentence & rhyme” on the Words page.
+* Allow **comma-separated** typed words (“clapping, waving”) to become a quick queue:
+
+  ```ts
+  const typed = inputValue.split(',').map(s => s.trim()).filter(Boolean);
+  setIngQueue(typed); setIngIndex(0); setIngView('record');
+  ```
+
+That’s it — you get the extra page for **sentence/rhyme**, clean navigation, and the green button finally does what it says on the tin.

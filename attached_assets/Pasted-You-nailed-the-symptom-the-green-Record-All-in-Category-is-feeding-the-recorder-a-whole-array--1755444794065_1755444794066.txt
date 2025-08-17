@@ -1,0 +1,95 @@
+You nailed the symptom: **the green “Record All in Category” is feeding the recorder a whole array (or a joined string) instead of stepping word-by-word.**
+The fix is just to add a queue + index and render **only the current word**, advancing the index when you tap ✓.
+
+Here’s a tiny, surgical patch you can drop into your current `WelcomeScreen`:
+
+---
+
+### 1) Add queue + index state
+
+```ts
+// near other useState lines
+const [ingQueue, setIngQueue] = useState<string[]>([]);
+const [ingIndex, setIngIndex] = useState(0);
+```
+
+### 2) Select one word vs. the whole category
+
+```ts
+// tap a single chip
+const chooseWord = (word: string) => {
+  setIngQueue([word.toLowerCase()]);
+  setIngIndex(0);
+  setIngView('record');
+};
+
+// tap the green button
+const chooseAllInCategory = () => {
+  if (!ingCategory) return;
+  setIngQueue([...ING[ingCategory]]);   // <-- array of words
+  setIngIndex(0);
+  setIngView('record');                 // start with the first word
+};
+```
+
+(If you show the green button before a category is picked, add `disabled={!ingCategory}` to it.)
+
+### 3) Render the recorder for the **current** word only
+
+```tsx
+{ingView === 'record' && ingQueue.length > 0 && (
+  <RecordWord
+    key={ingQueue[ingIndex]}                 // force fresh UI per word
+    word={ingQueue[ingIndex]}                // <-- a single string
+    index={ingIndex + 1}
+    total={ingQueue.length}
+    onNext={() => {
+      const next = ingIndex + 1;
+      if (next < ingQueue.length) {
+        setIngIndex(next);                   // advance to next word
+      } else {
+        setIngView('words');                 // finished this category
+        setIngQueue([]);
+        setIngIndex(0);
+        showToastNotification('✅ All words recorded!');
+      }
+    }}
+    onBack={() => setIngView('words')}
+  />
+)}
+```
+
+### 4) Make sure the recorder expects a **string**, not an array
+
+```ts
+// RecordWord props should be:
+type Props = { word: string; index: number; total: number; onNext: () => void; onBack: () => void };
+```
+
+In its header show progress:
+
+```tsx
+<h2>Record: {word} ({index}/{total})</h2>
+```
+
+Hook buttons to actions:
+
+* ▶️ start/stop your MediaRecorder
+* ✅ calls `onNext()` (advance to next word)
+* 🔄 clears the current take and lets you re-record
+
+And add a small unmount guard so the mic isn’t left open:
+
+```ts
+useEffect(() => () => { if (rec?.state === 'recording') rec.stop(); }, [rec]);
+```
+
+---
+
+### Why this fixes your screenshots
+
+* “**Record: eating drinking brushing…**” happened because the recorder was receiving the **whole list** (array or joined string). Now it always receives **one word**: `ingQueue[ingIndex]`.
+* The green button now truly means **step through every word** in that category with `(n/total)` progress.
+* The pink “Record Typed Word” keeps working independently.
+
+If you want, I can also show a one-liner to split multiple typed words (“clapping, waving”) into a queue, but the change above is enough to make **Record All in Category** behave exactly as intended.
