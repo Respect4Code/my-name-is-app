@@ -638,7 +638,6 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
     }
   };
 
-  // Action Words data
   const ING = {
     daily: ['eating', 'drinking', 'brushing', 'washing', 'sleeping', 'waking'],
     movement: ['running', 'jumping', 'walking', 'crawling', 'rolling', 'spinning'],
