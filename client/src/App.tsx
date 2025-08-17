@@ -90,16 +90,30 @@ const RecordClip: React.FC<{
   const [audioURL, setAudioURL] = useState<string>('');
   const chunksRef = useRef<Blob[]>([]);
 
+  // Helper to pick best MIME type for cross-platform compatibility
+  const pickMimeType = useCallback(() => {
+    const candidates = [
+      'audio/mp4;codecs=aac',
+      'audio/mp4',
+      'audio/webm;codecs=opus',
+      'audio/webm'
+    ];
+    return candidates.find(type => MediaRecorder.isTypeSupported(type)) || '';
+  }, []);
+
   const start = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' :
-                   MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : '';
+      const mime = pickMimeType();
       const r = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
       chunksRef.current = [];
       r.ondataavailable = (e) => e.data.size && chunksRef.current.push(e.data);
       r.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: mime || 'audio/webm' });
+        // Revoke previous URL to prevent memory leaks
+        if (audioURL) {
+          URL.revokeObjectURL(audioURL);
+        }
         setAudioURL(URL.createObjectURL(blob));
         stream.getTracks().forEach((t) => t.stop());
       };
@@ -120,8 +134,12 @@ const RecordClip: React.FC<{
   useEffect(() => {
     return () => {
       if (rec?.state === 'recording') rec.stop();
+      // Cleanup object URL on unmount
+      if (audioURL) {
+        URL.revokeObjectURL(audioURL);
+      }
     };
-  }, [rec]);
+  }, [rec, audioURL]);
 
   return (
     <div style={{ padding: '30px', background: '#fff0ff', borderRadius: '15px', textAlign: 'center' }}>
@@ -505,8 +523,34 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
     handleInfoMouseUp(e as any);
   }, [handleInfoMouseUp]);
 
+  // Helper to revoke object URLs (prevent memory leaks)
+  const revokeAllObjectUrls = useCallback((map: Record<string, string>) => {
+    Object.values(map).forEach(url => {
+      try {
+        URL.revokeObjectURL(url);
+      } catch (e) {
+        // Ignore errors for already revoked URLs
+      }
+    });
+  }, []);
+
+  // Start Over for Action mode
+  const startOverAction = useCallback(() => {
+    // Revoke object URLs to prevent memory leaks
+    revokeAllObjectUrls(savedWordClips);
+    
+    setIngView('grid');
+    setIngQueue([]);
+    setIngIndex(0);
+    setComposeSentence('');
+    setComposeRhyme('');
+    setRecordTarget('word');
+    setSavedWordClips({});
+    showToastNotification('🔁 Reset Action Words');
+  }, [savedWordClips, revokeAllObjectUrls, showToastNotification]);
+
   // Enhanced mode selection with immediate feedback
-  const handleModeChange = (mode: typeof currentMode) => {
+  const handleModeChange = useCallback((mode: typeof currentMode) => {
     setCurrentMode(mode);
     setShowSecretMenu(false);
     setIsLongPress(false);
@@ -534,11 +578,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
 
     // Mode-specific state reset and initial setup
     if (mode === 'actions') {
-      setIngView('grid');
-      setIngCategory(null);
-      setIngQueue([]);
-      setIngIndex(0);
-      setName('');
+      startOverAction();
     } else {
       setIngView('grid');
       setIngCategory(null);
@@ -552,7 +592,15 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
         setName('');
       }
     }
-  };
+  }, [showToastNotification, startOverAction]);
+
+  // Helper to parse -ING words from user input
+  const parseIngWords = useCallback((input: string) => {
+    return input
+      .split(/[,\s]+/)
+      .map(word => word.replace(/[^\w]$/, '').toLowerCase())
+      .filter(word => /ing$/i.test(word));
+  }, []);
 
   // Magic word detection
   useEffect(() => {
@@ -564,7 +612,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
     } else if (value === 'NUMBERS' || value === '123') {
       handleModeChange('numbers');
     }
-  }, [name]);
+  }, [name, handleModeChange]);
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
@@ -625,21 +673,30 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
     setComposeRhyme(`${w} ${w}, ${w} all day — ${w} ${w}, hip-hip-hooray!`);
   }, []);
 
-  // Sequential playback of saved word clips
+  // Sequential playback of saved word clips with safety checks
   const playAllSequential = useCallback((words: string[]) => {
     const urls = words.map(w => savedWordClips[w]).filter(Boolean);
-    if (!urls.length) return;
+    if (!urls.length) {
+      showToastNotification('No recorded words to play');
+      return;
+    }
+    
     let i = 0;
     const audio = new Audio(urls[i]);
     audio.addEventListener('ended', () => {
       i++;
       if (i < urls.length) {
         audio.src = urls[i];
-        audio.play();
+        audio.play().catch(err => {
+          console.error('Sequential playback failed:', err);
+        });
       }
     });
-    audio.play();
-  }, [savedWordClips]);
+    audio.play().catch(err => {
+      console.error('Sequential playback failed:', err);
+      showToastNotification('Playback failed - check volume');
+    });
+  }, [savedWordClips, showToastNotification]);
 
   // Choose word for recording - now goes to compose first
   const chooseWord = useCallback((word: string) => {
@@ -660,17 +717,15 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
     setIngView('compose');
   }, [ingCategory, primeCompose]);
 
-  // Start Over for Action mode
-  const startOverAction = useCallback(() => {
-    setIngView('grid');
-    setIngQueue([]);
-    setIngIndex(0);
-    setComposeSentence('');
-    setComposeRhyme('');
-    setRecordTarget('word');
-    setSavedWordClips({});
-    showToastNotification('🔁 Reset Action Words');
-  }, [showToastNotification]);
+  // Helper to stop active recording (prevents mic lockups)
+  const stopActiveRecording = useCallback(() => {
+    try {
+      const tracks = (navigator.mediaDevices as any)?._activeStream?.getTracks?.();
+      tracks?.forEach((track: any) => track.stop());
+    } catch (e) {
+      // Ignore errors - just cleanup attempt
+    }
+  }, []);
 
   // Helper to get the correct emoji for categories
   const getCategoryEmoji = (catKey: string) => {
@@ -915,12 +970,22 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
                 </div>
                 <div style={{ textAlign: 'center', marginBottom: '10px', color: '#666' }}>or</div>
                 <input
-                  placeholder="Type your own -ING word (e.g., clapping)"
+                  placeholder="Type -ING words (e.g., clapping, jumping)"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-                      chooseWord(e.currentTarget.value.trim());
+                      const words = parseIngWords(e.currentTarget.value.trim());
+                      if (words.length > 0) {
+                        if (words.length === 1) {
+                          chooseWord(words[0]);
+                        } else {
+                          setIngQueue(words);
+                          setIngIndex(0);
+                          primeCompose(words[0]);
+                          setIngView('compose');
+                        }
+                      }
                     }
                   }}
                   style={{
@@ -965,7 +1030,10 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
                   </button>
                 </div>
                 <button
-                  onClick={startOverAction}
+                  onClick={() => {
+                    stopActiveRecording();
+                    startOverAction();
+                  }}
                   style={{
                     width: '100%',
                     padding: '10px',
@@ -985,7 +1053,10 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
             {ingView === 'compose' && ingQueue.length > 0 && (
               <div>
                 <button
-                  onClick={() => setIngView('words')}
+                  onClick={() => {
+                    stopActiveRecording();
+                    setIngView('words');
+                  }}
                   style={{
                     background: 'transparent',
                     border: 'none',
@@ -997,7 +1068,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
                   ← Back
                 </button>
                 <h3 style={{ textAlign: 'center', margin: '6px 0 14px' }}>
-                  Word: <strong>{ingQueue[ingIndex]}</strong> ({ingIndex + 1}/{ingQueue.length})
+                  Record word: <strong>{ingQueue[ingIndex]}</strong> ({ingIndex + 1}/{ingQueue.length})
                 </h3>
                 <div style={{ display: 'grid', gap: '12px' }}>
                   <button
@@ -1053,20 +1124,26 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
                   >
                     🎤 Record RHYME →
                   </button>
-                  {Object.keys(savedWordClips).length > 0 && (
-                    <button
-                      onClick={() => playAllSequential(ingQueue)}
-                      style={{
-                        padding: '12px',
-                        background: '#8e44ad',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '12px',
-                      }}
-                    >
-                      ▶︎ Play All Words
-                    </button>
-                  )}
+                  {(() => {
+                    const recorded = ingQueue.filter(w => Boolean(savedWordClips[w]));
+                    const canPlayAll = recorded.length > 0;
+                    return (
+                      <button
+                        onClick={() => playAllSequential(ingQueue)}
+                        disabled={!canPlayAll}
+                        style={{
+                          padding: '12px',
+                          background: canPlayAll ? '#8e44ad' : '#ccc',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '12px',
+                          cursor: canPlayAll ? 'pointer' : 'not-allowed',
+                        }}
+                      >
+                        ▶︎ Play All Words {recorded.length}/{ingQueue.length}
+                      </button>
+                    );
+                  })()}
                   <button
                     onClick={() => {
                       const next = ingIndex + 1;
@@ -1095,7 +1172,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
 
             {ingView === 'record' && ingQueue.length > 0 && (
               <RecordClip
-                key={`${ingQueue[ingIndex]}-${recordTarget}`}
+                key={`${recordTarget}:${ingQueue[ingIndex]}`}
                 title={
                   recordTarget === 'word'
                     ? `Record word: ${ingQueue[ingIndex]}`
@@ -1116,7 +1193,10 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
                   }
                   setIngView('compose'); // Return to compose to add sentence/rhyme or go next
                 }}
-                onBack={() => setIngView('compose')}
+                onBack={() => {
+                  stopActiveRecording();
+                  setIngView('compose');
+                }}
               />
             )}
           </>
