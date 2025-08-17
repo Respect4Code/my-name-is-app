@@ -1,0 +1,117 @@
+Yeah—this is a solid step up. 🎉 You fixed the biggies (queue, compose, MIME, memory revokes, re-mounting the recorder). I spot a few last tighten-ups so it compiles cleanly in TS and behaves perfectly on iOS.
+
+## Quick wins (do these and you’re golden)
+
+1. **TypeScript: `ING` used before it’s declared**
+   You do:
+
+```ts
+const [ingCategory, setIngCategory] = useState<keyof typeof ING | null>(null);
+```
+
+but `ING` is declared later. Move `ING` **above** the component and lock its literal types:
+
+```ts
+// ⬆️ very top of file
+export const ING = {
+  daily: ['eating','drinking','brushing','washing','sleeping','waking'],
+  movement: ['running','jumping','walking','crawling','rolling','spinning'],
+  hands: ['clapping','waving','grabbing','throwing','catching','pointing'],
+  emotions: ['laughing','smiling','crying','hugging','kissing','loving'],
+  creative: ['drawing','painting','singing','dancing','building','making'],
+  playing: ['hiding','seeking','climbing','sliding','swinging','bouncing'],
+} as const;
+
+type IngCategory = keyof typeof ING;
+```
+
+Then change:
+
+```ts
+const [ingCategory, setIngCategory] = useState<IngCategory | null>(null);
+```
+
+2. **Revoke old URL when re-recording the *same* word**
+   You already revoke on reset, but if a parent re-records *clapping*, the old URL sticks around. Patch your `onSaved`:
+
+```ts
+onSaved={(url) => {
+  if (recordTarget === 'word') {
+    const w = ingQueue[ingIndex];
+    setSavedWordClips(prev => {
+      if (prev[w]) URL.revokeObjectURL(prev[w]);   // ← revoke old
+      return { ...prev, [w]: url };
+    });
+  }
+  setIngView('compose');
+}}
+```
+
+3. **Stop “Play All” when navigating away**
+   Prevent audio continuing after Back/Start Over.
+
+```ts
+// inside component
+const playRef = useRef<HTMLAudioElement | null>(null);
+
+const playAllSequential = (words: string[]) => {
+  const urls = words.map(w => savedWordClips[w]).filter(Boolean);
+  if (!urls.length) return;
+  let i = 0;
+  const a = new Audio(urls[i]);
+  playRef.current = a;
+  a.addEventListener('ended', () => {
+    i++;
+    if (i < urls.length) { a.src = urls[i]; a.load(); a.play(); }
+    else playRef.current = null;
+  });
+  a.play();
+};
+
+// pause wherever you navigate/reset
+const haltPlayback = () => { playRef.current?.pause(); playRef.current = null; };
+
+const startOverAction = useCallback(() => {
+  haltPlayback();
+  // ... your existing resets + revokeAll
+}, [savedWordClips, showToastNotification]);
+
+// also call haltPlayback() in Back buttons where appropriate
+```
+
+4. **`NodeJS.Timeout` in the browser**
+   If this is a pure web build, replace `NodeJS.Timeout` with:
+
+```ts
+const [infoPressTimer, setInfoPressTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
+```
+
+5. **Make `pickMime` and `stopActiveRecorder` singletons**
+   You defined them inside and outside the component. That’s fine at runtime but noisy for TS. Keep **one** copy at module scope (bottom is fine) and import/use it in both places.
+
+6. **Minor accessibility + safety**
+
+* Add `aria-live="polite"` to the toast container so screen readers announce updates.
+* Disable **Record** button in `RecordClip` if `text.trim()` is empty for sentence/rhyme recording (prevents blank clips).
+
+```tsx
+<button
+  onClick={start}
+  disabled={!text || !text.trim()}
+  // ...
+>
+  🎤 Record (15s)
+</button>
+```
+
+---
+
+## Sanity check on UX (you’re aligned)
+
+* **Start Over → Category Grid**: ✅ Correct; clears queue, compose text, and URLs.
+* **Pink flow**: word → compose → record (word/sentence/rhyme) with playback: ✅
+* **Green flow**: sequential per-word recording; Play All shows progress and only plays saved clips: ✅
+
+If you want parity later, the **Compose** pattern ports nicely to Alphabet (“A is for apple”) and Numbers (“Three apples!”).
+
+If you want, paste back any compile errors after moving `ING` to the top—those are the only ones I expect.
