@@ -79,14 +79,13 @@ interface RecordingStageProps {
   recordings: { [key: string]: string };
 }
 
-// RecordWord Component for Action Words mode with MIME detection
-const RecordWord: React.FC<{
-  word: string;
-  index?: number;
-  total?: number;
-  onNext: () => void;
+// RecordClip Component - content-agnostic recorder for word/sentence/rhyme
+const RecordClip: React.FC<{
+  title: string;
+  text: string;
+  onSaved: (url: string) => void;
   onBack: () => void;
-}> = memo(({ word, index, total, onNext, onBack }) => {
+}> = memo(({ title, text, onSaved, onBack }) => {
   const [rec, setRec] = useState<MediaRecorder | null>(null);
   const [audioURL, setAudioURL] = useState<string>('');
   const chunksRef = useRef<Blob[]>([]);
@@ -139,12 +138,12 @@ const RecordWord: React.FC<{
         ← Back
       </button>
       <h2 style={{ textAlign: 'center', marginBottom: '20px', fontSize: '28px', fontWeight: 'bold', color: '#ff00ff' }}>
-        Recording: {word} {index && total ? `(${index}/${total})` : ''}
+        {title}
       </h2>
       <p style={{ textAlign: 'center', marginBottom: '20px', color: '#666', fontSize: '18px' }}>
-        Say the word, then a short sentence, e.g., "We are {word}!"
+        {text}
       </p>
-      {!rec && (
+      {!rec && !audioURL && (
         <button
           onClick={start}
           style={{
@@ -212,7 +211,7 @@ const RecordWord: React.FC<{
               <RefreshCw size={16} /> Re-record
             </button>
             <button
-              onClick={onNext}
+              onClick={() => onSaved(audioURL)}
               style={{
                 padding: '10px 20px',
                 background: '#4CAF50',
@@ -225,7 +224,7 @@ const RecordWord: React.FC<{
                 gap: '5px',
               }}
             >
-              <CheckCircle size={16} /> Next Word →
+              <CheckCircle size={16} /> ✓ Save
             </button>
           </div>
         </div>
@@ -432,10 +431,14 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isLongPress, setIsLongPress] = useState(false);
-  const [ingView, setIngView] = useState<'grid' | 'words' | 'record'>('grid');
+  const [ingView, setIngView] = useState<'grid' | 'words' | 'compose' | 'record'>('grid');
   const [ingCategory, setIngCategory] = useState<keyof typeof ING | null>(null);
   const [ingQueue, setIngQueue] = useState<string[]>([]);
   const [ingIndex, setIngIndex] = useState(0);
+  const [recordTarget, setRecordTarget] = useState<'word' | 'sentence' | 'rhyme'>('word');
+  const [composeSentence, setComposeSentence] = useState('');
+  const [composeRhyme, setComposeRhyme] = useState('');
+  const [savedWordClips, setSavedWordClips] = useState<Record<string, string>>({});
 
   // Load saved mode on component mount
   useEffect(() => {
@@ -616,20 +619,58 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
     setIngView('words');
   }, []);
 
-  // Choose word for recording
-  const chooseWord = useCallback((word: string) => {
-    setIngQueue([word.toLowerCase()]);
-    setIngIndex(0);
-    setIngView('record');
+  // Helper to prime compose fields
+  const primeCompose = useCallback((w: string) => {
+    setComposeSentence(`We are ${w}.`);
+    setComposeRhyme(`${w} ${w}, ${w} all day — ${w} ${w}, hip-hip-hooray!`);
   }, []);
 
-  // Choose all words in category
+  // Sequential playback of saved word clips
+  const playAllSequential = useCallback((words: string[]) => {
+    const urls = words.map(w => savedWordClips[w]).filter(Boolean);
+    if (!urls.length) return;
+    let i = 0;
+    const audio = new Audio(urls[i]);
+    audio.addEventListener('ended', () => {
+      i++;
+      if (i < urls.length) {
+        audio.src = urls[i];
+        audio.play();
+      }
+    });
+    audio.play();
+  }, [savedWordClips]);
+
+  // Choose word for recording - now goes to compose first
+  const chooseWord = useCallback((word: string) => {
+    const w = word.toLowerCase();
+    setIngQueue([w]);
+    setIngIndex(0);
+    primeCompose(w);
+    setIngView('compose');
+  }, [primeCompose]);
+
+  // Choose all words in category - starts at compose for first word
   const chooseAllInCategory = useCallback(() => {
     if (!ingCategory) return;
-    setIngQueue([...ING[ingCategory]]);
+    const list = [...ING[ingCategory]];
+    setIngQueue(list);
     setIngIndex(0);
-    setIngView('record');
-  }, [ingCategory]);
+    primeCompose(list[0]);
+    setIngView('compose');
+  }, [ingCategory, primeCompose]);
+
+  // Start Over for Action mode
+  const startOverAction = useCallback(() => {
+    setIngView('grid');
+    setIngQueue([]);
+    setIngIndex(0);
+    setComposeSentence('');
+    setComposeRhyme('');
+    setRecordTarget('word');
+    setSavedWordClips({});
+    showToastNotification('🔁 Reset Action Words');
+  }, [showToastNotification]);
 
   // Helper to get the correct emoji for categories
   const getCategoryEmoji = (catKey: string) => {
@@ -923,27 +964,159 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
                     Record All in Category →
                   </button>
                 </div>
+                <button
+                  onClick={startOverAction}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    background: '#ff4444',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '10px',
+                    cursor: 'pointer',
+                    marginTop: '20px',
+                  }}
+                >
+                  Start Over
+                </button>
+              </div>
+            )}
+
+            {ingView === 'compose' && ingQueue.length > 0 && (
+              <div>
+                <button
+                  onClick={() => setIngView('words')}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    fontSize: '24px',
+                    cursor: 'pointer',
+                    marginBottom: '16px',
+                  }}
+                >
+                  ← Back
+                </button>
+                <h3 style={{ textAlign: 'center', margin: '6px 0 14px' }}>
+                  Word: <strong>{ingQueue[ingIndex]}</strong> ({ingIndex + 1}/{ingQueue.length})
+                </h3>
+                <div style={{ display: 'grid', gap: '12px' }}>
+                  <button
+                    onClick={() => { setRecordTarget('word'); setIngView('record'); }}
+                    style={{
+                      padding: '14px',
+                      background: '#ff00ff',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '12px',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    🎤 Record WORD →
+                  </button>
+                  <label style={{ fontWeight: 'bold', marginTop: '8px' }}>Sentence</label>
+                  <input
+                    value={composeSentence}
+                    onChange={(e) => setComposeSentence(e.target.value)}
+                    placeholder={`e.g., Sam is ${ingQueue[ingIndex]}`}
+                    style={{ padding: '12px', border: '2px solid #ddd', borderRadius: '12px' }}
+                  />
+                  <button
+                    onClick={() => { setRecordTarget('sentence'); setIngView('record'); }}
+                    style={{
+                      padding: '14px',
+                      background: '#7c4dff',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '12px',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    🎤 Record SENTENCE →
+                  </button>
+                  <label style={{ fontWeight: 'bold', marginTop: '8px' }}>Rhyme</label>
+                  <textarea
+                    value={composeRhyme}
+                    onChange={(e) => setComposeRhyme(e.target.value)}
+                    rows={3}
+                    style={{ padding: '12px', border: '2px solid #ddd', borderRadius: '12px' }}
+                  />
+                  <button
+                    onClick={() => { setRecordTarget('rhyme'); setIngView('record'); }}
+                    style={{
+                      padding: '14px',
+                      background: '#4CAF50',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '12px',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    🎤 Record RHYME →
+                  </button>
+                  {Object.keys(savedWordClips).length > 0 && (
+                    <button
+                      onClick={() => playAllSequential(ingQueue)}
+                      style={{
+                        padding: '12px',
+                        background: '#8e44ad',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '12px',
+                      }}
+                    >
+                      ▶︎ Play All Words
+                    </button>
+                  )}
+                  <button
+                    onClick={() => {
+                      const next = ingIndex + 1;
+                      if (next < ingQueue.length) {
+                        setIngIndex(next);
+                        primeCompose(ingQueue[next]);
+                      } else {
+                        setIngQueue([]);
+                        setIngIndex(0);
+                        setIngView('words');
+                        showToastNotification('✅ Finished this set!');
+                      }
+                    }}
+                    style={{
+                      padding: '12px',
+                      background: '#eee',
+                      border: '1px solid #ddd',
+                      borderRadius: '12px',
+                    }}
+                  >
+                    Next Word →
+                  </button>
+                </div>
               </div>
             )}
 
             {ingView === 'record' && ingQueue.length > 0 && (
-              <RecordWord
-                key={ingQueue[ingIndex]}
-                word={ingQueue[ingIndex]}
-                index={ingIndex + 1}
-                total={ingQueue.length}
-                onNext={() => {
-                  const next = ingIndex + 1;
-                  if (next < ingQueue.length) {
-                    setIngIndex(next);
-                  } else {
-                    setIngView('words');
-                    setIngQueue([]);
-                    setIngIndex(0);
-                    showToastNotification('✅ All words recorded!');
+              <RecordClip
+                key={`${ingQueue[ingIndex]}-${recordTarget}`}
+                title={
+                  recordTarget === 'word'
+                    ? `Record word: ${ingQueue[ingIndex]}`
+                    : recordTarget === 'sentence'
+                      ? 'Record sentence'
+                      : 'Record rhyme'
+                }
+                text={
+                  recordTarget === 'word'
+                    ? ingQueue[ingIndex]
+                    : recordTarget === 'sentence'
+                      ? composeSentence
+                      : composeRhyme
+                }
+                onSaved={(url) => {
+                  if (recordTarget === 'word') {
+                    setSavedWordClips(prev => ({ ...prev, [ingQueue[ingIndex]]: url }));
                   }
+                  setIngView('compose'); // Return to compose to add sentence/rhyme or go next
                 }}
-                onBack={() => setIngView('words')}
+                onBack={() => setIngView('compose')}
               />
             )}
           </>
