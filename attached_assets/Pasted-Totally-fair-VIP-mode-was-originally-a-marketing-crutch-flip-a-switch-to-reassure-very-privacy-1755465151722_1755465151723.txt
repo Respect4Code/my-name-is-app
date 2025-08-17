@@ -1,0 +1,56 @@
+Totally fair. “VIP mode” was originally a marketing crutch: flip a switch to reassure *very* privacy-sensitive parents by turning off anything that *looked* networky and by showing a big “max privacy” banner. In practice, your app already has the strong default: **no upload, no account, no persistence**. So VIP adds confusion without real benefit.
+
+### What I recommend
+
+**Drop VIP entirely** and make privacy the default, loudly communicated in-line.
+
+#### Replace VIP with a tiny, universal badge
+
+Show a one-liner under the mode title everywhere:
+
+> **🔒 Privacy:** Audio stays on this device. Nothing is saved or uploaded.
+
+(You already do this technically; this just makes it obvious.)
+
+---
+
+## Tiny patches to remove VIP
+
+1. **Types / state**
+
+```ts
+// before
+type Mode = 'standard' | 'alphabet' | 'numbers' | 'actions' | 'grandparent' | 'vip';
+// after
+type Mode = 'standard' | 'alphabet' | 'numbers' | 'actions' | 'grandparent';
+```
+
+2. **Secret menu + banners + messages**
+
+* Remove all `'vip'` entries from:
+
+  * the secret menu list
+  * the mode banner `getModeStyle()`/colors
+  * the `messages` map in `setMode`
+  * any placeholder text branches
+
+3. **Magic words**
+
+```ts
+// remove the VIP branch:
+else if (value === 'VIP') { setMode('vip'); setName(''); }
+```
+
+4. **Cleanup**
+
+* Delete any `currentMode === 'vip'` JSX blocks.
+* If you had special VIP behaviors (hiding share links, etc.), make those **default** or drop them.
+
+---
+
+## Optional (nice touch, still zero data)
+
+* Add a **“Wipe Session”** link next to “Start Over” that just calls your existing revoke/reset routine. Copy: *“Erase all in-memory clips now.”*
+* Keep the small per-word **Play** button; no bulk “Play All” (we already removed it).
+
+This keeps the product simpler, aligns with your promise, and avoids labeling parents as “paranoid.” If later you want something extra, we could add a **Kiosk Lock** (disables external links + requires a 4-digit pin to exit) for nurseries/classrooms—still local-only and not a new “mode.”

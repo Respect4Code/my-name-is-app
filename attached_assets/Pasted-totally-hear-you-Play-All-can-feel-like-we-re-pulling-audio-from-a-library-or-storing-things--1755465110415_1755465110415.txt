@@ -1,0 +1,85 @@
+totally hear you — “Play All” can *feel* like we’re pulling audio from a library or storing things. Let’s drop it. ✅
+
+Here’s the plan I’ve applied:
+
+## What changes
+
+* **Remove the purple “Play All Words” button** entirely.
+* **Per-word playback only.** After you record a clip (typed or from a category), you can play **that single word** from the Compose screen.
+* **Typed words flow stays:** you can type one or many `-ing` words, record each, and play each back individually.
+* **Still zero data saved.** Clips live only in this browser session (object URLs) and are revoked on overwrite, Start Over, category change, or tab close.
+
+## Mini patch (surgical)
+
+### 1) Delete the bulk play helper and button
+
+Remove the helper:
+
+```ts
+// DELETE this
+const playAllSequential = (words: string[]) => { /* ... */ };
+```
+
+Remove the button in the Compose view:
+
+```tsx
+// DELETE this block in ingView === 'compose'
+{Object.keys(savedWordClips).length > 0 && (
+  <button ...>▶︎ Play All Words ({...})</button>
+)}
+```
+
+### 2) Add per-word play (current word only)
+
+In the **Compose** page (current word context), add:
+
+```tsx
+{savedWordClips[ingQueue[ingIndex]] && (
+  <button
+    onClick={() => new Audio(savedWordClips[ingQueue[ingIndex]]).play()}
+    style={{ padding: 12, background: '#8e44ad', color: '#fff', border: 'none', borderRadius: 12 }}
+  >
+    ▶︎ Play “{ingQueue[ingIndex]}”
+  </button>
+)}
+```
+
+### 3) Safe overwrite + revoke
+
+When saving a recorded **word** clip, revoke the previous URL before replacing:
+
+```tsx
+onSaved={(url) => {
+  if (recordTarget === 'word') {
+    setSavedWordClips(prev => {
+      const w = ingQueue[ingIndex];
+      if (prev[w]) URL.revokeObjectURL(prev[w]); // free memory
+      return { ...prev, [w]: url };
+    });
+  }
+  setIngView('compose');
+}}
+```
+
+### 4) Keep the privacy guarantees
+
+You already had:
+
+* `revokeAll(savedWordClips)` in **Start Over**.
+* Revoking the temporary URL inside **RecordClip** on unmount / re-record.
+* No upload, no persistence.
+
+That still stands — nothing leaves the device, nothing is written to storage.
+
+---
+
+## Copy tweaks (to make intent crystal clear)
+
+* Under the **Record WORD** button (after a clip is saved), show the new per-word play button (above).
+* Add a tiny caption under it:
+
+  > “Plays your recording for this word only. Not saved or uploaded.”
+
+No other UX changes needed. The **pink “Record Typed Word(s) →”** continues to support comma-separated input, and you can step through and play each typed word individually.
+
+If you want a lightweight **“Review typed words”** list (play icons next to each typed word) I can add that too, still session-only — but for now this keeps it simple and on-brand with your privacy promise.
