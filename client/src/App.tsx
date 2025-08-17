@@ -1,4 +1,4 @@
-import React, { memo, useState, useEffect, useRef } from 'react';
+import React, { memo, useState, useEffect, useRef, useCallback } from 'react';
 import {
   Info, ChevronRight, ArrowLeft, Volume2, BookOpen, Moon, Music, Loader2, ArrowRight, ChevronLeft,
   CheckCircle, Mic, Square, RefreshCw, Play, Share2, HelpCircle, X, ChevronDown
@@ -276,14 +276,14 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
   const longPressRef = useRef(false);
 
   // Toast notification
-  const showToastNotification = (message: string) => {
+  const showToastNotification = useCallback((message: string) => {
     setToastMessage(message);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
-  };
+  }, []);
 
   // Info button handlers for secret menu
-  const handleInfoMouseDown = () => {
+  const handleInfoMouseDown = useCallback(() => {
     setInfoPressing(true);
     longPressRef.current = false;
     const timer = setTimeout(() => {
@@ -293,9 +293,9 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
       showToastNotification('🎯 Secret menu activated!');
     }, 600);
     setInfoPressTimer(timer);
-  };
+  }, [showToastNotification]);
 
-  const handleInfoMouseUp = () => {
+  const handleInfoMouseUp = useCallback(() => {
     setInfoPressing(false);
     if (infoPressTimer) {
       clearTimeout(infoPressTimer);
@@ -305,17 +305,17 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
       onGuide();
     }
     longPressRef.current = false;
-  };
+  }, [infoPressTimer, showSecretMenu, onGuide]);
 
-  const handleInfoTouchStart = (e: React.TouchEvent) => {
+  const handleInfoTouchStart = useCallback((e: React.TouchEvent) => {
     e.preventDefault();
     handleInfoMouseDown();
-  };
+  }, [handleInfoMouseDown]);
 
-  const handleInfoTouchEnd = (e: React.TouchEvent) => {
+  const handleInfoTouchEnd = useCallback((e: React.TouchEvent) => {
     e.preventDefault();
     handleInfoMouseUp();
-  };
+  }, [handleInfoMouseUp]);
 
   const handleModeChange = (mode: typeof currentMode) => {
     setCurrentMode(mode);
