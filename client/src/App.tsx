@@ -78,6 +78,152 @@ interface RecordingStageProps {
   recordings: { [key: string]: string };
 }
 
+// RecordWord Component for Action Words mode
+const RecordWord: React.FC<{
+  word: string;
+  onNext: () => void;
+  onBack: () => void;
+  recorderRef: React.MutableRefObject<MediaRecorder | null>;
+}> = memo(({ word, onNext, onBack, recorderRef }) => {
+  const [isRecording, setIsRecording] = useState(false);
+  const [isStopping, setIsStopping] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+
+  const startRecording = async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      alert('getUserMedia not supported on your browser.');
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : MediaRecorder.isTypeSupported('audio/webm')
+          ? 'audio/webm'
+          : 'audio/mp4';
+
+      recorderRef.current = new MediaRecorder(stream, { mimeType });
+      audioChunksRef.current = [];
+
+      recorderRef.current.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+
+      recorderRef.current.onstop = () => {
+        stream.getTracks().forEach(track => track.stop());
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+        const reader = new FileReader();
+        reader.onload = () => setPreviewUrl(reader.result as string);
+        reader.readAsDataURL(audioBlob);
+        setIsRecording(false);
+        setIsStopping(false);
+      };
+
+      recorderRef.current.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error('Recording error:', err);
+      alert('Failed to start recording. Please check microphone permissions.');
+      setIsRecording(false);
+      setIsStopping(false);
+    }
+  };
+
+  const stopRecording = () => {
+    if (recorderRef.current && recorderRef.current.state === 'recording') {
+      setIsStopping(true);
+      recorderRef.current.stop();
+    }
+  };
+
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
+
+  const playPreview = () => {
+    if (previewUrl && audioRef.current) {
+      audioRef.current.src = previewUrl;
+      audioRef.current.play().catch(err => {
+        console.error('Preview playback failed:', err);
+        alert('Unable to play preview. Check your device volume or silent mode.');
+      });
+    }
+  };
+
+  const saveRecording = () => {
+    if (previewUrl) {
+      onNext();
+      // In a real app, you'd pass this data up to the parent component
+      // For now, we assume the parent handles saving the previewUrl with the word
+    }
+  };
+
+  return (
+    <div style={{ padding: '30px', background: '#fff0ff', borderRadius: '15px', textAlign: 'center' }}>
+      <h3 style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '15px', color: '#ff00ff' }}>
+        Record: {word}
+      </h3>
+      <p style={{ fontSize: '18px', color: '#666', marginBottom: '20px' }}>
+        Tap the mic to start, tap the square to stop.
+      </p>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', alignItems: 'center' }}>
+        {previewUrl ? (
+          <>
+            <button
+              onClick={playPreview}
+              style={{ padding: '15px', background: '#ff00ff', color: 'white', border: 'none', borderRadius: '50%', cursor: 'pointer' }}
+            >
+              <Play size={24} />
+            </button>
+            <button
+              onClick={saveRecording}
+              style={{ padding: '15px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '50%', cursor: 'pointer' }}
+            >
+              <CheckCircle size={24} />
+            </button>
+            <button
+              onClick={() => { setPreviewUrl(null); setIsRecording(false); stopRecording(); }}
+              style={{ padding: '15px', background: '#f44336', color: 'white', border: 'none', borderRadius: '50%', cursor: 'pointer' }}
+            >
+              <RefreshCw size={24} />
+            </button>
+            <audio ref={audioRef} />
+          </>
+        ) : (
+          <button
+            onClick={toggleRecording}
+            style={{
+              padding: '20px',
+              background: isRecording ? '#f44336' : '#2196F3',
+              color: 'white',
+              border: 'none',
+              borderRadius: '50%',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {isRecording ? <Square size={30} /> : <Mic size={30} />}
+          </button>
+        )}
+      </div>
+      <div style={{ marginTop: '20px' }}>
+        <button onClick={onBack} style={{ background: 'transparent', border: 'none', color: '#999', cursor: 'pointer', fontSize: '16px' }}>
+          ← Back to Categories
+        </button>
+      </div>
+    </div>
+  );
+});
+
 // ParentGuide Component
 const ParentGuide: React.FC<ParentGuideProps> = memo(({ onClose }) => {
   return (
@@ -276,16 +422,17 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isLongPress, setIsLongPress] = useState(false);
-  const [showIngCategories, setShowIngCategories] = useState(false);
+  const [ingView, setIngView] = useState<'grid' | 'words' | 'record'>('grid');
+  const [ingCategory, setIngCategory] = useState<keyof typeof ING | null>(null);
+  const [ingQueue, setIngQueue] = useState<string[]>([]);
+  const [ingIndex, setIngIndex] = useState(0);
+  const recorderRef = useRef<MediaRecorder | null>(null);
 
   // Load saved mode on component mount
   useEffect(() => {
     const savedMode = localStorage.getItem('selectedMode');
     if (savedMode && ['standard', 'alphabet', 'numbers', 'actions', 'grandparent', 'vip'].includes(savedMode)) {
       setCurrentMode(savedMode as typeof currentMode);
-      if (savedMode === 'actions') {
-        setShowIngCategories(true);
-      }
     }
   }, []);
 
@@ -301,7 +448,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
     e.preventDefault();
     setIsLongPress(false);
     setInfoPressing(true);
-    
+
     const timer = setTimeout(() => {
       setIsLongPress(true);
       setShowSecretMenu(true);
@@ -314,16 +461,16 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
   const handleInfoMouseUp = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     setInfoPressing(false);
-    
+
     if (infoPressTimer) {
       clearTimeout(infoPressTimer);
       setInfoPressTimer(null);
     }
-    
+
     if (!isLongPress && !showSecretMenu) {
       onGuide();
     }
-    
+
     setTimeout(() => setIsLongPress(false), 100);
   }, [infoPressTimer, isLongPress, showSecretMenu, onGuide]);
 
@@ -351,7 +498,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
     setCurrentMode(mode);
     setShowSecretMenu(false);
     setIsLongPress(false);
-    
+
     // Store the selected mode in localStorage for persistence (except VIP)
     if (mode === 'vip') {
       sessionStorage.clear();
@@ -360,7 +507,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
       localStorage.setItem('selectedMode', mode);
       sessionStorage.setItem('mode', mode);
     }
-    
+
     // Mode-specific immediate feedback
     const modeMessages = {
       actions: '🎬 Action Words Mode - Categories ready!',
@@ -370,15 +517,25 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
       vip: '🔒 VIP Mode - Maximum privacy enabled',
       standard: '🏠 Standard Mode - Name recording ready'
     };
-    
+
     showToastNotification(modeMessages[mode] || 'Mode changed');
-    
-    // Immediate mode-specific actions
+
+    // Mode-specific state reset and initial setup
     if (mode === 'actions') {
-      setShowIngCategories(true);
+      setIngView('grid');
+      setIngCategory(null);
+      setIngQueue([]);
+      setIngIndex(0);
       setName('');
+      // Stop any active recording
+      if (recorderRef.current?.state === 'recording') {
+        recorderRef.current.stop();
+      }
     } else {
-      setShowIngCategories(false);
+      setIngView('grid');
+      setIngCategory(null);
+      setIngQueue([]);
+      setIngIndex(0);
       if (mode === 'alphabet') {
         setName('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
       } else if (mode === 'numbers') {
@@ -408,37 +565,79 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
   };
 
   const handleNextClick = () => {
-    if (currentMode === 'actions' && !showIngCategories) {
-      setShowIngCategories(true);
-      showToastNotification('🎬 Categories displayed! Select one to begin.');
+    const value = name.trim();
+    const canRecordTypedWord = currentMode === 'actions' && value.length > 0 && /ing$/i.test(value);
+
+    if (!value && currentMode !== 'actions') {
+      alert('Please enter a name or word first');
       return;
     }
-    
-    const minLength = currentMode === 'alphabet' ? 1 : currentMode === 'numbers' ? 1 : 2;
-    const maxLength = currentMode === 'alphabet' ? 26 : currentMode === 'numbers' ? 10 : 12;
-    
-    if (name.length >= minLength && name.length <= maxLength) {
-      onNext(name.toUpperCase());
+
+    if (currentMode === 'actions') {
+      if (canRecordTypedWord) {
+        chooseWord(value); // Jump directly to recording
+      } else if (ingView === 'grid') {
+        // If in grid view, do nothing until a category is selected
+        return;
+      } else if (ingView === 'record') {
+        // This case should ideally not be reached directly from the main button
+        // but is handled within RecordWord component.
+        return;
+      } else if (ingView === 'words') {
+        // If in words view, the button should trigger recording all or typed word
+        // For now, this path might need refinement based on exact UX desired.
+        // The input field's onKeyDown handles direct recording.
+        showToastNotification('Select or type a word to record.');
+        return;
+      }
     } else {
-      showToastNotification(`Please enter ${minLength}-${maxLength} characters`);
+      onNext(name.toUpperCase());
     }
   };
 
-  // ING Categories data
-  const ingCategories = {
-    daily: { emoji: '🍽️', words: ['eating', 'drinking', 'sleeping'], label: 'Daily Actions' },
-    movement: { emoji: '🏃', words: ['running', 'jumping', 'walking'], label: 'Movement' },
-    hands: { emoji: '✋', words: ['clapping', 'waving', 'pointing'], label: 'Hand Actions' },
-    emotions: { emoji: '😊', words: ['laughing', 'smiling', 'crying'], label: 'Emotions' },
-    creative: { emoji: '🎨', words: ['drawing', 'painting', 'singing'], label: 'Creative' },
-    playing: { emoji: '🎮', words: ['hiding', 'seeking', 'building'], label: 'Playing' }
+
+  // Action Words data
+  const ING = {
+    daily: ['eating', 'drinking', 'brushing', 'washing', 'sleeping', 'waking'],
+    movement: ['running', 'jumping', 'walking', 'crawling', 'rolling', 'spinning'],
+    hands: ['clapping', 'waving', 'grabbing', 'throwing', 'catching', 'pointing'],
+    emotions: ['laughing', 'smiling', 'crying', 'hugging', 'kissing', 'loving'],
+    creative: ['drawing', 'painting', 'singing', 'dancing', 'building', 'making'],
+    playing: ['hiding', 'seeking', 'climbing', 'sliding', 'swinging', 'bouncing'],
   };
 
-  const handleCategorySelect = (category: string) => {
-    const categoryData = ingCategories[category as keyof typeof ingCategories];
-    setName(category.toUpperCase());
-    showToastNotification(`${categoryData.label} selected! Click Next to record.`);
-    setShowIngCategories(false);
+  // Open category view
+  const openCategory = useCallback((cat: keyof typeof ING) => {
+    setIngCategory(cat);
+    setIngView('words');
+  }, []);
+
+  // Choose word for recording
+  const chooseWord = useCallback((word: string) => {
+    setIngQueue([word.toLowerCase()]);
+    setIngIndex(0);
+    setIngView('record');
+  }, []);
+
+  // Choose all words in category
+  const chooseAllInCategory = useCallback(() => {
+    if (!ingCategory) return;
+    setIngQueue([...ING[ingCategory]]);
+    setIngIndex(0);
+    setIngView('record');
+  }, [ingCategory]);
+
+  // Helper to get the correct emoji for categories
+  const getCategoryEmoji = (catKey: string) => {
+    switch (catKey) {
+      case 'daily': return '🍽️';
+      case 'movement': return '🏃';
+      case 'hands': return '✋';
+      case 'emotions': return '😊';
+      case 'creative': return '🎨';
+      case 'playing': return '🎮';
+      default: return '❓';
+    }
   };
 
   return (
@@ -453,7 +652,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
       {/* Mode Banner */}
       {currentMode !== 'standard' && (
         <div className="fixed top-0 left-0 right-0 z-50 p-3 text-center text-white font-bold animate-pulse" style={{
-          background: currentMode === 'actions' ? '#ff00ff' : 
+          background: currentMode === 'actions' ? '#ff00ff' :
                      currentMode === 'alphabet' ? '#007bff' :
                      currentMode === 'numbers' ? '#00ff00' :
                      currentMode === 'grandparent' ? '#ffa500' :
@@ -467,7 +666,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
           {currentMode === 'vip' && '🔒 VIP MODE - Maximum Security'}
         </div>
       )}
-      
+
       <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-2xl relative" style={{
         marginTop: currentMode !== 'standard' ? '60px' : '0'
       }}>
@@ -585,37 +784,165 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
            '⭐ "My 18-month-old learned all letters phonetically!" - Real parent'}
         </p>
 
-        {/* Mode-specific content areas */}
-        {showIngCategories && currentMode === 'actions' && (
-          <div className="mb-6 p-4 bg-purple-50 rounded-xl border-2 border-purple-200">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-bold text-purple-800">🎬 Choose Action Category:</h3>
-              <button
-                onClick={() => setShowIngCategories(false)}
-                className="text-purple-600 hover:text-purple-800 font-medium text-sm"
-              >
-                ← Back
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {Object.entries(ingCategories).map(([key, data]) => (
-                <button
-                  key={key}
-                  onClick={() => handleCategorySelect(key)}
-                  className="p-3 bg-purple-100 hover:bg-purple-200 rounded-lg text-sm font-medium text-purple-700 transition-colors"
-                >
-                  <div className="text-2xl mb-1">{data.emoji}</div>
-                  <div className="font-bold">{data.label}</div>
-                  <div className="text-xs opacity-75">
-                    {data.words.slice(0, 2).join(', ')}...
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Main Content for Action Words Mode */}
+        {currentMode === 'actions' ? (
+          <>
+            {ingView === 'grid' && (
+              <div>
+                <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>
+                  🎬 Choose a Category
+                </h2>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                  {Object.keys(ING).map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => openCategory(cat as keyof typeof ING)}
+                      style={{
+                        padding: '20px',
+                        background: 'white',
+                        border: '2px solid #ff00ff',
+                        borderRadius: '10px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        textAlign: 'center',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#ff00ff';
+                        e.currentTarget.style.color = 'white';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'white';
+                        e.currentTarget.style.color = 'black';
+                      }}
+                    >
+                      <div style={{ fontSize: '30px', marginBottom: '10px' }}>
+                        {getCategoryEmoji(cat)}
+                      </div>
+                      <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>
+                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                      </div>
+                      <div style={{ fontSize: '12px', opacity: '0.7' }}>
+                        {ING[cat as keyof typeof ING].slice(0, 3).join(', ')}...
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
-        {!showIngCategories && (
+            {ingView === 'words' && ingCategory && (
+              <div>
+                <button
+                  onClick={() => setIngView('grid')}
+                  className="absolute top-4 left-4 p-2 text-gray-600 hover:bg-gray-100 rounded-full"
+                  aria-label="Back to categories"
+                >
+                  <ArrowLeft size={20} aria-hidden="true" />
+                </button>
+                <h3 style={{ textAlign: 'center', marginBottom: '20px', marginTop: '30px' }}>
+                  {ingCategory.charAt(0).toUpperCase() + ingCategory.slice(1)} Actions
+                </h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: '10px', marginBottom: '20px' }}>
+                  {ING[ingCategory].map((w) => (
+                    <button
+                      key={w}
+                      onClick={() => chooseWord(w)}
+                      style={{
+                        padding: '10px',
+                        background: '#f0f0f0',
+                        border: '1px solid #ddd',
+                        borderRadius: '15px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#ff00ff';
+                        e.currentTarget.style.color = 'white';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#f0f0f0';
+                        e.currentTarget.style.color = 'black';
+                      }}
+                    >
+                      {w}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ textAlign: 'center', marginBottom: '10px', color: '#666' }}>or</div>
+                <input
+                  placeholder="Type your own -ING word (e.g., clapping)"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                      chooseWord(e.currentTarget.value.trim());
+                    }
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    border: '2px solid #ddd',
+                    borderRadius: '10px',
+                    marginBottom: '10px',
+                    boxSizing: 'border-box',
+                  }}
+                />
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                  <button
+                    onClick={() => {
+                      if (name.trim()) chooseWord(name.trim());
+                    }}
+                    style={{
+                      padding: '10px 20px',
+                      background: '#ff00ff',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '10px',
+                      cursor: 'pointer',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    Record Typed Word →
+                  </button>
+                  <button
+                    onClick={chooseAllInCategory}
+                    style={{
+                      padding: '10px 15px',
+                      background: '#4CAF50',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '10px',
+                      cursor: 'pointer',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    Record All in Category →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {ingView === 'record' && ingQueue.length > 0 && (
+              <RecordWord
+                word={ingQueue[ingIndex]}
+                onNext={() => {
+                  const next = ingIndex + 1;
+                  if (next < ingQueue.length) {
+                    setIngIndex(next);
+                  } else {
+                    setIngView('words');
+                    setIngQueue([]);
+                    setIngIndex(0);
+                    showToastNotification('Recording complete!');
+                  }
+                }}
+                onBack={() => setIngView('words')}
+                recorderRef={recorderRef}
+              />
+            )}
+          </>
+        ) : (
+          // Standard and other modes content
           <>
             <input
               type="text"
@@ -629,12 +956,13 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
               }}
               onKeyPress={handleKeyPress}
               placeholder={
-                currentMode === 'actions' ? "Type 'ING' or click Next for categories" :
-                currentMode === 'alphabet' ? "Letters A-Z (preset loaded)" :
-                currentMode === 'numbers' ? "Numbers 0-9 (preset loaded)" :
-                currentMode === 'grandparent' ? "TYPE CHILD'S NAME (LARGER TEXT)" :
-                currentMode === 'vip' ? "Enter name (Privacy Mode - No Storage)" :
-                "Enter your child's name"
+                currentMode === 'standard' ? "Enter your child's name" :
+                currentMode === 'actions' ? "Type an -ING word (e.g., clapping)" :
+                currentMode === 'alphabet' ? "Enter letters (A-Z)" :
+                currentMode === 'numbers' ? "Enter numbers (0-9)" :
+                currentMode === 'grandparent' ? "TYPE THE CHILD'S NAME" :
+                currentMode === 'vip' ? "Enter name (Privacy Mode)" :
+                "Enter a value"
               }
               className={`w-full p-4 text-center border-2 border-purple-200 rounded-xl text-gray-800 mb-6 ${
                 currentMode === 'grandparent' ? 'text-3xl' : 'text-2xl'
@@ -652,15 +980,21 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
 
             <button
               onClick={handleNextClick}
-              className="w-full py-4 rounded-xl font-bold text-xl transition-all flex items-center justify-center gap-2 bg-purple-500 text-white hover:bg-purple-600"
+              className={`w-full py-4 rounded-xl font-bold text-xl transition-all flex items-center justify-center gap-2 ${
+                currentMode === 'actions' && name.trim().length > 0 && /ing$/i.test(name.trim())
+                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600'
+                  : currentMode === 'actions' ? 'bg-purple-300'
+                  : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
+              }`}
               aria-label="Proceed to next step"
+              disabled={
+                (currentMode === 'actions' && !name.trim() && ingView === 'grid') || // Cannot proceed from grid without selecting category
+                (currentMode === 'actions' && ingView === 'words' && !name.trim() && ingQueue.length === 0) // Cannot proceed from words without selecting or typing
+              }
             >
-              {currentMode === 'actions' ? 'Show Categories' :
-               currentMode === 'alphabet' ? 'Start Recording Alphabet' :
-               currentMode === 'numbers' ? 'Start Recording Numbers' :
-               currentMode === 'grandparent' ? 'Start Simple Recording' :
-               currentMode === 'vip' ? 'Start Private Recording' :
-               'Next'} <ChevronRight />
+              {currentMode === 'actions' && name.trim().length > 0 && /ing$/i.test(name.trim()) ? 'Start Recording →' :
+               currentMode === 'actions' ? 'Show Categories →' : 'Next →'}
+              {currentMode !== 'actions' && <ChevronRight />}
             </button>
           </>
         )}
@@ -977,15 +1311,13 @@ const RecordingScreen: React.FC<RecordingScreenProps> = memo(({ name, recordings
   return (
     <div className="min-h-screen p-4 flex items-center justify-center">
       <div className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl relative">
-        <div className="relative">
-          <button
-            onClick={handleBack}
-            className="absolute top-4 left-4 p-2 text-gray-600 hover:bg-gray-100 rounded-full"
-            aria-label="Go back to name entry and clear recordings"
-          >
-            <ArrowLeft size={20} aria-hidden="true" />
-          </button>
-        </div>
+        <button
+          onClick={handleBack}
+          className="absolute top-4 left-4 p-2 text-gray-600 hover:bg-gray-100 rounded-full"
+          aria-label="Go back to name entry and clear recordings"
+        >
+          <ArrowLeft size={20} aria-hidden="true" />
+        </button>
 
         <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
           Record Your Voice for {name}
@@ -1169,7 +1501,7 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = memo(({ name, recordings
           <button
             onClick={() => playAudio('sentence')}
             className="px-4 py-2 bg-green-500 text-white rounded-xl hover:bg-green-600 flex items-center gap-2"
-            aria-label="Play walking sentence"
+            aria-label="Play sentence"
           >
             <Moon size={20} aria-hidden="true" /> Sentence
           </button>
@@ -1242,8 +1574,6 @@ const App = () => {
 
   // Toast state
   const [toast, setToast] = useState({ message: '', type: 'info', show: false });
-
-  
 
   useEffect(() => {
     const loadData = async () => {
@@ -1389,7 +1719,7 @@ const App = () => {
         />
       )}
 
-      
+
 
       <footer className="text-center text-xs text-gray-500 py-6 px-4 mt-8">
         <div className="space-y-3">
