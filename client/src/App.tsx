@@ -290,7 +290,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
     setTimeout(() => setShowToast(false), 3000);
   }, []);
 
-  // Info button handlers for secret menu
+  // Info button handlers for secret menu - Fixed version
   const handleInfoMouseDown = useCallback(() => {
     setInfoPressing(true);
     longPressRef.current = false;
@@ -305,13 +305,19 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
 
   const handleInfoMouseUp = useCallback(() => {
     setInfoPressing(false);
+    
+    // Clear the timer if it hasn't fired yet
     if (infoPressTimer) {
       clearTimeout(infoPressTimer);
       setInfoPressTimer(null);
     }
+    
+    // Only show guide if it was a short tap (not a long-press)
     if (!longPressRef.current && !showSecretMenu) {
-      onGuide();
+      onGuide(); // Short tap → show guide
     }
+    
+    // Reset the flag for next interaction
     longPressRef.current = false;
   }, [infoPressTimer, showSecretMenu, onGuide]);
 
@@ -329,25 +335,35 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
     setCurrentMode(mode);
     setShowSecretMenu(false);
     
-    // Store the selected mode in localStorage for persistence
-    localStorage.setItem('selectedMode', mode);
+    // Store the selected mode in localStorage for persistence (except VIP)
+    if (mode === 'vip') {
+      sessionStorage.clear();
+      localStorage.clear();
+    } else {
+      localStorage.setItem('selectedMode', mode);
+    }
     
-    // Update the input placeholder and behavior based on mode
+    // Mode-specific setup and immediate feedback
+    const modeMessages = {
+      actions: '🎬 Action Words Mode - Choose a category!',
+      alphabet: '🔤 Alphabet Mode - Type a letter to begin',
+      numbers: '🔢 Numbers Mode - Type a number to begin',
+      grandparent: '👴 Grandparent Mode - Simplified interface',
+      vip: '🔒 VIP Mode - Maximum privacy enabled',
+      standard: '🏠 Standard Mode - Name recording'
+    };
+    
+    showToastNotification(modeMessages[mode] || 'Mode changed');
+    
+    // Update input based on mode
     if (mode === 'actions') {
-      setName('ING');
-      showToastNotification('🎬 Action Words Mode - Type words ending in -ING!');
+      setName('');
     } else if (mode === 'alphabet') {
       setName('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-      showToastNotification('🔤 Alphabet Mode - Learning A-Z!');
     } else if (mode === 'numbers') {
       setName('0123456789');
-      showToastNotification('🔢 Numbers Mode - Learning 0-9!');
-    } else if (mode === 'grandparent') {
-      showToastNotification('👴 Grandparent Mode - Slower pace, larger text!');
-    } else if (mode === 'vip') {
-      showToastNotification('🔒 VIP Mode - Premium features unlocked!');
     } else {
-      showToastNotification('🏠 Standard Mode - Learning names!');
+      setName('');
     }
   };
 
@@ -358,8 +374,35 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-4">
-      <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-2xl relative">
+    <div className="flex items-center justify-center min-h-screen p-4" style={{
+      backgroundColor: currentMode === 'actions' ? 'rgba(255, 0, 255, 0.05)' :
+                       currentMode === 'alphabet' ? 'rgba(0, 123, 255, 0.05)' :
+                       currentMode === 'numbers' ? 'rgba(0, 255, 0, 0.05)' :
+                       currentMode === 'grandparent' ? 'rgba(255, 165, 0, 0.05)' :
+                       currentMode === 'vip' ? 'rgba(255, 215, 0, 0.05)' : 'transparent',
+      transition: 'background-color 0.3s ease'
+    }}>
+      {/* Mode Banner */}
+      {currentMode !== 'standard' && (
+        <div className="fixed top-0 left-0 right-0 z-50 p-3 text-center text-white font-bold animate-pulse" style={{
+          background: currentMode === 'actions' ? '#ff00ff' : 
+                     currentMode === 'alphabet' ? '#007bff' :
+                     currentMode === 'numbers' ? '#00ff00' :
+                     currentMode === 'grandparent' ? '#ffa500' :
+                     currentMode === 'vip' ? '#ffd700' : '#333',
+          animation: 'slideDown 0.3s ease'
+        }}>
+          {currentMode === 'actions' && '🎬 ACTION WORDS MODE ACTIVE'}
+          {currentMode === 'alphabet' && '🔤 ALPHABET MODE ACTIVE'}
+          {currentMode === 'numbers' && '🔢 NUMBERS MODE ACTIVE'}
+          {currentMode === 'grandparent' && '👴 GRANDPARENT MODE ACTIVE'}
+          {currentMode === 'vip' && '🔒 VIP MODE - Maximum Security'}
+        </div>
+      )}
+      
+      <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-2xl relative" style={{
+        marginTop: currentMode !== 'standard' ? '60px' : '0'
+      }}>
         <button
           onClick={() => !showSecretMenu && onGuide()}
           onMouseDown={handleInfoMouseDown}
@@ -480,14 +523,16 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
           }}
           onKeyPress={handleKeyPress}
           placeholder={
-            currentMode === 'actions' ? 'Enter words ending in -ING' :
-            currentMode === 'alphabet' ? 'Type ALPHABET for A-Z' :
-            currentMode === 'numbers' ? 'Type NUMBERS for 0-9' :
-            currentMode === 'grandparent' ? 'Enter name (Grandparent mode)' :
-            currentMode === 'vip' ? 'Enter name (VIP access)' :
-            'Enter your child\'s name'
+            currentMode === 'actions' ? "Type 'ING' or click Next to see categories" :
+            currentMode === 'alphabet' ? "Type a letter (A-Z) to begin" :
+            currentMode === 'numbers' ? "Type a number (0-9) to begin" :
+            currentMode === 'grandparent' ? "TYPE CHILD'S NAME (LARGER TEXT)" :
+            currentMode === 'vip' ? "Enter name (Privacy Mode - No Storage)" :
+            "Enter your child's name"
           }
-          className="w-full p-4 text-2xl text-center border-2 border-purple-200 rounded-xl text-gray-800 mb-6"
+          className={`w-full p-4 text-center border-2 border-purple-200 rounded-xl text-gray-800 mb-6 ${
+            currentMode === 'grandparent' ? 'text-3xl' : 'text-2xl'
+          }`}
           maxLength={currentMode === 'alphabet' ? 26 : currentMode === 'numbers' ? 10 : 12}
           autoFocus
           aria-label="Child's name"

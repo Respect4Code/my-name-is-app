@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes slideDown {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
 /* Secret Sauce Mode Styling */
 html[data-mode="grandparent"] {
   font-size: 18px;
