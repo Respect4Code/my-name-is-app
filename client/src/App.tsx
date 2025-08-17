@@ -468,72 +468,31 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
     }
   }, []);
 
-  // Toast notification
+  // Toast notification system
   const showToastNotification = useCallback((message: string) => {
     setToastMessage(message);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
   }, []);
 
-  // Info button handlers with proper long-press detection
-  const handleInfoMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsLongPress(false);
-    setInfoPressing(true);
-
-    const timer = setTimeout(() => {
-      setIsLongPress(true);
-      setShowSecretMenu(true);
-      setInfoPressing(false);
-      showToastNotification('🎯 Secret menu activated!');
-    }, 600);
-    setInfoPressTimer(timer);
-  }, [showToastNotification]);
-
-  const handleInfoMouseUp = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    setInfoPressing(false);
-
-    if (infoPressTimer) {
-      clearTimeout(infoPressTimer);
-      setInfoPressTimer(null);
+  // Handle mode-specific actions to avoid TDZ
+  useEffect(() => {
+    if (currentMode === 'actions') {
+      // Reset when switching to actions mode
+      setName('');
+      setRecordings({});
     }
+  }, [currentMode]);
 
-    if (!isLongPress && !showSecretMenu) {
-      onGuide();
+
+  // Helper to stop active recording (prevents mic lockups)
+  const stopActiveRecording = useCallback(() => {
+    try {
+      const tracks = (navigator.mediaDevices as any)?._activeStream?.getTracks?.();
+      tracks?.forEach((track: any) => track.stop());
+    } catch (e) {
+      // Ignore errors - just cleanup attempt
     }
-
-    setTimeout(() => setIsLongPress(false), 100);
-  }, [infoPressTimer, isLongPress, showSecretMenu, onGuide]);
-
-  const handleInfoMouseLeave = useCallback(() => {
-    if (infoPressTimer) {
-      clearTimeout(infoPressTimer);
-      setInfoPressTimer(null);
-    }
-    setInfoPressing(false);
-    setIsLongPress(false);
-  }, [infoPressTimer]);
-
-  const handleInfoTouchStart = useCallback((e: React.TouchEvent) => {
-    e.preventDefault();
-    handleInfoMouseDown(e as any);
-  }, [handleInfoMouseDown]);
-
-  const handleInfoTouchEnd = useCallback((e: React.TouchEvent) => {
-    e.preventDefault();
-    handleInfoMouseUp(e as any);
-  }, [handleInfoMouseUp]);
-
-  // Helper to revoke object URLs (prevent memory leaks)
-  const revokeAllObjectUrls = useCallback((map: Record<string, string>) => {
-    Object.values(map).forEach(url => {
-      try {
-        URL.revokeObjectURL(url);
-      } catch (e) {
-        // Ignore errors for already revoked URLs
-      }
-    });
   }, []);
 
   // Start Over for Action mode
@@ -542,6 +501,17 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
     if (recorderRef.current?.state === 'recording') {
       recorderRef.current.stop();
     }
+
+    // Helper to revoke object URLs (prevent memory leaks)
+    const revokeAllObjectUrls = useCallback((map: Record<string, string>) => {
+      Object.values(map).forEach(url => {
+        try {
+          URL.revokeObjectURL(url);
+        } catch (e) {
+          // Ignore errors for already revoked URLs
+        }
+      });
+    }, []);
 
     // Revoke object URLs to prevent memory leaks
     revokeAllObjectUrls(savedWordClips);
@@ -554,26 +524,20 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
     setRecordTarget('word');
     setSavedWordClips({});
     showToastNotification('🔁 Reset Action Words');
-  }, [savedWordClips, revokeAllObjectUrls, showToastNotification]);
+  }, [savedWordClips, showToastNotification]);
 
-  // Mode selection
-  const setMode = useCallback((mode: typeof currentMode) => {
-    setCurrentMode(mode);
-    setShowSecretMenu(false);
+  // Mode management with proper dependency handling
+  const setMode = useCallback((mode: string) => {
+    setCurrentMode(mode as any);
     sessionStorage.setItem('mode', mode);
-    const messages = {
-      standard: '🏠 Standard Mode Active - Enter a name to begin',
-      actions: '🎬 Action Words Mode Active - Choose a category',
-      alphabet: '🔤 Alphabet Mode Active - Enter letters to begin',
-      numbers: '🔢 Numbers Mode Active - Enter numbers to begin',
-      grandparent: '👴 Grandparent Mode Active - Larger text enabled',
-    };
-    showToastNotification(messages[mode]);
+    showToastNotification(`📱 ${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode activated!`);
+
+    // Handle actions mode reset (moved to useEffect to avoid TDZ)
     if (mode === 'actions') {
-      startOverAction();
+      setName('');
+      setRecordings({});
     }
-    setIsLongPress(false);
-  }, [showToastNotification, startOverAction]);
+  }, [showToastNotification]);
 
   // Helper to parse -ING words from user input
   const parseIngWords = useCallback((input: string) => {
@@ -618,7 +582,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
         return;
       } else if (ingView === 'record') {
         // This case should ideally not be reached directly from the main button
-        // but is handled within RecordWord component.
+        // but is handled within RecordClip.
         return;
       } else if (ingView === 'words') {
         // If in words view, the button should trigger recording all or typed word
@@ -653,7 +617,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
     setComposeRhyme(`${w} ${w}, ${w} all day — ${w} ${w}, hip-hip-hooray!`);
   }, []);
 
-  
+
 
   // Choose word for recording - now goes to compose first
   const chooseWord = useCallback((word: string) => {
@@ -674,15 +638,6 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
     setIngView('compose');
   }, [ingCategory, primeCompose]);
 
-  // Helper to stop active recording (prevents mic lockups)
-  const stopActiveRecording = useCallback(() => {
-    try {
-      const tracks = (navigator.mediaDevices as any)?._activeStream?.getTracks?.();
-      tracks?.forEach((track: any) => track.stop());
-    } catch (e) {
-      // Ignore errors - just cleanup attempt
-    }
-  }, []);
 
   // Helper to get the correct emoji for categories
   const getCategoryEmoji = (catKey: string) => {
@@ -815,7 +770,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onNext, onGuide }) =
                 {currentMode === 'grandparent' && <span className="ml-auto text-xs bg-yellow-500 text-white px-2 py-1 rounded">ACTIVE</span>}
               </button>
 
-              
+
 
               <div className="border-t pt-2 mt-3">
                 <button
