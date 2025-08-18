@@ -97,7 +97,10 @@ const WelcomeScreen = memo(({ onNext, onGuide, onMode }) => {
                   className="w-full p-3 bg-purple-100 rounded-xl text-left flex items-center gap-3"
                 >
                   <span className="text-2xl">🎬</span>
-                  <span className="font-semibold">Action Words Mode</span>
+                  <div>
+                    <div className="font-semibold">Action Words Mode</div>
+                    <div className="text-sm text-purple-600 bg-purple-200 px-2 py-1 rounded-full inline-block">ACTIVE</div>
+                  </div>
                 </button>
                 
                 <button
@@ -196,7 +199,6 @@ const WelcomeScreen = memo(({ onNext, onGuide, onMode }) => {
 const ActionWordsMode = memo(({ name, onBack }) => {
   const [currentScreen, setCurrentScreen] = useState('categories');
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [recordingStage, setRecordingStage] = useState('word');
   const [currentWord, setCurrentWord] = useState('');
 
   const categories = {
@@ -357,6 +359,14 @@ const ActionWordsMode = memo(({ name, onBack }) => {
               </div>
             </div>
           </div>
+
+          <p className="text-center text-purple-600 mb-4">
+            Need help? Read 4-minute guide
+          </p>
+
+          <button className="w-full bg-white border-2 border-purple-200 text-purple-600 py-3 rounded-xl font-semibold mb-4">
+            Share with friends & family 🔗
+          </button>
         </div>
       </div>
     );
